@@ -1,0 +1,8 @@
+node_modules
+dist
+backend/node_modules
+backend/dist
+backend/.env
+backend/*.log
+frontend*.log
+backend/dev.db
