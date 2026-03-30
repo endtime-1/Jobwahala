@@ -45,6 +45,11 @@ const corsOptions: cors.CorsOptions = {
       return;
     }
 
+    if (origin.endsWith('.up.railway.app')) {
+      callback(null, true);
+      return;
+    }
+
     const error = new Error('Origin is not allowed by CORS') as Error & { status?: number };
     error.status = 403;
     callback(error);

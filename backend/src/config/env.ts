@@ -18,7 +18,7 @@ const parseBoolean = (value: string | undefined, fallback = false) => {
 const parseOrigins = (value: string | undefined) =>
   (value || '')
     .split(',')
-    .map((origin) => origin.trim())
+    .map((origin) => origin.trim().replace(/\/$/, ''))
     .filter(Boolean);
 
 const nodeEnv = process.env.NODE_ENV || 'development';
