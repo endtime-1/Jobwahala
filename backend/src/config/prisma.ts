@@ -13,7 +13,7 @@ const prisma = isFileDatabase
         url: path.resolve(projectRoot, env.databaseUrl.slice('file:'.length)),
       }),
     } as any)
-  : new PrismaClient();
+  : new PrismaClient({ datasourceUrl: env.databaseUrl } as any);
 
 if (env.isProduction && isFileDatabase) {
   logger.warn('sqlite_single_instance_warning', {
