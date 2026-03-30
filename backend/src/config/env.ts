@@ -35,7 +35,7 @@ if (!jwtSecret && isProduction) {
 }
 
 if (isProduction && databaseUrl.startsWith('file:')) {
-  console.warn('[jobwahala] Production is using SQLite. This is only safe for a single-instance deployment.');
+  throw new Error('[CRITICAL JOBWAHALA ERROR] The Railway Backend is missing the DATABASE_URL environment variable and is trying to use local SQLite in Production! Please add DATABASE_URL (postgresql://...) to the Railway Variables tab and redeploy!');
 }
 
 const corsAllowedOrigins = parseOrigins(process.env.CORS_ALLOWED_ORIGINS);

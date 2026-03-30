@@ -161,7 +161,7 @@ app.use(notFoundHandler);
 
 app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
   const status = typeof err?.status === 'number' ? err.status : 500;
-  const message = err?.message || 'Internal Server Error';
+  const message = String(err) + (err?.message ? ' | ' + err.message : '') + (err?.stack ? ' | ' + err.stack.toString().split('\\n')[0] : '');
 
   logger.error('request_failed', {
     requestId: res.locals.requestId,
