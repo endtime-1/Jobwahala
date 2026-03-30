@@ -9,7 +9,7 @@ import logger from './logger';
 const projectRoot = path.resolve(__dirname, '../..');
 const isFileDatabase = env.databaseUrl.startsWith('file:');
 
-let prisma: any;
+let prisma: PrismaClient;
 
 if (isFileDatabase) {
   prisma = new PrismaClient({
