@@ -107,10 +107,6 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
   next();
 });
-app.use(cors(corsOptions));
-app.use(express.json({ limit: env.bodyLimit }));
-app.use(express.urlencoded({ extended: true, limit: env.bodyLimit }));
-
 app.get('/', (_req: Request, res: Response) => {
   res.json({
     success: true,
@@ -136,6 +132,10 @@ app.get('/ready', async (_req: Request, res: Response) => {
     res.status(503).json({ success: false, status: 'not_ready' });
   }
 });
+
+app.use(cors(corsOptions));
+app.use(express.json({ limit: env.bodyLimit }));
+app.use(express.urlencoded({ extended: true, limit: env.bodyLimit }));
 
 if (isLocalEvidenceStorage) {
   app.use('/api/uploads', express.static(getLocalEvidenceUploadsDir()));
