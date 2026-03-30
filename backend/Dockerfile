@@ -8,7 +8,7 @@ RUN npm install
 COPY prisma ./prisma
 COPY prisma.config.ts ./prisma.config.ts
 COPY prisma.postgresql.config.ts ./prisma.postgresql.config.ts
-RUN npm run prisma:generate:postgres
+RUN DATABASE_URL="postgresql://dummy:dummy@localhost/dummy" npm run prisma:generate:postgres
 
 COPY tsconfig.json ./
 COPY src ./src
