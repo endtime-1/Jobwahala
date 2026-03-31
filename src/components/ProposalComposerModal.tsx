@@ -62,8 +62,8 @@ export default function ProposalComposerModal({
   if (!isOpen) return null
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-end justify-center bg-[#101a2b]/45 p-4 backdrop-blur-md sm:items-center">
-      <div className="dashboard-panel w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-[2rem] p-5 shadow-premium-xl sm:p-7">
+    <div className="fixed inset-0 z-[100] flex justify-center bg-[#101a2b]/45 p-4 sm:p-6 backdrop-blur-md overflow-y-auto custom-scrollbar">
+      <div className="dashboard-panel w-full max-w-2xl m-auto shrink-0 rounded-[2rem] p-5 shadow-premium-xl sm:p-7">
         <div className="mb-6 flex items-start justify-between gap-4 border-b border-surface-border/60 pb-5">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Proposal Composer</p>
