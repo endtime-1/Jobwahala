@@ -1,5 +1,6 @@
 import { X, Send, AlertTriangle } from 'lucide-react'
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { apiCreateReport } from '../lib/api'
 
 interface ReportModalProps {
@@ -40,10 +41,10 @@ export default function ReportModal({ isOpen, onClose, type, targetId, targetNam
     }
   }
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-text-main/60 backdrop-blur-md animate-in fade-in duration-300" onClick={onClose}></div>
-      <div className="bg-white rounded-[2.5rem] w-full max-w-lg relative z-10 shadow-premium-2xl animate-in zoom-in duration-300 overflow-hidden">
+      <div className="bg-white rounded-[2.5rem] w-full max-w-lg max-h-[90vh] overflow-y-auto relative z-10 shadow-premium-2xl animate-in zoom-in duration-300">
         <div className="p-10">
           <div className="flex justify-between items-center mb-10">
             <h2 className="text-3xl font-black text-text-main tracking-tighter uppercase flex items-center gap-3">
@@ -113,6 +114,7 @@ export default function ReportModal({ isOpen, onClose, type, targetId, targetNam
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { ChevronRight, Sparkles, X } from 'lucide-react'
 
 export type ProposalDraft = {
@@ -60,9 +61,9 @@ export default function ProposalComposerModal({
 
   if (!isOpen) return null
 
-  return (
-    <div className="fixed inset-0 z-[70] flex items-end justify-center bg-[#101a2b]/45 p-4 backdrop-blur-md sm:items-center">
-      <div className="dashboard-panel w-full max-w-2xl rounded-[2rem] p-5 shadow-premium-xl sm:p-7">
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-end justify-center bg-[#101a2b]/45 p-4 backdrop-blur-md sm:items-center">
+      <div className="dashboard-panel w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-[2rem] p-5 shadow-premium-xl sm:p-7">
         <div className="mb-6 flex items-start justify-between gap-4 border-b border-surface-border/60 pb-5">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Proposal Composer</p>
@@ -72,7 +73,7 @@ export default function ProposalComposerModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex h-11 w-11 items-center justify-center rounded-2xl border border-surface-border bg-white text-text-light transition-colors hover:text-text-main"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-surface-border bg-white text-text-light transition-colors hover:text-text-main"
           >
             <X className="h-5 w-5" />
           </button>
@@ -216,6 +217,7 @@ export default function ProposalComposerModal({
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

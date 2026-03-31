@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { X, Send, BriefcaseBusiness, Sparkles } from 'lucide-react'
 import { apiCreateServiceRequest, apiGetServiceRequestCoaching } from '../lib/api'
 
@@ -104,10 +105,10 @@ export default function ServiceRequestModal({
     }
   }
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-text-main/60 backdrop-blur-md animate-in fade-in duration-300" onClick={handleClose}></div>
-      <div className="bg-white rounded-[2.5rem] w-full max-w-2xl relative z-10 shadow-premium-2xl animate-in zoom-in duration-300 overflow-hidden">
+      <div className="bg-white rounded-[2.5rem] w-full max-w-2xl max-h-[90vh] overflow-y-auto relative z-10 shadow-premium-2xl animate-in zoom-in duration-300">
         <div className="p-10">
           <div className="flex justify-between items-center mb-10">
             <div>
@@ -250,6 +251,7 @@ export default function ServiceRequestModal({
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

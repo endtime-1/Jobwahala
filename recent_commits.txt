@@ -1,0 +1,43 @@
+commit 6648889b1ab01f114c72465d32f8d9f6f1ed122a
+Author: qelaxa <owusuansahdoro@gmail.com>
+Date:   Mon Mar 30 22:18:27 2026 +0000
+
+    fix(env): forcefully crash explicitly if DATABASE_URL is missing in prod
+
+M	backend/dev.db
+M	backend/src/app.ts
+M	backend/src/config/env.ts
+
+commit 8f1e03790ae40c0cbf2f49b0f30cca9fbd63f4e6
+Author: qelaxa <owusuansahdoro@gmail.com>
+Date:   Mon Mar 30 21:06:16 2026 +0000
+
+    chore(debug): temporarily disable 500 error obfuscation to isolate auth crash root cause
+
+M	backend/src/app.ts
+
+commit 67a891269de61ea61a411fe273664c1d18fe17ea
+Author: qelaxa <owusuansahdoro@gmail.com>
+Date:   Mon Mar 30 20:57:16 2026 +0000
+
+    fix(cors): natively allow railway proxy subdomains and auto-strip trailing slashes from allowed origins
+
+M	backend/src/app.ts
+M	backend/src/config/env.ts
+
+commit 8c1e472350e11c9407fff7409b6b55405aaf4f5e
+Author: qelaxa <owusuansahdoro@gmail.com>
+Date:   Mon Mar 30 20:50:16 2026 +0000
+
+    fix(prisma): append missing token schemas to PG and switch docker entrypoint to use db push for true database synchronization
+
+M	backend/package.json
+M	backend/prisma/schema.postgresql.prisma
+
+commit 2ec9f76a816a7f443ce31872862d03c2830c7759
+Author: qelaxa <owusuansahdoro@gmail.com>
+Date:   Mon Mar 30 20:31:49 2026 +0000
+
+    fix(prisma): update postgres migrations sequence to correctly use schema flag
+
+M	backend/package.json

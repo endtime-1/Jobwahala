@@ -1,0 +1,34 @@
+diff --git a/backend/prisma/schema.postgresql.prisma b/backend/prisma/schema.postgresql.prisma
+index a735dc7..930344c 100644
+--- a/backend/prisma/schema.postgresql.prisma
++++ b/backend/prisma/schema.postgresql.prisma
+@@ -529,29 +529,3 @@ model PasswordResetToken {
+   @@index([expiresAt])
+ }
+ 
+-model EmailVerificationToken {
+-  id        String   @id @default(uuid())
+-  token     String   @unique
+-  userId    String
+-  expiresAt DateTime
+-  createdAt DateTime @default(now())
+-
+-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+-
+-  @@index([userId])
+-  @@index([expiresAt])
+-}
+-
+-model PasswordResetToken {
+-  id        String    @id @default(uuid())
+-  token     String    @unique
+-  userId    String
+-  expiresAt DateTime
+-  usedAt    DateTime?
+-  createdAt DateTime  @default(now())
+-
+-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+-
+-  @@index([userId])
+-  @@index([expiresAt])
+-}
