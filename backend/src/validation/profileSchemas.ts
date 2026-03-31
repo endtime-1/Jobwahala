@@ -10,8 +10,12 @@ const optionalUrl = () =>
   z.preprocess(
     (value) => {
       if (typeof value !== 'string') return value;
-      const trimmed = value.trim();
-      return trimmed === '' ? '' : trimmed;
+      let trimmed = value.trim();
+      if (trimmed === '') return '';
+      if (!/^https?:\/\//i.test(trimmed)) {
+        trimmed = `https://${trimmed}`;
+      }
+      return trimmed;
     },
     z.union([z.literal(''), z.string().url().max(500)]).optional(),
   );
