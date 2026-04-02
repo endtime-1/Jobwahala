@@ -5,6 +5,7 @@ import { apiCompareMarketplaceFreelancers, apiGetRecommendedServices, apiGetServ
 import { emailHandle, formatMoney, getDisplayName, getInitials } from '../lib/display'
 import VerifiedBadge from '../components/VerifiedBadge'
 import { useAuth } from '../context/AuthContext'
+import SEO from '../components/SEO'
 
 type ServiceRecord = {
   id: string
@@ -275,6 +276,10 @@ export default function FreelancerMarketplace() {
 
   return (
     <div className="container animate-in fade-in pt-24 pb-24 duration-1000 md:pt-28 xl:pt-32">
+      <SEO 
+        title="Hire Elite Freelancers in Ghana"
+        description="Connect with top-rated Ghanaian developers, designers, and digital markers. Verified talent for your next high-growth project."
+      />
       <header className="dashboard-hero mb-8 px-5 py-6 sm:px-7 sm:py-7 lg:px-8 lg:py-8">
         <div className="relative z-10 flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-2xl">

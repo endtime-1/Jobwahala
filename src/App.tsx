@@ -20,6 +20,7 @@ const FreelancerProfile = lazy(() => import('./pages/FreelancerProfile'))
 const VerifyEmail = lazy(() => import('./pages/VerifyEmail'))
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'))
 const ResetPassword = lazy(() => import('./pages/ResetPassword'))
+const Blog = lazy(() => import('./pages/Blog'))
 
 function RouteFallback() {
   return (
@@ -74,6 +75,7 @@ function App() {
           <Route path="/dashboard" element={renderProtected(<Dashboard />)} />
           <Route path="/freelancers" element={<FreelancerMarketplace />} />
           <Route path="/freelancers/:id" element={<FreelancerProfile />} />
+          <Route path="/blog" element={<Blog />} />
         </Route>
       </Routes>
     </Suspense>

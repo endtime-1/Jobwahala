@@ -13,6 +13,7 @@ import {
   UserCircle2,
   Users,
   X,
+  BookOpen,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { apiGetWorkspaceSignals } from '../lib/api'
@@ -34,6 +35,7 @@ const seekerLinks: NavLinkItem[] = [
   { name: 'Agreements', href: '/agreements', icon: <FileCheck className="h-4 w-4" /> },
   { name: 'CV Generator', href: '/cv-generator', icon: <Rocket className="h-4 w-4" /> },
   { name: 'Messages', href: '/messaging', icon: <MessageSquare className="h-4 w-4" /> },
+  { name: 'Resources', href: '/blog', icon: <BookOpen className="h-4 w-4" /> },
 ]
 
 const employerLinks: NavLinkItem[] = [
@@ -43,6 +45,7 @@ const employerLinks: NavLinkItem[] = [
   { name: 'Proposals', href: '/proposals', icon: <Handshake className="h-4 w-4" /> },
   { name: 'Agreements', href: '/agreements', icon: <FileCheck className="h-4 w-4" /> },
   { name: 'Messages', href: '/messaging', icon: <MessageSquare className="h-4 w-4" /> },
+  { name: 'Resources', href: '/blog', icon: <BookOpen className="h-4 w-4" /> },
 ]
 
 const freelancerLinks: NavLinkItem[] = [
@@ -52,6 +55,7 @@ const freelancerLinks: NavLinkItem[] = [
   { name: 'Proposals', href: '/proposals', icon: <Handshake className="h-4 w-4" /> },
   { name: 'Agreements', href: '/agreements', icon: <FileCheck className="h-4 w-4" /> },
   { name: 'Messages', href: '/messaging', icon: <MessageSquare className="h-4 w-4" /> },
+  { name: 'Resources', href: '/blog', icon: <BookOpen className="h-4 w-4" /> },
 ]
 
 const adminLinks: NavLinkItem[] = [
@@ -63,6 +67,7 @@ const adminLinks: NavLinkItem[] = [
 const guestLinks: NavLinkItem[] = [
   { name: 'Browse Jobs', href: '/jobs', icon: <Briefcase className="h-4 w-4" /> },
   { name: 'Freelancers', href: '/freelancers', icon: <Users className="h-4 w-4" /> },
+  { name: 'Resources', href: '/blog', icon: <BookOpen className="h-4 w-4" /> },
 ]
 
 const pendingSetupLinks: NavLinkItem[] = [

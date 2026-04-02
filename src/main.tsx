@@ -7,15 +7,19 @@ import './index.css'
 import { AuthProvider } from './context/AuthContext'
 import { queryClient } from './lib/queryClient'
 
+import { HelmetProvider } from 'react-helmet-async'
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <AuthProvider>
-          <App />
-        </AuthProvider>
-      </BrowserRouter>
-    </QueryClientProvider>
+    <HelmetProvider>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <AuthProvider>
+            <App />
+          </AuthProvider>
+        </BrowserRouter>
+      </QueryClientProvider>
+    </HelmetProvider>
   </React.StrictMode>,
 )
 

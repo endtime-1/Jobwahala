@@ -3,6 +3,7 @@ import { Briefcase, Users, Shield, Search, ArrowRight, Star, Zap, TrendingUp, Co
 import { Link } from 'react-router-dom'
 import VerifiedBadge from '../components/VerifiedBadge'
 import { apiGetPlatformStats } from '../lib/api'
+import SEO from '../components/SEO'
 
 interface PlatformStats {
   counts: {
@@ -72,6 +73,10 @@ export default function Landing() {
 
   return (
     <div className="fade-in">
+      <SEO 
+        title="JobWahala — Connecting Ghana's Elite Talent"
+        description="JobWahala connects Ghana's top professionals with high-growth global opportunities. Join the future of work today."
+      />
       {/* Hero Section */}
       <section className="relative overflow-hidden pt-24 pb-20 md:pt-28 md:pb-24 xl:pt-32 xl:pb-32">
         <div className="container relative z-10">
