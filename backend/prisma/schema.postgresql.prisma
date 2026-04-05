@@ -4,6 +4,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -11,48 +12,52 @@ model User {
   email         String   @unique
   password      String
   role          String   @default("SEEKER")
-  status        String   @default("ACTIVE")
+  status        String   @default("ACTIVE") // ACTIVE, FLAGGED, SUSPENDED
   emailVerified Boolean  @default(false)
+  identityVerified Boolean @default(false)
+  preferredCurrency String @default("GHS")
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  jobSeekerProfile    JobSeekerProfile?
-  employerProfile     EmployerProfile?
-  freelancerProfile   FreelancerProfile?
+  jobSeekerProfile   JobSeekerProfile?
+  employerProfile    EmployerProfile?
+  freelancerProfile  FreelancerProfile?
 
-  jobsPosted           Job[] @relation("EmployerPostedJobs")
-  adminPostedJobs      Job[] @relation("AdminPostedJobs")
-  applications         Application[]
-  freelanceServices    FreelanceService[]
-
-  messagesSent         Message[] @relation("SentMessages")
+  jobsPosted          Job[] @relation("EmployerPostedJobs")
+  adminPostedJobs     Job[] @relation("AdminPostedJobs")
+  applications        Application[]
+  freelanceServices   FreelanceService[]
+  
+  messagesSent        Message[] @relation("SentMessages")
   conversationsAsUser1 Conversation[] @relation("ConversationUser1")
   conversationsAsUser2 Conversation[] @relation("ConversationUser2")
 
-  cvGenerations        CVGeneration[]
-  reportsSubmitted     Report[] @relation("Reporter")
-  reportsReceived      Report[] @relation("ReportedUser")
-  serviceRequestsSent  ServiceRequest[] @relation("ServiceRequestClient")
-  employerAgreements   Agreement[] @relation("EmployerAgreements")
-  seekerAgreements     Agreement[] @relation("SeekerAgreements")
+  cvGenerations       CVGeneration[]
+  reportsSubmitted    Report[] @relation("Reporter")
+  reportsReceived     Report[] @relation("ReportedUser")
+  serviceRequestsSent ServiceRequest[] @relation("ServiceRequestClient")
+  employerAgreements  Agreement[] @relation("EmployerAgreements")
+  seekerAgreements    Agreement[] @relation("SeekerAgreements")
   freelancerAgreements Agreement[] @relation("FreelancerAgreements")
-  clientAgreements     Agreement[] @relation("ClientAgreements")
-  agreementEvents      AgreementEvent[]
-  proposalsCreated     Proposal[] @relation("ProposalCreator")
-  proposalsReceived    Proposal[] @relation("ProposalRecipient")
-  proposalRevisions    ProposalRevision[] @relation("ProposalRevisionAuthor")
-  notifications        Notification[]
-  paymentsSent         Payment[] @relation("PaymentPayer")
-  paymentsReceived     Payment[] @relation("PaymentPayee")
-  reviewsWritten       Review[] @relation("ReviewAuthor")
-  reviewsReceived      Review[] @relation("ReviewRecipient")
-  disputesCreated      AgreementDispute[] @relation("DisputeCreator")
-  disputesReceived     AgreementDispute[] @relation("DisputeCounterparty")
-  disputesResolved     AgreementDispute[] @relation("DisputeResolver")
+  clientAgreements    Agreement[] @relation("ClientAgreements")
+  agreementEvents     AgreementEvent[]
+  proposalsCreated    Proposal[] @relation("ProposalCreator")
+  proposalsReceived   Proposal[] @relation("ProposalRecipient")
+  proposalRevisions   ProposalRevision[] @relation("ProposalRevisionAuthor")
+  notifications       Notification[]
+  paymentsSent        Payment[] @relation("PaymentPayer")
+  paymentsReceived    Payment[] @relation("PaymentPayee")
+  reviewsWritten      Review[]  @relation("ReviewAuthor")
+  reviewsReceived     Review[]  @relation("ReviewRecipient")
+  disputesCreated     AgreementDispute[] @relation("DisputeCreator")
+  disputesReceived    AgreementDispute[] @relation("DisputeCounterparty")
+  disputesResolved    AgreementDispute[] @relation("DisputeResolver")
   verificationRequests VerificationRequest[] @relation("VerificationRequester")
-  verificationReviews  VerificationRequest[] @relation("VerificationReviewer")
+  verificationReviews   VerificationRequest[] @relation("VerificationReviewer")
   emailVerificationTokens EmailVerificationToken[]
   passwordResetTokens     PasswordResetToken[]
+  payoutAccount           PayoutAccount?
+  disputeMessages         DisputeMessage[]
 
   @@index([role])
   @@index([status])
@@ -60,14 +65,14 @@ model User {
 }
 
 model JobSeekerProfile {
-  id            String   @id @default(uuid())
-  userId        String   @unique
-  firstName     String?
-  lastName      String?
-  skills        String   @default("")
-  experience    String?
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  firstName   String?
+  lastName    String?
+  skills      String   @default("")
+  experience  String?
   resumeFileUrl String?
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model EmployerProfile {
@@ -82,31 +87,54 @@ model EmployerProfile {
 }
 
 model FreelancerProfile {
-  id           String   @id @default(uuid())
-  userId       String   @unique
-  firstName    String?
-  lastName     String?
-  hourlyRate   Float?
-  portfolioUrl String?
-  bio          String?
-  skills       String   @default("")
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id            String   @id @default(uuid())
+  userId        String   @unique
+  firstName     String?
+  lastName      String?
+  tagline       String?
+  hourlyRate    Float?
+  availability  String   @default("AVAILABLE") // AVAILABLE, BUSY, OUT_OF_OFFICE
+  location      String?  // Accra, Kumasi, Tema, etc.
+  portfolioUrl  String?
+  bio           String?
+  skills        String   @default("")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projects      PortfolioProject[]
+}
+
+model PortfolioProject {
+  id                  String   @id @default(uuid())
+  freelancerProfileId String
+  title               String
+  description         String
+  imageUrl            String?
+  projectUrl          String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  freelancerProfile   FreelancerProfile @relation(fields: [freelancerProfileId], references: [id], onDelete: Cascade)
+
+  @@index([freelancerProfileId])
 }
 
 model Job {
-  id           String   @id @default(uuid())
-  employerId   String
+  id          String   @id @default(uuid())
+  employerId  String
   postedByAdminId String?
   postedByAdminAt DateTime?
-  title        String
-  description  String
-  location     String?
-  type         String
-  salary       String?
-  category     String?
-  status       String   @default("ACTIVE")
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  title       String
+  description String
+  location    String?
+  type        String   // Full-time, Part-time, Contract, etc.
+  salary      String?
+  currency    String   @default("GHS")
+  category    String?
+  status      String   @default("ACTIVE") // ACTIVE, FLAGGED, SUSPENDED
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   employer     User          @relation("EmployerPostedJobs", fields: [employerId], references: [id], onDelete: Cascade)
   postedByAdmin User?        @relation("AdminPostedJobs", fields: [postedByAdminId], references: [id], onDelete: SetNull)
@@ -115,9 +143,10 @@ model Job {
 
   @@index([employerId])
   @@index([postedByAdminId])
-  @@index([status])
-  @@index([category])
-  @@index([postedByAdminAt])
+  @@index([status, category, createdAt])
+  @@index([category, status])
+  @@index([location, status])
+  @@index([type, status])
   @@index([createdAt])
 }
 
@@ -126,14 +155,14 @@ model Application {
   jobId       String
   seekerId    String
   coverLetter String?
-  status      String    @default("SUBMITTED")
-  createdAt   DateTime  @default(now())
+  status      String   @default("SUBMITTED") // SUBMITTED, SHORTLISTED, INTERVIEW, REJECTED, HIRED, COMPLETED, CANCELLED
+  createdAt   DateTime @default(now())
   updatedAt   DateTime  @updatedAt
 
-  job         Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  seeker      User      @relation(fields: [seekerId], references: [id], onDelete: Cascade)
-  agreement   Agreement?
-  proposals   Proposal[]
+  job       Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  seeker    User      @relation(fields: [seekerId], references: [id], onDelete: Cascade)
+  agreement Agreement?
+  proposals Proposal[]
 
   @@unique([jobId, seekerId])
   @@index([jobId, status])
@@ -143,24 +172,25 @@ model Application {
 }
 
 model FreelanceService {
-  id              String   @id @default(uuid())
-  freelancerId    String
-  title           String
-  description     String
-  price           Float
-  deliveryTime    String?
-  category        String?
-  status          String   @default("ACTIVE")
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id          String   @id @default(uuid())
+  freelancerId String
+  title       String
+  description String
+  price       Float
+  currency    String   @default("GHS")
+  deliveryTime String?
+  category    String?
+  status      String   @default("ACTIVE") // ACTIVE, FLAGGED, SUSPENDED
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  freelancer      User             @relation(fields: [freelancerId], references: [id], onDelete: Cascade)
-  reports         Report[]         @relation("ReportedService")
+  freelancer  User     @relation(fields: [freelancerId], references: [id], onDelete: Cascade)
+  reports     Report[] @relation("ReportedService")
   serviceRequests ServiceRequest[]
 
   @@index([freelancerId])
-  @@index([status])
-  @@index([category])
+  @@index([status, category, createdAt])
+  @@index([category, status])
   @@index([createdAt])
 }
 
@@ -171,7 +201,7 @@ model ServiceRequest {
   message   String
   budget    String?
   timeline  String?
-  status    String   @default("PENDING")
+  status    String   @default("PENDING") // PENDING, ACCEPTED, DECLINED, COMPLETED, CANCELLED
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -192,8 +222,8 @@ model Proposal {
   serviceRequestId String?
   creatorId        String
   recipientId      String
-  type             String
-  status           String   @default("PENDING")
+  type             String   // JOB, SERVICE
+  status           String   @default("PENDING") // PENDING, COUNTERED, ACCEPTED, REJECTED, EXPIRED, CANCELLED
   title            String
   summary          String
   amount           String?
@@ -219,14 +249,14 @@ model Proposal {
 }
 
 model ProposalRevision {
-  id         String   @id @default(uuid())
+  id        String   @id @default(uuid())
   proposalId String
-  authorId   String
-  summary    String
-  amount     String?
-  timeline   String?
-  message    String?
-  createdAt  DateTime @default(now())
+  authorId  String
+  summary   String
+  amount    String?
+  timeline  String?
+  message   String?
+  createdAt DateTime @default(now())
 
   proposal Proposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
   author   User     @relation("ProposalRevisionAuthor", fields: [authorId], references: [id], onDelete: Cascade)
@@ -237,11 +267,12 @@ model ProposalRevision {
 
 model Agreement {
   id               String   @id @default(uuid())
-  type             String
+  type             String   // JOB, SERVICE
   title            String
   summary          String?
   amount           String?
-  status           String   @default("ACTIVE")
+  currency         String   @default("GHS")
+  status           String   @default("ACTIVE") // ACTIVE, COMPLETED, CANCELLED
   applicationId    String?  @unique
   serviceRequestId String?  @unique
   employerId       String?
@@ -311,6 +342,7 @@ model AgreementDispute {
   creator        User      @relation("DisputeCreator", fields: [creatorId], references: [id], onDelete: Cascade)
   counterparty   User?     @relation("DisputeCounterparty", fields: [counterpartyId], references: [id], onDelete: SetNull)
   resolver       User?     @relation("DisputeResolver", fields: [resolverId], references: [id], onDelete: SetNull)
+  messages       DisputeMessage[]
 
   @@index([agreementId, createdAt])
   @@index([creatorId, createdAt])
@@ -320,12 +352,27 @@ model AgreementDispute {
   @@index([type, status])
 }
 
+model DisputeMessage {
+  id          String   @id @default(uuid())
+  disputeId   String
+  senderId    String
+  content     String
+  evidenceUrl String?
+  createdAt   DateTime @default(now())
+
+  dispute     AgreementDispute @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+  sender      User             @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([disputeId, createdAt])
+  @@index([senderId])
+}
+
 model VerificationRequest {
   id          String   @id @default(uuid())
   userId      String
   reviewerId  String?
-  type        String
-  status      String   @default("PENDING")
+  type        String   // IDENTITY, BUSINESS, PROFESSIONAL
+  status      String   @default("PENDING") // PENDING, APPROVED, REJECTED
   details     String
   documentUrl String?
   reviewNote  String?
@@ -361,21 +408,22 @@ model AgreementEvent {
 }
 
 model AgreementMilestone {
-  id                 String   @id @default(uuid())
-  agreementId        String
-  title              String
-  description        String?
-  amount             String?
-  dueDate            DateTime?
-  status             String   @default("PENDING")
-  paymentStatus      String   @default("PENDING")
+  id          String   @id @default(uuid())
+  agreementId String
+  title       String
+  description String?
+  amount      String?
+  currency    String   @default("GHS")
+  dueDate     DateTime?
+  status      String   @default("PENDING") // PENDING, IN_PROGRESS, COMPLETED
+  paymentStatus String @default("PENDING") // PENDING, REQUESTED, PAID
   paymentRequestedAt DateTime?
-  paidAt             DateTime?
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  paidAt      DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  agreement          Agreement @relation(fields: [agreementId], references: [id], onDelete: Cascade)
-  payments           Payment[]
+  agreement   Agreement @relation(fields: [agreementId], references: [id], onDelete: Cascade)
+  payments    Payment[]
 
   @@index([agreementId])
   @@index([status])
@@ -384,27 +432,34 @@ model AgreementMilestone {
 }
 
 model Payment {
-  id            String   @id @default(uuid())
+  id           String   @id @default(uuid())
   agreementId   String
   milestoneId   String
-  payerId       String
-  payeeId       String
-  provider      String   @default("SANDBOX")
-  status        String   @default("PENDING")
-  amount        String
-  currency      String?
+  payerId      String
+  payeeId      String
+  provider     String   @default("SANDBOX")
+  status       String   @default("PENDING") // PENDING, PROCESSING, SUCCEEDED, FAILED, CANCELLED
+  amount       String
+  currency     String   @default("GHS")
   providerAmount Int?
-  reference     String   @unique
-  checkoutUrl   String?
+  reference    String   @unique
+  checkoutUrl  String?
   failureReason String?
-  completedAt   DateTime?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  
+  // Escrow & Payout tracking
+  transferId    String?   @unique // Paystack transfer reference for payout
+  payoutStatus  String    @default("NONE") // NONE, PENDING, PROCESSING, SUCCESS, FAILED
+  payoutAmount  String?   // Net amount sent to freelancer (after fees)
+  platformFee   String?   // JobWahala fee if applicable
 
-  agreement     Agreement          @relation(fields: [agreementId], references: [id], onDelete: Cascade)
-  milestone     AgreementMilestone @relation(fields: [milestoneId], references: [id], onDelete: Cascade)
-  payer         User               @relation("PaymentPayer", fields: [payerId], references: [id], onDelete: Cascade)
-  payee         User               @relation("PaymentPayee", fields: [payeeId], references: [id], onDelete: Cascade)
+  completedAt  DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  agreement    Agreement          @relation(fields: [agreementId], references: [id], onDelete: Cascade)
+  milestone    AgreementMilestone @relation(fields: [milestoneId], references: [id], onDelete: Cascade)
+  payer        User               @relation("PaymentPayer", fields: [payerId], references: [id], onDelete: Cascade)
+  payee        User               @relation("PaymentPayee", fields: [payeeId], references: [id], onDelete: Cascade)
 
   @@index([agreementId, createdAt])
   @@index([milestoneId, createdAt])
@@ -454,7 +509,7 @@ model CVGeneration {
   id        String   @id @default(uuid())
   userId    String
   prompt    String?
-  content   String
+  content   String // Markdown or JSON output
   createdAt DateTime @default(now())
 
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -479,20 +534,38 @@ model Notification {
   @@index([type])
 }
 
-model Report {
-  id             String   @id @default(uuid())
-  reporterId     String
-  jobId          String?
-  serviceId      String?
-  reportedUserId String?
-  reason         String
-  status         String   @default("PENDING")
-  createdAt      DateTime @default(now())
+model PayoutAccount {
+  id            String   @id @default(uuid())
+  userId        String   @unique
+  bankCode      String   // Paystack bank code (e.g. "MTN", "000013")
+  bankName      String
+  accountNumber String
+  accountName   String
+  recipientCode String   // RCP_xxxxx from Paystack
+  type          String   @default("mobile_money") // mobile_money or ghipss
+  currency      String   @default("GHS")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  reporter       User              @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
-  job            Job?              @relation("ReportedJob", fields: [jobId], references: [id], onDelete: SetNull)
-  service        FreelanceService? @relation("ReportedService", fields: [serviceId], references: [id], onDelete: SetNull)
-  reportedUser   User?             @relation("ReportedUser", fields: [reportedUserId], references: [id], onDelete: SetNull)
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Report {
+  id          String   @id @default(uuid())
+  reporterId  String
+  jobId       String?
+  serviceId   String?
+  reportedUserId String?
+  reason      String
+  status      String   @default("PENDING") // PENDING, RESOLVED, DISMISSED
+  createdAt   DateTime @default(now())
+
+  reporter User @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  job      Job? @relation("ReportedJob", fields: [jobId], references: [id], onDelete: SetNull)
+  service  FreelanceService? @relation("ReportedService", fields: [serviceId], references: [id], onDelete: SetNull)
+  reportedUser User? @relation("ReportedUser", fields: [reportedUserId], references: [id], onDelete: SetNull)
 
   @@index([reporterId])
   @@index([jobId])
@@ -528,4 +601,3 @@ model PasswordResetToken {
   @@index([userId])
   @@index([expiresAt])
 }
-

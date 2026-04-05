@@ -821,8 +821,8 @@ const getDashboardOverviewData = async (userId: string, role: string) => {
       })
     ]);
 
-    const totalEarnings = successPayments.reduce((acc, p) => acc + parseFloat(p.payoutAmount || '0'), 0);
-    const pendingEscrow = pendingPayments.reduce((acc, p) => acc + parseFloat(p.amount || '0'), 0);
+    const totalEarnings = (successPayments as any[]).reduce((acc: number, p: any) => acc + parseFloat(p.payoutAmount || '0'), 0);
+    const pendingEscrow = (pendingPayments as any[]).reduce((acc: number, p: any) => acc + parseFloat(p.amount || '0'), 0);
 
     return {
       services,

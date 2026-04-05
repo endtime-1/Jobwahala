@@ -734,19 +734,19 @@ export const getFreelancerDetails = async (req: Request, res: Response) => {
       return res.status(404).json({ success: false, message: 'Freelancer not found' });
     }
 
-    const latestVerificationRequest = profile.verificationRequests[0] || null;
-    const reviewCount = profile.reviewsReceived.length;
+    const latestVerificationRequest = (profile as any).verificationRequests[0] || null;
+    const reviewCount = (profile as any).reviewsReceived.length;
     const averageRating =
       reviewCount > 0
         ? Number(
             (
-              profile.reviewsReceived.reduce((sum, review) => sum + review.rating, 0) /
+              (profile as any).reviewsReceived.reduce((sum: number, review: any) => sum + review.rating, 0) /
               reviewCount
             ).toFixed(1)
           )
         : 0;
 
-    const { verificationRequests, ...safeProfile } = profile;
+    const { verificationRequests, ...safeProfile } = profile as any;
 
     res.json({
       success: true,

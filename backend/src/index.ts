@@ -25,7 +25,7 @@ server.keepAliveTimeout = 5000;
 const payoutPollIntervalMs = 15 * 60 * 1000;
 const payoutTask = setInterval(async () => {
   try {
-     const maturePayments = await prisma.payment.findMany({
+     const maturePayments = await (prisma.payment as any).findMany({
        where: {
          payoutStatus: 'PENDING',
          status: 'SUCCEEDED',

@@ -97,10 +97,10 @@ export const initiateIdentityVerification = async (req: AuthRequest, res: Respon
         prisma.verificationRequest.update({
           where: { id: verificationRequest.id },
           data: { 
-            status: 'APPROVED', 
+            status: 'APPROVED' as any, 
             reviewedAt: new Date(),
             reviewNote: 'Automatically verified via Ghana Card (Smile ID).' 
-          },
+          } as any,
         }),
         prisma.user.update({
           where: { id: userId },
