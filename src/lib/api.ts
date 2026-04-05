@@ -547,10 +547,31 @@ export const apiCreateAgreementReview = (
   }).then(handleResponse);
 
 export const apiCreateAgreementDispute = (
-  id: string,
-  data: { type: string; title: string; description: string; evidenceUrl?: string },
+  agreementId: string,
+  data: {
+    type: string;
+    title: string;
+    description: string;
+    evidenceUrl?: string;
+  },
 ) =>
-  fetch(`${BASE_URL}/agreements/${id}/disputes`, {
+  fetch(`${BASE_URL}/disputes/agreement/${agreementId}`, {
+    method: 'POST',
+    headers: headers(true),
+    body: JSON.stringify(data),
+  }).then(handleResponse);
+
+export const apiGetDisputeDetails = (disputeId: string) =>
+  fetch(`${BASE_URL}/disputes/${disputeId}`, {
+    method: 'GET',
+    headers: headers(true),
+  }).then(handleResponse);
+
+export const apiAddDisputeMessage = (
+  disputeId: string,
+  data: { content: string; evidenceUrl?: string },
+) =>
+  fetch(`${BASE_URL}/disputes/${disputeId}/messages`, {
     method: 'POST',
     headers: headers(true),
     body: JSON.stringify(data),
@@ -603,6 +624,33 @@ export const apiVerifyAgreementPayment = (id: string, paymentId: string) =>
     method: 'POST',
     headers: headers(true),
   }).then(handleResponse);
+
+export const apiInitializeMilestonePayment = (agreementId: string, milestoneId: string) =>
+  fetch(`${BASE_URL}/payments/milestones/initialize`, {
+    method: 'POST',
+    headers: headers(true),
+    body: JSON.stringify({ agreementId, milestoneId }),
+  }).then(handleResponse);
+
+// Payouts
+export const apiGetBanks = () =>
+  fetch(`${BASE_URL}/payouts/banks`, { headers: headers(true) }).then(handleResponse);
+
+export const apiSavePayoutAccount = (data: {
+  bankCode: string;
+  bankName: string;
+  accountNumber: string;
+  accountName: string;
+  type?: string;
+}) =>
+  fetch(`${BASE_URL}/payouts/account`, {
+    method: 'POST',
+    headers: headers(true),
+    body: JSON.stringify(data),
+  }).then(handleResponse);
+
+export const apiGetPayoutAccount = () =>
+  fetch(`${BASE_URL}/payouts/account`, { headers: headers(true) }).then(handleResponse);
 
 export const apiUpdateAgreementStatus = (id: string, status: string) =>
   fetch(`${BASE_URL}/agreements/${id}/status`, {
@@ -757,17 +805,17 @@ export const apiUpdateAdminVerificationStatus = (
     body: JSON.stringify({ status, reviewNote, internalNote }),
   }).then(handleResponse);
 
-export const apiUpdateAdminDisputeStatus = (
+export const apiResolveDispute = (
   id: string,
-  status: 'UNDER_REVIEW' | 'RESOLVED' | 'DISMISSED',
-  resolutionNote?: string,
+  data: {
+    status: 'RESOLVED' | 'DISMISSED';
+    resolutionNote: string;
+  },
 ) =>
-  fetch(`${BASE_URL}/admin/disputes/${id}/status`, {
-    method: 'PATCH',
+  fetch(`${BASE_URL}/disputes/${id}/resolve`, {
+    method: 'POST',
     headers: headers(true),
-    body: JSON.stringify(
-      resolutionNote ? { status, resolutionNote } : { status },
-    ),
+    body: JSON.stringify(data),
   }).then(handleResponse);
 
 export const apiDeleteAdminUser = (id: string) =>

@@ -3,6 +3,7 @@ import { AuthRequest } from '../middleware/auth';
 import prisma from '../config/prisma';
 import { singleValue } from '../utils/request';
 import { deferRealtimeEvent, emitRealtimeEventToUsers } from '../services/realtime';
+import { emitMessageRefresh } from '../utils/workflowRealtime';
 
 const conversationSummaryInclude = {
   user1: { select: { id: true, email: true } },
@@ -294,19 +295,16 @@ export const sendMessage = async (req: AuthRequest, res: Response) => {
       });
     });
 
-    deferRealtimeEvent(() => {
-      emitRealtimeEventToUsers(
-        [senderId, receiverId],
-        'messages.refresh',
-        {
-          reason: 'created',
-          conversationId: message.conversationId,
-          messageId: message.id,
-          createdAt: message.createdAt.toISOString(),
-          senderId,
-        }
-      );
-    });
+    emitMessageRefresh(
+      [senderId, receiverId],
+      {
+        reason: 'created',
+        conversationId: message.conversationId,
+        messageId: message.id,
+        createdAt: message.createdAt.toISOString(),
+        senderId,
+      }
+    );
 
     res.status(201).json({ success: true, message });
   } catch (error: any) {
@@ -337,17 +335,14 @@ export const markAsRead = async (req: AuthRequest, res: Response) => {
       data: { read: true }
     });
 
-    deferRealtimeEvent(() => {
-      emitRealtimeEventToUsers(
-        [conversation.user1Id, conversation.user2Id],
-        'messages.refresh',
-        {
-          reason: 'read',
-          conversationId,
-          actorId: userId,
-        }
-      );
-    });
+    emitMessageRefresh(
+      [conversation.user1Id, conversation.user2Id],
+      {
+        reason: 'read',
+        conversationId,
+        actorId: userId,
+      }
+    );
 
     res.json({ success: true, message: 'Messages marked as read' });
   } catch (error: any) {

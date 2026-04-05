@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
-import { ShieldCheck, Send, Link2 } from 'lucide-react'
+import { ShieldCheck, Send, Link2, Zap } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import VerifiedBadge from './VerifiedBadge'
 import EvidenceUploadField from './EvidenceUploadField'
 
@@ -220,14 +221,25 @@ export default function VerificationPanel({
               </div>
             </form>
           ) : (
-            <button
-              type="button"
-              onClick={openForm}
-              disabled={isSubmitting}
-              className="btn btn-primary btn-sm font-black uppercase tracking-widest text-[10px] disabled:opacity-60"
-            >
-              {needsInfo ? 'Update Verification' : isRejected ? 'Resubmit Verification' : 'Request Verification'}
-            </button>
+            <div className="flex flex-col gap-3">
+              {(type === 'seeker' || type === 'freelancer') ? (
+                <Link
+                  to="/verify-identity"
+                  className="btn btn-secondary btn-sm font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 border-none bg-slate-900 text-white hover:bg-slate-800"
+                >
+                  <Zap className="h-3.5 w-3.5 text-yellow-400 fill-yellow-400" />
+                  Verify with Ghana Card
+                </Link>
+              ) : null}
+              <button
+                type="button"
+                onClick={openForm}
+                disabled={isSubmitting}
+                className="btn btn-primary btn-sm font-black uppercase tracking-widest text-[10px] disabled:opacity-60"
+              >
+                {needsInfo ? 'Update Verification' : isRejected ? 'Resubmit Verification' : type === 'employer' ? 'Request Business Verification' : 'Manual Verification Request'}
+              </button>
+            </div>
           )}
         </div>
       ) : null}

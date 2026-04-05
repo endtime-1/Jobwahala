@@ -44,6 +44,9 @@ const freelancerProfileBodySchema = z
   .object({
     firstName: trimmedOptionalString(80),
     lastName: trimmedOptionalString(80),
+    tagline: trimmedOptionalString(150),
+    availability: z.enum(['AVAILABLE', 'BUSY', 'OUT_OF_OFFICE']).optional(),
+    location: trimmedOptionalString(100),
     hourlyRate: z.coerce.number().positive().max(100000).optional(),
     portfolioUrl: optionalUrl(),
     bio: trimmedOptionalString(2000),

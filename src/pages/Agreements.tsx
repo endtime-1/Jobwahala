@@ -7,6 +7,7 @@ import {
   apiCreateAgreementMilestone,
   apiCreateAgreementReview,
   apiCreateAgreementMilestonePaymentSession,
+  apiInitializeMilestonePayment,
   apiGenerateAgreementDecisionBrief,
   apiGetMyAgreements,
   apiVerifyAgreementPayment,
@@ -71,6 +72,10 @@ type AgreementPayment = {
   providerAmount?: number | null
   reference: string
   checkoutUrl?: string | null
+  payoutStatus?: 'NONE' | 'PENDING' | 'PROCESSING' | 'SUCCESS' | 'FAILED'
+  transferId?: string | null
+  platformFee?: string | null
+  payoutAmount?: string | null
   failureReason?: string | null
   completedAt?: string | null
   createdAt: string
@@ -547,9 +552,9 @@ export default function Agreements() {
     setIsActing(true)
 
     try {
-      const data = await apiCreateAgreementMilestonePaymentSession(agreementId, milestoneId)
-      if (data.payment?.provider === 'PAYSTACK' && data.payment?.checkoutUrl) {
-        window.location.assign(data.payment.checkoutUrl)
+      const data = await apiInitializeMilestonePayment(agreementId, milestoneId)
+      if (data.checkoutUrl) {
+        window.location.assign(data.checkoutUrl)
         return
       }
       await loadAgreements()
@@ -727,7 +732,7 @@ export default function Agreements() {
     const { payerId, payeeId } = getPaymentActors(agreement)
 
     return (
-      <div key={agreement.id} className="dashboard-panel p-5 sm:p-7 lg:p-8">
+      <div key={agreement.id} className="dashboard-panel">
         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
           <div className="space-y-4">
             <div>
@@ -861,7 +866,7 @@ export default function Agreements() {
               </div>
             ) : null}
 
-            <div className="rounded-[1.5rem] border border-surface-border bg-surface-alt/10 p-5">
+            <div className="rounded-[1.5rem] border border-surface-border bg-surface-alt/10">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
                 <div className="flex items-center gap-3">
                   <div className="h-9 w-9 rounded-2xl bg-secondary/10 text-secondary flex items-center justify-center">
@@ -992,6 +997,26 @@ export default function Agreements() {
                                       <span>{formatRelativeTime(payment.createdAt)}</span>
                                       {payment.completedAt ? <span>Settled {formatRelativeTime(payment.completedAt)}</span> : null}
                                     </div>
+                                    {payment.platformFee && (
+                                      <div className="mt-2 flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-text-muted">
+                                        <span>Platform Fee (5%)</span>
+                                        <span className="text-error">-{payment.platformFee}</span>
+                                      </div>
+                                    )}
+                                    {payment.payoutAmount && (
+                                      <div className="mt-1 flex items-center justify-between text-[11px] font-black uppercase tracking-widest text-success">
+                                        <span>Net Payout</span>
+                                        <span>{payment.payoutAmount}</span>
+                                      </div>
+                                    )}
+                                    {payment.payoutStatus && payment.payoutStatus !== 'NONE' && (
+                                      <div className="mt-2 flex items-center gap-2">
+                                        <div className={`h-1.5 w-1.5 rounded-full ${payment.payoutStatus === 'SUCCESS' ? 'bg-success' : payment.payoutStatus === 'FAILED' ? 'bg-error' : 'bg-secondary animate-pulse'}`} />
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-text-muted">
+                                          Payout {payment.payoutStatus}
+                                        </span>
+                                      </div>
+                                    )}
                                     {payment.failureReason ? (
                                       <p className="mt-2 text-xs font-semibold text-error">{payment.failureReason}</p>
                                     ) : null}
@@ -1058,7 +1083,7 @@ export default function Agreements() {
                             </button>
                           ) : null}
 
-                          {canCompleteSandboxPayment && latestPayment ? (
+                          {canCompleteSandboxPayment && latestPayment && latestPayment.provider === 'SANDBOX' ? (
                             <button
                               type="button"
                               disabled={isActing}
@@ -1174,7 +1199,7 @@ export default function Agreements() {
               ) : null}
               </div>
 
-              <div className="rounded-[1.5rem] border border-surface-border bg-surface-alt/10 p-5">
+              <div className="rounded-[1.5rem] border border-surface-border bg-surface-alt/10">
                 <div className="mb-5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                   <div className="flex items-center gap-3">
                     <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-error/10 text-error">
@@ -1319,7 +1344,7 @@ export default function Agreements() {
                 ) : null}
               </div>
 
-              <div className="rounded-[1.5rem] border border-surface-border bg-surface-alt/10 p-5">
+              <div className="rounded-[1.5rem] border border-surface-border bg-surface-alt/10">
                 <div className="mb-5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                   <div className="flex items-center gap-3">
                     <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-accent/15 text-accent">

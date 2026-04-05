@@ -17,7 +17,18 @@ const serviceListInclude = {
     select: {
       id: true,
       email: true,
-      freelancerProfile: true,
+      freelancerProfile: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          tagline: true,
+          availability: true,
+          location: true,
+          hourlyRate: true,
+          skills: true,
+        }
+      },
       verificationRequests: {
         where: { type: 'PROFESSIONAL' },
         orderBy: { createdAt: 'desc' },
@@ -679,7 +690,14 @@ export const getFreelancerDetails = async (req: Request, res: Response) => {
         id: true,
         email: true,
         createdAt: true,
-        freelancerProfile: true,
+        freelancerProfile: {
+          include: {
+            projects: {
+              orderBy: { createdAt: 'desc' },
+              take: 6,
+            },
+          },
+        },
         freelanceServices: { where: { status: 'ACTIVE' } },
         verificationRequests: {
           where: { type: 'PROFESSIONAL' },

@@ -261,7 +261,13 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="fixed inset-x-0 top-0 z-50 px-3 pt-[max(0.75rem,env(safe-area-inset-top))] md:px-5 xl:px-8">
+      <div className="fixed inset-x-0 top-0 z-[60]">
+        <div className="bg-primary px-4 py-2 text-center text-[10px] font-black uppercase tracking-[0.25em] text-white">
+          <span className="opacity-70">🇬🇭 JobWahala Ghana 2026 Launch:</span> Verified Hire program is now live.{' '}
+          <Link to="/onboarding?role=seeker" className="ml-2 underline hover:text-white/80 transition-colors">Join the frontier</Link>
+        </div>
+      </div>
+      <nav className="fixed inset-x-0 top-10 z-50 px-3 pt-[max(0.75rem,env(safe-area-inset-top))] md:px-5 xl:px-8">
         <div className="container">
           <div className="glass rounded-[1.9rem] border border-white/50 shadow-premium px-4 py-3 md:px-5">
             <div className="flex items-center justify-between gap-3">

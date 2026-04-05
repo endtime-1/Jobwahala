@@ -52,13 +52,27 @@ export const formatRelativeTime = (value?: string | null) => {
   });
 };
 
-export const formatMoney = (value?: number | string | null) => {
+export const formatMoney = (value?: number | string | null, currency: string = 'GHS') => {
   if (value === null || value === undefined || value === '') return 'Not specified';
-  if (typeof value === 'string') return value;
+  
+  let num: number;
+  if (typeof value === 'string') {
+    // Try to extract the first number found in the string
+    const match = value.match(/(\d+(\.\d+)?)/);
+    if (!match) return value;
+    num = parseFloat(match[0]);
+  } else {
+    num = value;
+  }
 
-  return new Intl.NumberFormat(undefined, {
-    style: 'currency',
-    currency: 'USD',
-    maximumFractionDigits: 0,
-  }).format(value);
+  try {
+    return new Intl.NumberFormat(undefined, {
+      style: 'currency',
+      currency: currency.toUpperCase(),
+      maximumFractionDigits: 0,
+    }).format(num);
+  } catch (e) {
+    // Fallback if currency code is invalid
+    return `${currency.toUpperCase()} ${num.toLocaleString()}`;
+  }
 };

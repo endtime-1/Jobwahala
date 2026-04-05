@@ -5,6 +5,7 @@ export type UpcomingMilestone = {
   id: string
   title: string
   amount?: string | null
+  currency?: string | null
   dueDate?: string | null
   status: string
   agreement: {
@@ -25,6 +26,7 @@ export type AgreementComparisonRecord = {
     title: string
     summary?: string | null
     amount?: string | null
+    currency?: string | null
     updatedAt: string
     counterpartyName: string
     source: {
@@ -61,6 +63,7 @@ export type PaymentActionItem = {
   id: string
   title: string
   amount?: string | null
+  currency?: string | null
   dueDate?: string | null
   status: string
   paymentStatus: string
@@ -82,6 +85,7 @@ export type ProposalActionItem = {
   status: string
   title: string
   amount?: string | null
+  currency?: string | null
   timeline?: string | null
   expiresAt?: string | null
   updatedAt: string

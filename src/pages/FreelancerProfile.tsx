@@ -19,6 +19,15 @@ type Service = {
   category?: string | null
 }
 
+type PortfolioProject = {
+  id: string
+  title: string
+  description?: string | null
+  imageUrl: string
+  projectUrl?: string | null
+  createdAt: string
+}
+
 type AlternativeService = {
   id: string
   title: string
@@ -65,10 +74,14 @@ type FreelancerProfileRecord = {
   freelancerProfile?: {
     firstName?: string | null
     lastName?: string | null
+    tagline?: string | null
+    availability?: string | null
+    location?: string | null
     hourlyRate?: number | null
     portfolioUrl?: string | null
     bio?: string | null
     skills?: string | null
+    projects?: PortfolioProject[]
   } | null
   freelanceServices: Service[]
   reviewsReceived?: Array<{
@@ -282,10 +295,23 @@ export default function FreelancerProfile() {
                 status={profile.isVerified ? 'APPROVED' : 'UNVERIFIED'}
                 hideWhenUnverified
               />
+              <div className="ml-2 flex items-center gap-1.5">
+                <div className={`h-2.5 w-2.5 rounded-full ${
+                  profile.freelancerProfile?.availability === 'AVAILABLE' ? 'bg-success' : 
+                  profile.freelancerProfile?.availability === 'BUSY' ? 'bg-accent' : 'bg-text-light'
+                }`}></div>
+                <span className="text-[10px] font-black uppercase tracking-widest text-text-light">
+                  {profile.freelancerProfile?.availability?.replace('_', ' ') || 'AVAILABLE'}
+                </span>
+              </div>
             </div>
-            <p className="text-secondary font-black text-xs uppercase tracking-[0.2em] mb-8">
+            <p className="text-secondary font-black text-xs uppercase tracking-[0.2em] mb-4">
               {profile.freelanceServices[0]?.category || 'Independent Professional'}
             </p>
+            {profile.freelancerProfile?.location && (
+              <p className="text-[10px] font-black text-text-light uppercase tracking-[0.15em] mb-4">{profile.freelancerProfile.location}, GH</p>
+            )}
+            <h4 className="text-lg font-black text-text-main tracking-tight mb-8 italic">“{profile.freelancerProfile?.tagline || 'Expert Professional'}”</h4>
 
             <div className="flex justify-center items-center gap-8 mb-12">
               <div>
@@ -500,6 +526,41 @@ export default function FreelancerProfile() {
               ))}
             </div>
           </section>
+
+          {profile.freelancerProfile?.projects && profile.freelancerProfile.projects.length > 0 ? (
+            <section className="dashboard-panel p-5 sm:p-7 lg:p-8">
+              <h2 className="mb-10 border-b border-surface-border pb-4 text-xs font-black uppercase tracking-[0.3em] text-text-light">
+                Visual Portfolio
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {profile.freelancerProfile.projects.map((project) => (
+                  <div key={project.id} className="group overflow-hidden rounded-[2rem] border border-surface-border bg-white transition-all hover:shadow-premium-xl">
+                    <div className="aspect-video overflow-hidden">
+                      <img 
+                        src={project.imageUrl} 
+                        alt={project.title}
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      />
+                    </div>
+                    <div className="p-6">
+                      <h4 className="text-xl font-black text-text-main tracking-tight group-hover:text-secondary transition-colors mb-2">{project.title}</h4>
+                      <p className="text-sm text-text-muted font-medium line-clamp-2">{project.description}</p>
+                      {project.projectUrl && (
+                        <a 
+                          href={project.projectUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="mt-4 inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-secondary hover:text-secondary-dark transition-colors"
+                        >
+                          View Live Project <ArrowRight className="h-3.5 w-3.5" />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          ) : null}
 
           <section className="dashboard-panel p-5 sm:p-7 lg:p-8">
             <h2 className="mb-10 border-b border-surface-border pb-4 text-xs font-black uppercase tracking-[0.3em] text-text-light">

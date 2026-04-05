@@ -99,7 +99,7 @@ export default function SeekerDashboard() {
 
   return (
     <div className="fade-in">
-      <header className="dashboard-hero mb-8 px-5 py-6 sm:px-7 sm:py-7 lg:px-8 lg:py-8">
+      <header className="dashboard-hero mb-8">
         <div className="relative z-10 flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-2xl">
             <div className="dashboard-kicker mb-4"><CheckCircle className="h-3.5 w-3.5" /> Seeker workspace</div>
@@ -115,7 +115,7 @@ export default function SeekerDashboard() {
               <Link to="/proposals" className="dashboard-action-chip"><Handshake className="h-4 w-4" /> Proposals</Link>
             </div>
           </div>
-          <div className="dashboard-panel relative flex min-w-0 items-center gap-5 px-5 py-5 sm:min-w-[20rem] sm:px-6">
+          <div className="dashboard-panel relative flex min-w-0 items-center gap-5 sm:min-w-[20rem]">
             <div className="relative z-10 flex h-16 w-16 items-center justify-center">
               <svg className="h-16 w-16 -rotate-90 transform">
                 <circle cx="32" cy="32" r="28" stroke="currentColor" strokeWidth="5" fill="transparent" className="text-surface-alt" />
@@ -157,7 +157,7 @@ export default function SeekerDashboard() {
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.65fr)_minmax(20rem,0.95fr)]">
           <div className="space-y-8">
             {/* AI Job Comparison */}
-            <section className="dashboard-panel p-5 sm:p-7 lg:p-8">
+            <section className="dashboard-panel">
               <div className="mb-6 flex flex-col gap-3 border-b border-surface-border/50 pb-5 sm:flex-row sm:items-end sm:justify-between">
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">AI Role Comparison</p>
@@ -219,7 +219,7 @@ export default function SeekerDashboard() {
             </section>
 
             {/* Applied Positions */}
-            <section className="dashboard-panel p-5 sm:p-7 lg:p-8">
+            <section className="dashboard-panel">
               <div className="mb-8 flex flex-col gap-3 border-b border-surface-border/50 pb-5 sm:flex-row sm:items-center sm:justify-between">
                 <h2 className="font-black text-xs uppercase tracking-[0.2em] text-text-main">Applied Positions</h2>
                 <Link to="/jobs" className="text-[10px] text-primary font-black uppercase tracking-widest hover:underline flex items-center gap-2">Browse More Roles <span className="inline-block">›</span></Link>
@@ -309,7 +309,7 @@ export default function SeekerDashboard() {
 
           <aside className="space-y-6">
             {/* AI Profile Coach */}
-            <div className="dashboard-panel border-primary/20 bg-gradient-to-br from-primary/5 to-white p-5 sm:p-6 overflow-hidden relative group/sidebar">
+            <div className="dashboard-panel border-primary/20 bg-gradient-to-br from-primary/5 to-white overflow-hidden relative group/sidebar">
               <div className="absolute top-0 right-0 h-32 w-32 bg-primary/10 rounded-full -mr-16 -mt-16 blur-2xl group-hover/sidebar:bg-primary/20 transition-colors"></div>
               <div className="relative z-10">
                 <h2 className="font-black text-xs uppercase tracking-[0.2em] text-primary mb-6 flex items-center gap-3"><Sparkles className="h-4 w-4" /> AI Profile Coach</h2>
@@ -364,7 +364,7 @@ export default function SeekerDashboard() {
             <VerificationPanel type="seeker" verification={data?.verification ?? null} isSubmitting={isActing} onSubmit={handleSubmitVerification} />
 
             {/* Freelance Requests */}
-            <div className="dashboard-panel p-5 sm:p-6">
+            <div className="dashboard-panel">
               <div className="flex justify-between items-center mb-6 pb-4 border-b border-surface-border/50">
                 <h3 className="font-black text-[10px] uppercase tracking-widest text-text-main">Freelance Requests</h3>
                 <span className="badge bg-secondary text-white border-none text-[9px] uppercase tracking-widest">{sentRequests.length}</span>

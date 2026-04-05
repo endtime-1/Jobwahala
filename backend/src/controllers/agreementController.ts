@@ -1,5 +1,7 @@
 import { randomUUID } from 'crypto';
 import { Response } from 'express';
+import env from '../config/env';
+import logger from '../config/logger';
 import prisma from '../config/prisma';
 import { AuthRequest } from '../middleware/auth';
 import { singleValue } from '../utils/request';
@@ -13,6 +15,7 @@ import {
 } from '../services/ai';
 import { emitAgreementRefresh } from '../utils/workflowRealtime';
 
+import { paystackService } from '../services/paystackService';
 const agreementUserSelect = {
   id: true,
   email: true,
@@ -104,6 +107,114 @@ const getAgreementUserName = (user?: {
   return user.employerProfile?.companyName || fullName || user.email || 'Unknown';
 };
 
+/**
+ * Background process to release funds from escrow to the freelancer.
+ */
+export const processPayout = async (milestoneId: string) => {
+  try {
+    const milestone = await prisma.agreementMilestone.findFirst({
+      where: { id: milestoneId },
+      include: {
+        agreement: {
+          include: {
+            freelancer: true,
+            seeker: true,
+          }
+        },
+        payments: {
+          where: { status: 'SUCCEEDED' },
+          orderBy: { createdAt: 'desc' },
+          take: 1
+        }
+      }
+    });
+
+    if (!milestone || milestone.status !== 'COMPLETED' || milestone.paymentStatus !== 'PAID') {
+      return;
+    }
+
+    const payment = milestone.payments[0];
+    if (!payment || (payment as any).payoutStatus !== 'PENDING') {
+      return;
+    }
+
+    // --- Industry Practice: Maturity Check ---
+    const holdMs = env.payoutHoldDurationHours * 60 * 60 * 1000;
+    const isMature = payment.completedAt && (new Date().getTime() - new Date(payment.completedAt).getTime()) >= holdMs;
+    
+    if (!isMature && env.isProduction) {
+      logger.info('payout_pending_maturity', { milestoneId, completedAt: payment.completedAt });
+      return;
+    }
+
+    const freelancerId = milestone.agreement.freelancerId || milestone.agreement.seekerId;
+    if (!freelancerId) return;
+
+    const payoutAccount = await (prisma as any).payoutAccount.findUnique({
+      where: { userId: freelancerId }
+    });
+
+    if (!payoutAccount) {
+      logger.warn('payout_skipped_no_account', { milestoneId, freelancerId });
+      return;
+    }
+
+    const totalAmountMinor = payment.providerAmount || 0;
+    const feePercentage = env.platformFeePercentage;
+    const feeAmountMinor = Math.round(totalAmountMinor * (feePercentage / 100));
+    const payoutAmountMinor = totalAmountMinor - feeAmountMinor;
+    const currency = (payment as any).currency || 'GHS';
+
+    // 1. Mark as PROCESSING in DB before calling Paystack (Atomic check-and-set)
+    const updateResult = await prisma.payment.updateMany({
+      where: { 
+        id: payment.id,
+        payoutStatus: 'PENDING'
+      },
+      data: { 
+        payoutStatus: 'PROCESSING',
+        platformFee: (feeAmountMinor / 100).toString(),
+        payoutAmount: (payoutAmountMinor / 100).toString(),
+      } as any
+    });
+
+    if (updateResult.count === 0) {
+      logger.warn('payout_skipped_already_processing', { paymentId: payment.id });
+      return;
+    }
+
+    // 2. Initiate Paystack Transfer
+    const transferResponse = await paystackService.initiateTransfer({
+      source: 'balance',
+      amount: payoutAmountMinor,
+      currency: currency,
+      recipient: payoutAccount.recipientCode,
+      reason: `Payout for milestone: ${milestone.title}`,
+      reference: `out_${payment.id}_${Date.now()}`
+    });
+
+    if (transferResponse.status) {
+      await prisma.payment.update({
+        where: { id: payment.id },
+        data: { 
+          transferId: transferResponse.data.transfer_code,
+          payoutStatus: 'SUCCESS'
+        } as any
+      });
+      logger.info('payout_initiated_successfully', { milestoneId, transferId: transferResponse.data.transfer_code });
+    } else {
+      throw new Error(transferResponse.message || 'Paystack transfer failed');
+    }
+
+  } catch (error: any) {
+    logger.error('process_payout_failed', { milestoneId, error: error.message });
+    await prisma.payment.updateMany({
+      where: { milestoneId, payoutStatus: 'PROCESSING' } as any,
+      data: { payoutStatus: 'FAILED' } as any
+    });
+  }
+};
+
 const activeAgreementDisputeStatuses = ['OPEN', 'UNDER_REVIEW'] as const;
 
 const hasActiveAgreementDispute = (
@@ -132,7 +243,7 @@ const getLatestMilestonePayment = (milestone: {
 const generatePaymentReference = () =>
   `JW-PAY-${randomUUID().replace(/-/g, '').slice(0, 12).toUpperCase()}`;
 
-type TransactionClientLike = Omit<
+export type TransactionClientLike = Omit<
   typeof prisma,
   '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'
 >;
@@ -1098,6 +1209,27 @@ export const updateAgreementMilestoneStatus = async (req: AuthRequest, res: Resp
         data: { status },
       });
 
+      // Automated Escrow Payout Logic
+      if (status === 'COMPLETED' && milestone.paymentStatus === 'PAID') {
+        const payment = await tx.payment.findFirst({
+          where: { milestoneId, status: 'SUCCEEDED' },
+        });
+
+        if (payment && payment.payoutStatus === 'NONE') {
+          const recipient = await tx.payoutAccount.findUnique({
+            where: { userId: agreement.freelancerId || agreement.seekerId || '' },
+          });
+
+          if (recipient) {
+            // Mark for processing. The actual transfer happens after transaction commit for safety.
+            await tx.payment.update({
+              where: { id: payment.id },
+              data: { payoutStatus: 'PENDING' }
+            });
+          }
+        }
+      }
+
       await createAgreementEvent(tx, {
         agreementId,
         actorId: userId,
@@ -1129,6 +1261,11 @@ export const updateAgreementMilestoneStatus = async (req: AuthRequest, res: Resp
       milestoneId,
       actorId: userId,
     });
+
+    // Fire-and-forget payout trigger
+    if (status === 'COMPLETED' && milestone.paymentStatus === 'PAID') {
+       processPayout(milestone.id).catch((err: any) => logger.error('deferred_payout_error', { error: err.message }));
+    }
 
     return res.json({ success: true, milestone: updatedMilestone });
   } catch (error: any) {
@@ -1359,7 +1496,10 @@ export const updateAgreementMilestonePaymentStatus = async (req: AuthRequest, re
         userId,
         payeeId,
       });
-      });
+    });
+
+    // Trigger background payout process
+    void processPayout(milestone.id);
 
     emitAgreementRefresh(getAgreementParticipantIds(agreement), {
       reason: 'milestone_payment_paid',
@@ -1682,43 +1822,46 @@ export const verifyAgreementPayment = async (req: AuthRequest, res: Response) =>
       });
     }
 
-    if (verification.status === 'SUCCEEDED') {
-      const completedPayment = await prisma.$transaction(async (tx) =>
-        completeMilestonePayment(tx, {
-          agreement: {
-            id: payment.agreement.id,
-            title: payment.agreement.title,
-          },
-          milestone: {
-            id: payment.milestone.id,
-            title: payment.milestone.title,
-            paymentStatus: payment.milestone.paymentStatus,
-          },
-          payment: {
-            id: payment.id,
-            status: payment.status,
-          },
-          userId: payment.payerId,
-          payeeId: payment.payeeId,
-          completedAt: verification.completedAt ? new Date(verification.completedAt) : undefined,
-        })
-      );
+      if (verification.status === 'SUCCEEDED') {
+        const completedPayment = await prisma.$transaction(async (tx) =>
+          completeMilestonePayment(tx, {
+            agreement: {
+              id: payment.agreement.id,
+              title: payment.agreement.title,
+            },
+            milestone: {
+              id: payment.milestone.id,
+              title: payment.milestone.title,
+              paymentStatus: payment.milestone.paymentStatus,
+            },
+            payment: {
+              id: payment.id,
+              status: payment.status,
+            },
+            userId: payment.payerId,
+            payeeId: payment.payeeId,
+            completedAt: verification.completedAt ? new Date(verification.completedAt) : undefined,
+          })
+        );
 
-      emitAgreementRefresh(getAgreementParticipantIds(payment.agreement), {
-        reason: 'payment_succeeded',
-        agreementId,
-        milestoneId: payment.milestoneId,
-        paymentId,
-        actorId: payment.payerId,
-      });
+        // Trigger background payout process
+        void processPayout(payment.milestone.id);
 
-      return res.json({
-        success: true,
-        payment: completedPayment.payment,
-        milestone: completedPayment.milestone,
-        verificationStatus: 'SUCCEEDED',
-      });
-    }
+        emitAgreementRefresh(getAgreementParticipantIds(payment.agreement), {
+          reason: 'payment_succeeded',
+          agreementId,
+          milestoneId: payment.milestoneId,
+          paymentId,
+          actorId: payment.payerId,
+        });
+
+        return res.json({
+          success: true,
+          payment: completedPayment.payment,
+          milestone: completedPayment.milestone,
+          verificationStatus: 'SUCCEEDED',
+        });
+      }
 
     const failedPayment = await prisma.$transaction(async (tx) => {
       const nextPayment = await tx.payment.update({
@@ -1751,12 +1894,6 @@ export const verifyAgreementPayment = async (req: AuthRequest, res: Response) =>
       milestoneId: payment.milestoneId,
       paymentId,
       actorId: payment.payerId,
-    });
-
-    return res.json({
-      success: true,
-      payment: failedPayment,
-      verificationStatus: verification.status,
     });
   } catch (error: any) {
     return res.status(500).json({ success: false, message: error.message });

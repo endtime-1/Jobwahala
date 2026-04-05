@@ -1,4 +1,4 @@
-const DEFAULT_MODEL = process.env.OPENAI_MODEL || 'gpt-5'
+const DEFAULT_MODEL = process.env.OPENAI_MODEL || 'gpt-4o-mini'
 
 export type ProposalDraftContext = {
   type: 'JOB' | 'SERVICE'
@@ -512,8 +512,8 @@ export const generateCVFromPrompt = async (prompt: string): Promise<string> => {
       body: JSON.stringify({
         model: DEFAULT_MODEL,
         instructions:
-          'You are an expert CV writer. Produce a concise, ATS-friendly CV in Markdown using only the information provided. Do not invent employers, degrees, dates, certifications, or achievements. If key details are missing, keep the section generic and clearly useful.',
-        input: `Create a professional CV from this user request:\n\n${cleanPrompt}`,
+          'You are an expert CV writer for JobWahala, the premier African talent marketplace. Produce a concise, ATS-friendly CV in Markdown using only the information provided. Focus on highlighting skills relevant to high-growth opportunities in Ghana and the broader African continent. Do not invent employers, degrees, dates, certifications, or achievements. If key details are missing, keep the section generic and clearly useful.',
+        input: `Create a professional CV for a JobWahala user from this request:\n\n${cleanPrompt}`,
       }),
     })
 
@@ -588,7 +588,7 @@ Context:
       body: JSON.stringify({
         model: DEFAULT_MODEL,
         instructions:
-          'You draft high-quality freelance and hiring proposals. Return strict JSON only.',
+          'You draft high-quality freelance and hiring proposals for JobWahala, Africa’s leading workspace for elite talent. Return strict JSON only.',
         input: prompt,
       }),
     })
@@ -686,7 +686,7 @@ ${optionBlock || 'No proposals available.'}
       body: JSON.stringify({
         model: DEFAULT_MODEL,
         instructions:
-          'You are a negotiation decision coach. Return concise plain text only.',
+          'You are a negotiation decision coach for JobWahala. Your goal is to help users in the African market navigate professional opportunities. Return concise plain text only.',
         input: prompt,
       }),
     })
@@ -1629,7 +1629,7 @@ Context:
       body: JSON.stringify({
         model: DEFAULT_MODEL,
         instructions:
-          'You are a work operations decision coach. Return strict JSON only.',
+          'You are a work operations decision coach for JobWahala, specialized in the African freelancer and employment market. Return strict JSON only.',
         input: prompt,
       }),
     })

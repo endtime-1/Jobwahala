@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Star, Briefcase, Award, ChevronRight, ShieldCheck, UserCheck, MessageSquare, PlusCircle, Pencil, Trash2, Handshake, Sparkles } from 'lucide-react'
 import VerifiedBadge from '../../components/VerifiedBadge'
 import VerificationPanel from '../../components/VerificationPanel'
+import PayoutPanel from '../../components/PayoutPanel'
 import { Link } from 'react-router-dom'
 import ProposalComposerModal, { type ProposalDraft } from '../../components/ProposalComposerModal'
 import { useQueryClient } from '@tanstack/react-query'
@@ -124,7 +125,7 @@ export default function FreelancerDashboard() {
 
   return (
     <div className="fade-in">
-      <header className="dashboard-hero mb-8 px-5 py-6 sm:px-7 sm:py-7 lg:px-8 lg:py-8">
+      <header className="dashboard-hero mb-8">
         <div className="relative z-10 flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-2xl">
             <div className="dashboard-kicker mb-4"><Star className="h-3.5 w-3.5" /> Freelancer workspace</div>
@@ -142,18 +143,41 @@ export default function FreelancerDashboard() {
               <Link to="/proposals" className="dashboard-action-chip"><Handshake className="h-4 w-4" /> Proposals</Link>
             </div>
           </div>
-          <div className="dashboard-panel relative flex min-w-0 items-center gap-5 px-5 py-5 sm:min-w-[20rem] sm:px-6">
-            <div className="relative z-10 flex h-16 w-16 items-center justify-center">
-              <svg className="h-16 w-16 -rotate-90 transform">
-                <circle cx="32" cy="32" r="28" stroke="currentColor" strokeWidth="5" fill="transparent" className="text-surface-alt" />
-                <circle cx="32" cy="32" r="28" stroke="currentColor" strokeWidth="5" fill="transparent" strokeDasharray={176} strokeDashoffset={176 - (176 * profileStrength) / 100} className="text-primary transition-all duration-1000" />
-              </svg>
-              <span className="absolute text-[11px] font-black">{profileStrength}%</span>
+
+          <div className="flex flex-col sm:flex-row gap-4 lg:items-center">
+            {/* Financial Stats */}
+            <div className="dashboard-panel relative flex min-w-[12rem] items-center gap-4 p-4">
+              <div className="h-10 w-10 rounded-xl bg-success/10 flex items-center justify-center text-success">
+                <Wallet className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-text-light mb-1">Net Earnings</p>
+                <p className="text-xl font-black text-text-main leading-none">{data?.earnings?.currency} {data?.earnings?.total}</p>
+              </div>
             </div>
-            <div className="relative z-10">
-              <p className="mb-2 text-[10px] font-black uppercase tracking-[0.2em] text-text-light">Profile Strength</p>
-              <p className="mb-1 text-sm font-black text-text-main">{profileStrength >= 80 ? 'Strong Profile' : 'Build More Depth'}</p>
-              <Link to="/onboarding" className="text-[10px] font-black uppercase tracking-widest text-primary hover:underline">Edit Profile</Link>
+
+            <div className="dashboard-panel relative flex min-w-[12rem] items-center gap-4 p-4">
+              <div className="h-10 w-10 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary">
+                <ShieldCheck className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-text-light mb-1">Escrow Funds</p>
+                <p className="text-xl font-black text-text-main leading-none">{data?.earnings?.currency} {data?.earnings?.pending}</p>
+              </div>
+            </div>
+
+            <div className="dashboard-panel relative flex min-w-0 items-center gap-5 sm:min-w-[14rem] p-4">
+              <div className="relative z-10 flex h-14 w-14 items-center justify-center">
+                <svg className="h-14 w-14 -rotate-90 transform">
+                  <circle cx="28" cy="28" r="24" stroke="currentColor" strokeWidth="5" fill="transparent" className="text-surface-alt" />
+                  <circle cx="28" cy="28" r="24" stroke="currentColor" strokeWidth="5" fill="transparent" strokeDasharray={150} strokeDashoffset={150 - (150 * profileStrength) / 100} className="text-primary transition-all duration-1000" />
+                </svg>
+                <span className="absolute text-[10px] font-black">{profileStrength}%</span>
+              </div>
+              <div className="relative z-10">
+                <p className="mb-1 text-[10px] font-black uppercase tracking-[0.2em] text-text-light">Profile</p>
+                <p className="text-xs font-black text-text-main">{profileStrength >= 80 ? 'Strong' : 'Improve'}</p>
+              </div>
             </div>
           </div>
         </div>
@@ -183,7 +207,7 @@ export default function FreelancerDashboard() {
           <div className="space-y-8">
             {/* Service create/edit form */}
             {(showCreateForm || isEditing) ? (
-              <form onSubmit={isEditing ? handleUpdateService : handleCreateService} className="dashboard-panel p-5 sm:p-7 lg:p-8 space-y-6">
+              <form onSubmit={isEditing ? handleUpdateService : handleCreateService} className="dashboard-panel space-y-6">
                 <div className="flex justify-between items-center pb-6 border-b border-surface-border/50">
                   <h2 className="font-black text-xs uppercase tracking-[0.2em] text-text-main">{isEditing ? 'Edit Service' : 'Create Service'}</h2>
                   <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Live API</span>
@@ -228,7 +252,7 @@ export default function FreelancerDashboard() {
             ) : null}
 
             {/* Services list */}
-            <section className="dashboard-panel p-5 sm:p-7 lg:p-8">
+            <section className="dashboard-panel">
               <div className="flex justify-between items-center mb-10 pb-6 border-b border-surface-border/50">
                 <h2 className="font-black text-xs uppercase tracking-[0.2em] text-text-main">Your Services</h2>
                 <Link to="/freelancers" className="text-[10px] font-black text-primary uppercase tracking-widest hover:underline flex items-center gap-2">View Marketplace <ChevronRight className="h-4 w-4" /></Link>
@@ -261,7 +285,7 @@ export default function FreelancerDashboard() {
             </section>
 
             {/* Incoming Requests */}
-            <section className="dashboard-panel p-5 sm:p-7 lg:p-8">
+            <section className="dashboard-panel">
               <div className="flex justify-between items-center mb-10 pb-6 border-b border-surface-border/50">
                 <h2 className="font-black text-xs uppercase tracking-[0.2em] text-text-main">Incoming Requests</h2>
                 <span className="badge bg-secondary text-white border-none text-[9px] uppercase tracking-widest">{pendingRequests} pending</span>
@@ -323,7 +347,7 @@ export default function FreelancerDashboard() {
 
           <aside className="space-y-6">
             {/* Profile Strength */}
-            <div className="dashboard-panel border-primary/20 bg-gradient-to-br from-primary/5 to-white p-5 sm:p-6 overflow-hidden relative group/sidebar">
+            <div className="dashboard-panel border-primary/20 bg-gradient-to-br from-primary/5 to-white overflow-hidden relative group/sidebar">
               <div className="absolute top-0 right-0 h-32 w-32 bg-primary/10 rounded-full -mr-16 -mt-16 blur-2xl group-hover/sidebar:bg-primary/20 transition-colors"></div>
               <div className="relative z-10">
                 <h2 className="font-black text-xs uppercase tracking-[0.2em] text-primary mb-6 flex items-center gap-3"><ShieldCheck className="h-4 w-4" /> Profile Health</h2>
@@ -333,7 +357,7 @@ export default function FreelancerDashboard() {
             </div>
 
             {/* Recent Messages */}
-            <div className="dashboard-panel p-5 sm:p-6">
+            <div className="dashboard-panel">
               <div className="flex justify-between items-center mb-6 pb-4 border-b border-surface-border/50">
                 <h3 className="font-black text-[10px] uppercase tracking-widest text-text-main">Recent Messages</h3>
                 <span className="badge bg-primary text-white border-none text-[9px] uppercase tracking-widest">{unreadMessages} unread</span>
@@ -370,6 +394,7 @@ export default function FreelancerDashboard() {
             />
 
             <VerificationPanel type="freelancer" verification={data?.verification ?? null} isSubmitting={isUpdatingServiceStatus} onSubmit={handleSubmitVerification} />
+            <PayoutPanel />
           </aside>
         </div>
       )}

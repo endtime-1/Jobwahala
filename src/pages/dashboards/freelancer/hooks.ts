@@ -55,6 +55,7 @@ export function useFreelancerDashboard() {
         pendingPaymentActions: Number(data.pendingPaymentActions || 0),
         paymentActionItems: (data.paymentActionItems || []) as PaymentActionItem[],
         verification: (data.verification || null) as VerificationState | null,
+        earnings: (data.earnings || { total: '0.00', pending: '0.00', currency: 'GHS' }) as { total: string; pending: string; currency: string },
       }
     },
   })

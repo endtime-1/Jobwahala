@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import ReportModal from '../components/ReportModal'
 import VerifiedBadge from '../components/VerifiedBadge'
 import { apiCompareJobs, apiGetJobs } from '../lib/api'
-import { emailHandle, formatRelativeTime, getInitials } from '../lib/display'
+import { emailHandle, formatMoney, formatRelativeTime, getInitials } from '../lib/display'
 import {
   formatJobLocationWithWorkMode,
   getJobWorkModeBadgeClass,
@@ -20,6 +20,7 @@ type JobRecord = {
   description: string
   location?: string | null
   salary?: string | null
+  currency?: string | null
   type: string
   category?: string | null
   createdAt: string
@@ -58,7 +59,19 @@ export default function JobListings() {
   const [comparison, setComparison] = useState<JobComparisonRecord | null>(null)
   const [comparisonError, setComparisonError] = useState('')
   const [isComparing, setIsComparing] = useState(false)
+  const [showSuggestions, setShowSuggestions] = useState(false)
   const navigate = useNavigate()
+
+  const commonSkills = useMemo(() => [
+    'React', 'Node.js', 'TypeScript', 'Python', 'UX Design', 'UI Design',
+    'Product Management', 'DevOps', 'AWS', 'Mobile App', 'Backend', 'Frontend',
+    'Fullstack', 'Data Analytics', 'Accra', 'Kumasi', 'Remote'
+  ], [])
+
+  const suggestions = useMemo(() => {
+    if (!search || search.length < 2) return []
+    return commonSkills.filter(s => s.toLowerCase().includes(search.toLowerCase()) && s.toLowerCase() !== search.toLowerCase()).slice(0, 5)
+  }, [search, commonSkills])
 
   useEffect(() => {
     apiGetJobs()
@@ -166,8 +179,9 @@ export default function JobListings() {
   return (
     <div className="container animate-in fade-in pt-24 pb-24 duration-700 md:pt-28 xl:pt-32">
       <SEO 
-        title="Browse Jobs — Find High-Growth Opportunities in Ghana"
-        description="Filter through elite tech and design roles in Ghana. Find your next full-time, contract, or freelance gig on JobWahala."
+        title="Find Tech & Design Jobs in Ghana"
+        description="Filter and apply for elite full-time, contract, and freelance roles in Accra and across Ghana. Updated daily with high-growth global opportunities."
+        keywords="jobs in ghana, accra tech careers, remote jobs africa, software engineering ghana"
       />
       <header className="dashboard-hero mb-8 px-5 py-6 sm:px-7 sm:py-7 lg:px-8 lg:py-8">
         <div className="relative z-10 flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
@@ -299,9 +313,34 @@ export default function JobListings() {
                 type="text"
                 placeholder="Design, Engineering, Marketing..."
                 value={search}
-                onChange={(event) => setSearch(event.target.value)}
+                onChange={(event) => {
+                   setSearch(event.target.value)
+                   setShowSuggestions(true)
+                }}
+                onFocus={() => setShowSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                 className="w-full rounded-2xl border-none bg-surface py-4 pl-12 pr-4 text-lg font-medium focus:ring-2 focus:ring-primary/20 shadow-inner"
               />
+              {showSuggestions && suggestions.length > 0 && (
+                <div className="absolute top-full left-0 right-0 z-50 mt-2 rounded-2xl border border-surface-border bg-white p-3 shadow-premium-lg animate-in fade-in slide-in-from-top-2 duration-300">
+                  <p className="mb-2 px-3 text-[9px] font-black uppercase tracking-[0.2em] text-text-light">Suggested Skills</p>
+                  <div className="flex flex-wrap gap-2">
+                    {suggestions.map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => {
+                          setSearch(s)
+                          setShowSuggestions(false)
+                        }}
+                        className="rounded-xl border border-surface-border bg-surface-alt/20 px-4 py-2 text-xs font-bold text-text-muted hover:bg-primary/10 hover:text-primary transition-all"
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -397,7 +436,7 @@ export default function JobListings() {
                             </p>
                           </div>
                           <p className="mt-2 text-sm font-medium text-text-muted">
-                            {job.salary || 'Salary on request'}{job.category ? ` / ${job.category}` : ''}
+                            {job.salary ? formatMoney(job.salary, job.currency || 'GHS') : 'Salary on request'}{job.category ? ` / ${job.category}` : ''}
                           </p>
 
                           <div className="mt-4 flex flex-wrap gap-2">

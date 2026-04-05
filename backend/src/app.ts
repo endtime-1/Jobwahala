@@ -19,12 +19,16 @@ import paymentRoutes from './routes/paymentRoutes';
 import uploadRoutes from './routes/uploadRoutes';
 import realtimeRoutes from './routes/realtimeRoutes';
 import platformRoutes from './routes/platformRoutes';
+import verificationRoutes from './routes/verificationRoutes';
+import payoutRoutes from './routes/payoutRoutes';
+import disputeRoutes from './routes/disputeRoutes';
 import {
   createRateLimit,
   notFoundHandler,
   requestContextMiddleware,
   requestLoggerMiddleware,
   securityHeadersMiddleware,
+  strictAiRateLimit,
 } from './middleware/security';
 
 const app = express();
@@ -147,7 +151,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/messages', messageRoutes);
-app.use('/api/cv', cvRoutes);
+app.use('/api/cv', strictAiRateLimit, cvRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/agreements', agreementRoutes);
@@ -156,6 +160,8 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/realtime', realtimeRoutes);
 app.use('/api/platform', platformRoutes);
+app.use('/api/verifications', verificationRoutes);
+app.use('/api/payouts', payoutRoutes);
 
 app.use(notFoundHandler);
 

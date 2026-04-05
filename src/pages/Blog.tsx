@@ -1,46 +1,15 @@
 import { BookOpen, ArrowRight, Clock, User, Tag, Search } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import SEO from '../components/SEO'
-
-const blogPosts = [
-  {
-    id: 'hiring-in-ghana',
-    title: "How to Hire Elite Tech Talent in Ghana: 2026 Guide",
-    excerpt: "Accra's tech scene is exploding. Learn how to navigate the local landscape, salary benchmarks, and cultural nuances of hiring in the Gateway to Africa.",
-    author: "JobWahala Editorial",
-    date: "April 2, 2026",
-    readTime: "8 min read",
-    category: "Hiring Guide",
-    image: "https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?auto=format&fit=crop&q=80&w=800",
-  },
-  {
-    id: 'freelance-success-ghana',
-    title: "Success Spotlight: From Kumasi to Global Contracts",
-    excerpt: "Meet the freelancers defying boundaries. A deep dive into how Ghanaian professionals are leveraging JobWahala to secure high-paying international gigs.",
-    author: "Community Team",
-    date: "March 28, 2026",
-    readTime: "5 min read",
-    category: "Success Stories",
-    image: "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&q=80&w=800",
-  },
-  {
-    id: 'remote-work-readiness',
-    title: "5 Skills Every Ghanaian Freelancer Needs for 2026",
-    excerpt: "Technical skill is only half the battle. We explore the soft skills and infrastructure setups needed to thrive in the global remote work economy.",
-    author: "Career Coach",
-    date: "March 20, 2026",
-    readTime: "6 min read",
-    category: "Career Tips",
-    image: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&q=80&w=800",
-  },
-]
+import { blogPosts } from '../data/blogData'
 
 export default function Blog() {
   return (
     <div className="fade-in pt-24 pb-20 md:pt-28 md:pb-24 xl:pt-32 xl:pb-32">
       <SEO 
-        title="Resource Center — Insights on Hiring & Working in Ghana"
-        description="Stay ahead with the latest trends in the Ghanaian job market. Guides for employers hiring in Accra and tips for freelancers going global."
+        title="Resource Center — Insights on Hiring & Remote Work in Ghana"
+        description="Your toolkit for the Ghanaian job market. Expert hiring guides for Accra-based teams and remote work playbooks for local freelancers."
+        keywords="hiring in ghana, accra tech careers, remote work ghana, jobwahala blog, african tech trends"
       />
       
       <div className="container">
@@ -75,21 +44,23 @@ export default function Blog() {
 
         {/* Featured Post (Template) */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-20 items-center">
-          <div className="rounded-[3rem] overflow-hidden shadow-premium-2xl aspect-video lg:aspect-square relative group">
+          <Link to={`/blog/${blogPosts[0].id}`} className="rounded-[3rem] overflow-hidden shadow-premium-2xl aspect-video lg:aspect-square relative group block">
             <img src={blogPosts[0].image} alt={blogPosts[0].title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
             <div className="absolute bottom-10 left-10 right-10">
                <span className="px-3 py-1 bg-primary text-white rounded-lg text-[10px] font-black uppercase tracking-widest mb-4 inline-block">Featured</span>
                <h2 className="text-3xl font-black text-white tracking-tighter leading-tight">{blogPosts[0].title}</h2>
             </div>
-          </div>
-          <div className="space-y-8">
+          </Link>
+          <div className="space-y-8 text-left">
             <p className="text-primary font-black text-xs uppercase tracking-[0.2em]">{blogPosts[0].category}</p>
-            <h2 className="text-4xl font-black text-text-main tracking-tighter leading-tight">{blogPosts[0].title}</h2>
+            <Link to={`/blog/${blogPosts[0].id}`} className="block group">
+              <h2 className="text-4xl font-black text-text-main tracking-tighter leading-tight group-hover:text-primary transition-colors">{blogPosts[0].title}</h2>
+            </Link>
             <p className="text-xl text-text-muted font-medium leading-relaxed">{blogPosts[0].excerpt}</p>
             <div className="flex items-center gap-6 pt-4">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 bg-surface-alt rounded-full flex items-center justify-center font-black text-primary">JW</div>
+                <div className="h-10 w-10 bg-surface-alt rounded-full flex items-center justify-center font-black text-primary border border-surface-border">JW</div>
                 <div>
                   <p className="text-xs font-black text-text-main">{blogPosts[0].author}</p>
                   <p className="text-[10px] text-text-light font-bold uppercase tracking-widest">{blogPosts[0].date}</p>
@@ -98,38 +69,40 @@ export default function Blog() {
               <div className="h-10 w-[1px] bg-surface-border"></div>
               <p className="text-[10px] text-text-light font-black uppercase tracking-widest">{blogPosts[0].readTime}</p>
             </div>
-            <button className="btn btn-primary btn-lg px-8 sm:px-10 mt-4">
+            <Link to={`/blog/${blogPosts[0].id}`} className="btn btn-primary btn-lg px-8 sm:px-10 mt-4 inline-flex">
                Read Full Guide <ArrowRight className="h-6 w-6" />
-            </button>
+            </Link>
           </div>
         </div>
 
         {/* Grid Posts */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
           {blogPosts.slice(1).map((post) => (
-            <div key={post.id} className="card group hover:scale-[1.02] shadow-premium-lg border-surface-border/50 overflow-hidden">
-               <div className="aspect-[16/10] overflow-hidden -mx-7 -mt-7 mb-7 relative">
+            <Link key={post.id} to={`/blog/${post.id}`} className="card group hover:scale-[1.02] shadow-premium-lg border-surface-border/50 overflow-hidden active:scale-95 transition-all">
+               <div className="aspect-[16/10] overflow-hidden -mx-7 -mt-7 mb-7 relative rounded-t-[2rem]">
                  <img src={post.image} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                  <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest text-primary shadow-sm">
                    {post.category}
                  </div>
                </div>
-               <h3 className="mb-4 text-2xl font-black tracking-tighter text-text-main group-hover:text-primary transition-colors leading-tight">
-                 {post.title}
-               </h3>
-               <p className="text-text-muted text-base leading-relaxed font-medium mb-8 line-clamp-3">
-                 {post.excerpt}
-               </p>
+               <div className="text-left">
+                 <h3 className="mb-4 text-2xl font-black tracking-tighter text-text-main group-hover:text-primary transition-colors leading-tight">
+                   {post.title}
+                 </h3>
+                 <p className="text-text-muted text-base leading-relaxed font-medium mb-8 line-clamp-3">
+                   {post.excerpt}
+                 </p>
+               </div>
                <div className="flex items-center justify-between pt-6 border-t border-surface-border/50">
                  <div className="flex items-center gap-2">
                    <Clock className="h-3.5 w-3.5 text-text-light" />
                    <span className="text-[10px] font-black uppercase tracking-widest text-text-light">{post.readTime}</span>
                  </div>
-                 <button className="text-primary font-black uppercase tracking-widest text-[10px] flex items-center gap-2 group/link">
+                 <div className="text-primary font-black uppercase tracking-widest text-[10px] flex items-center gap-2 group/link">
                    Read More <ArrowRight className="h-3.5 w-3.5 group-hover/link:translate-x-1 transition-transform" />
-                 </button>
+                 </div>
                </div>
-            </div>
+            </Link>
           ))}
           
           {/* Success Spotlight Placeholder (Trust Pillar) */}
@@ -150,19 +123,19 @@ export default function Blog() {
        <section className="mt-24 md:mt-32">
           <div className="bg-text-main rounded-[4rem] p-12 md:p-20 relative overflow-hidden group shadow-premium-2xl">
              <div className="absolute top-0 right-0 h-full w-1/2 bg-gradient-to-l from-primary/20 to-transparent z-0"></div>
-             <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-12">
+              <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-12">
                 <div className="max-w-xl text-left">
-                   <h2 className="text-4xl md:text-5xl font-black text-white tracking-tighter leading-tight mb-6">Join the JobWahala Insider.</h2>
-                   <p className="text-white/70 text-lg font-medium leading-relaxed">Weekly insights on the Ghanaian job market, exclusive remote opportunities, and career playbooks delivered directly to you.</p>
+                  <h2 className="text-4xl md:text-5xl font-black text-white tracking-tighter leading-tight mb-6">Join the JobWahala Insider.</h2>
+                  <p className="text-white/70 text-lg font-medium leading-relaxed">Weekly insights on the Ghanaian tech landscape, exclusive remote engineering roles, and career playbooks for Accra's elite.</p>
                 </div>
                 <div className="w-full lg:w-auto">
-                   <div className="flex flex-col sm:flex-row gap-4">
-                      <input type="email" placeholder="Enter your email" className="bg-white/10 border border-white/20 text-white rounded-2xl px-8 py-4 w-full sm:w-80 focus:ring-2 focus:ring-primary/20 placeholder:text-white/30 font-bold" />
-                      <button className="btn btn-primary px-10 whitespace-nowrap">Subscribe Now</button>
-                   </div>
-                   <p className="text-[10px] text-white/40 font-bold uppercase tracking-[0.2em] mt-4">Join 2,000+ Ghanaian Professionals</p>
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <input type="email" placeholder="Enter your email" className="bg-white/10 border border-white/20 text-white rounded-2xl px-8 py-4 w-full sm:w-80 focus:ring-2 focus:ring-primary/20 placeholder:text-white/30 font-bold" />
+                    <button className="btn btn-primary px-10 whitespace-nowrap">Subscribe Now</button>
+                  </div>
+                  <p className="text-[10px] text-white/40 font-bold uppercase tracking-[0.2em] mt-4">Join 2,000+ Ghanaian Professionals</p>
                 </div>
-             </div>
+              </div>
           </div>
        </section>
     </div>

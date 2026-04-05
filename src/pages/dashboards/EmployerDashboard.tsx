@@ -86,7 +86,7 @@ export default function EmployerDashboard() {
 
   return (
     <div className="fade-in">
-      <header className="dashboard-hero mb-8 px-5 py-6 sm:px-7 sm:py-7 lg:px-8 lg:py-8">
+      <header className="dashboard-hero mb-8">
         <div className="relative z-10 flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-2xl">
             <div className="dashboard-kicker mb-4">
@@ -116,7 +116,7 @@ export default function EmployerDashboard() {
               </Link>
             </div>
           </div>
-          <div className="dashboard-panel px-5 py-5 sm:min-w-[20rem] sm:px-6">
+          <div className="dashboard-panel sm:min-w-[20rem]">
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-text-light">Hiring snapshot</p>
             <div className="mt-4 grid grid-cols-3 gap-3">
               <div className="rounded-2xl bg-white/80 px-3 py-4 text-center shadow-premium-sm">

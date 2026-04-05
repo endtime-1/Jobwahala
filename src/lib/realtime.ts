@@ -1,7 +1,7 @@
 const rawApiUrl = import.meta.env.VITE_API_URL?.trim()
 const BASE_URL = rawApiUrl ? rawApiUrl.replace(/\/$/, '') : '/api'
 
-type RealtimeMessagePayload = {
+export type RealtimeMessagePayload = {
   conversationId?: string
   reason?: string
   senderId?: string
@@ -10,19 +10,19 @@ type RealtimeMessagePayload = {
   createdAt?: string
 }
 
-type RealtimeNotificationPayload = {
+export type RealtimeNotificationPayload = {
   notificationId?: string
   reason?: string
 }
 
-type RealtimeProposalPayload = {
+export type RealtimeProposalPayload = {
   proposalId?: string
   reason?: string
   actorId?: string
   agreementId?: string
 }
 
-type RealtimeAgreementPayload = {
+export type RealtimeAgreementPayload = {
   agreementId?: string
   reason?: string
   actorId?: string
@@ -42,75 +42,59 @@ type RealtimeHandlers = {
   onError?: () => void
 }
 
-const parseEventData = <T>(event: MessageEvent<string>) => {
-  if (!event.data) {
-    return {} as T
+const parseEventData = <T>(data: any) => {
+  if (!data) return {} as T
+  if (typeof data === 'string') {
+    try { return JSON.parse(data) as T } catch { return {} as T }
   }
-
-  try {
-    return JSON.parse(event.data) as T
-  } catch {
-    return {} as T
-  }
+  return data as T
 }
 
-export const subscribeToRealtimeEvents = ({
-  onNotificationsRefresh,
-  onMessagesRefresh,
-  onProposalsRefresh,
-  onAgreementsRefresh,
-  onConnected,
-  onError,
-}: RealtimeHandlers) => {
-  if (typeof window === 'undefined' || typeof window.EventSource === 'undefined') {
-    return () => undefined
-  }
+// Centralized Event Dispatcher
+const listeners = {
+  notifications: new Set<(p: RealtimeNotificationPayload) => void>(),
+  messages: new Set<(p: RealtimeMessagePayload) => void>(),
+  proposals: new Set<(p: RealtimeProposalPayload) => void>(),
+  agreements: new Set<(p: RealtimeAgreementPayload) => void>(),
+  connected: new Set<() => void>(),
+}
 
-  const token = localStorage.getItem('jobwahala_token')
-  if (!token) {
-    return () => undefined
-  }
+export const dispatchRealtimeEvent = (event: string, data: any) => {
+  if (event === 'notifications.refresh') listeners.notifications.forEach(l => l(parseEventData(data)))
+  if (event === 'messages.refresh') listeners.messages.forEach(l => l(parseEventData(data)))
+  if (event === 'proposals.refresh') listeners.proposals.forEach(l => l(parseEventData(data)))
+  if (event === 'agreements.refresh') listeners.agreements.forEach(l => l(parseEventData(data)))
+  if (event === 'connected') listeners.connected.forEach(l => l())
+}
 
-  const url = `${BASE_URL}/realtime/stream?token=${encodeURIComponent(token)}`
-  const source = new window.EventSource(url)
+export const subscribeToRealtimeEvents = (handlers: RealtimeHandlers) => {
+  if (handlers.onNotificationsRefresh) listeners.notifications.add(handlers.onNotificationsRefresh)
+  if (handlers.onMessagesRefresh) listeners.messages.add(handlers.onMessagesRefresh)
+  if (handlers.onProposalsRefresh) listeners.proposals.add(handlers.onProposalsRefresh)
+  if (handlers.onAgreementsRefresh) listeners.agreements.add(handlers.onAgreementsRefresh)
+  if (handlers.onConnected) listeners.connected.add(handlers.onConnected)
 
-  if (onConnected) {
-    source.addEventListener('connected', () => {
-      onConnected()
-    })
-  }
-
-  if (onNotificationsRefresh) {
-    source.addEventListener('notifications.refresh', (event) => {
-      onNotificationsRefresh(parseEventData<RealtimeNotificationPayload>(event as MessageEvent<string>))
-    })
-  }
-
-  if (onMessagesRefresh) {
-    source.addEventListener('messages.refresh', (event) => {
-      onMessagesRefresh(parseEventData<RealtimeMessagePayload>(event as MessageEvent<string>))
-    })
-  }
-
-  if (onProposalsRefresh) {
-    source.addEventListener('proposals.refresh', (event) => {
-      onProposalsRefresh(parseEventData<RealtimeProposalPayload>(event as MessageEvent<string>))
-    })
-  }
-
-  if (onAgreementsRefresh) {
-    source.addEventListener('agreements.refresh', (event) => {
-      onAgreementsRefresh(parseEventData<RealtimeAgreementPayload>(event as MessageEvent<string>))
-    })
-  }
-
-  if (onError) {
-    source.onerror = () => {
-      onError()
-    }
+  // Side-effect: Still initialize SSE for fallback if needed, but Socket.io will also dispatch
+  let source: EventSource | null = null
+  if (typeof window !== 'undefined' && window.EventSource) {
+     const token = localStorage.getItem('jobwahala_token')
+     if (token) {
+        source = new window.EventSource(`${BASE_URL}/realtime/stream?token=${encodeURIComponent(token)}`)
+        source.addEventListener('connected', () => dispatchRealtimeEvent('connected', {}))
+        source.addEventListener('notifications.refresh', (e) => dispatchRealtimeEvent('notifications.refresh', (e as MessageEvent).data))
+        source.addEventListener('messages.refresh', (e) => dispatchRealtimeEvent('messages.refresh', (e as MessageEvent).data))
+        source.addEventListener('proposals.refresh', (e) => dispatchRealtimeEvent('proposals.refresh', (e as MessageEvent).data))
+        source.addEventListener('agreements.refresh', (e) => dispatchRealtimeEvent('agreements.refresh', (e as MessageEvent).data))
+        if (handlers.onError) source.onerror = () => handlers.onError!()
+     }
   }
 
   return () => {
-    source.close()
+    if (handlers.onNotificationsRefresh) listeners.notifications.delete(handlers.onNotificationsRefresh)
+    if (handlers.onMessagesRefresh) listeners.messages.delete(handlers.onMessagesRefresh)
+    if (handlers.onProposalsRefresh) listeners.proposals.delete(handlers.onProposalsRefresh)
+    if (handlers.onAgreementsRefresh) listeners.agreements.delete(handlers.onAgreementsRefresh)
+    if (handlers.onConnected) listeners.connected.delete(handlers.onConnected)
+    if (source) source.close()
   }
 }

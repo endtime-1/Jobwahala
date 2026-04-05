@@ -195,15 +195,15 @@ export default function Onboarding() {
               </div>
             </div>
 
-            <div className="rounded-3xl border border-surface-border bg-surface-alt/40 p-6">
+            <div className="rounded-3xl border border-primary/20 bg-primary/5 p-6 shadow-sm">
               <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-2xl bg-white flex items-center justify-center border border-surface-border shadow-sm">
-                  <Shield className="h-6 w-6 text-text-light" />
+                <div className="h-12 w-12 rounded-2xl bg-white flex items-center justify-center border border-primary/10 shadow-sm">
+                  <Shield className="h-6 w-6 text-primary" />
                 </div>
                 <div className="flex-grow">
-                  <p className="text-sm font-black text-text-main mb-1">Verification upload</p>
-                  <p className="text-[11px] font-bold text-text-light">
-                    Identity and document upload is not wired yet. Profile setup now saves the core backend fields first.
+                  <p className="text-sm font-black text-text-main mb-1">Identity Trust System</p>
+                  <p className="text-[11px] font-bold text-text-muted leading-relaxed">
+                    Once inside, you'll be prompted to complete a quick SmileID verification. Verified profiles see 4x more engagement in the JobWahala marketplace.
                   </p>
                 </div>
               </div>

@@ -74,8 +74,9 @@ export default function Landing() {
   return (
     <div className="fade-in">
       <SEO 
-        title="JobWahala — Connecting Ghana's Elite Talent"
-        description="JobWahala connects Ghana's top professionals with high-growth global opportunities. Join the future of work today."
+        title="JobWahala — Connecting Ghana's Elite Talent with Global Gigs"
+        description="Connect with high-growth global opportunities from Accra and beyond. JobWahala is Ghana's premier workspace for elite software engineers, designers, and digital professionals."
+        keywords="jobs in accra, hire ghanaian developers, remote work ghana, tech jobs ghana, jobs in kumasi, jobwahala launch"
       />
       {/* Hero Section */}
       <section className="relative overflow-hidden pt-24 pb-20 md:pt-28 md:pb-24 xl:pt-32 xl:pb-32">
@@ -262,7 +263,7 @@ export default function Landing() {
               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-text-main whitespace-nowrap">Powering Top Teams</p>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:flex lg:flex-wrap justify-center lg:justify-between items-center gap-x-20 gap-y-12 flex-grow">
-              {['TECHNEXUS', 'LAGOSHUB', 'SAFARIPAY', 'KIGALIDIGITAL', 'ACCRACLOUD'].map(logo => (
+              {['MEST_GHANA', 'ACCRA_HUB', 'GHLAB', 'VODA_GH', 'MTN_BIZ'].map(logo => (
                 <div key={logo} className="font-black text-xl tracking-tighter text-text-main grayscale opacity-40 hover:grayscale-0 hover:opacity-100 transition-all duration-500 cursor-default select-none">
                   {logo}
                 </div>

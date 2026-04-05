@@ -2,6 +2,7 @@ import { Response } from 'express';
 import prisma from '../config/prisma';
 import { AuthRequest } from '../middleware/auth';
 import { deferRealtimeEvent, emitRealtimeEvent } from '../services/realtime';
+import { emitNotificationRefresh } from '../utils/workflowRealtime';
 
 const notificationInclude = {
   user: {
@@ -90,11 +91,9 @@ export const markNotificationRead = async (req: AuthRequest, res: Response) => {
         where: { userId, read: false },
       });
 
-      deferRealtimeEvent(() => {
-        emitRealtimeEvent(userId, 'notifications.refresh', {
-          reason: 'read',
-          notificationId,
-        });
+      emitNotificationRefresh([userId], {
+        reason: 'read',
+        notificationId,
       });
 
       return res.json({ success: true, notification, unreadCount });
@@ -116,11 +115,9 @@ export const markNotificationRead = async (req: AuthRequest, res: Response) => {
       }),
     ]);
 
-    deferRealtimeEvent(() => {
-      emitRealtimeEvent(userId, 'notifications.refresh', {
-        reason: 'read',
-        notificationId,
-      });
+    emitNotificationRefresh([userId], {
+      reason: 'read',
+      notificationId,
     });
 
     return res.json({ success: true, notification: updatedNotification, unreadCount });
@@ -144,10 +141,8 @@ export const markAllNotificationsRead = async (req: AuthRequest, res: Response) 
       },
     });
 
-    deferRealtimeEvent(() => {
-      emitRealtimeEvent(userId, 'notifications.refresh', {
-        reason: 'read_all',
-      });
+    emitNotificationRefresh([userId], {
+      reason: 'read_all',
     });
 
     return res.json({ success: true, unreadCount: 0 });

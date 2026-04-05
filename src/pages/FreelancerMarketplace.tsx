@@ -12,6 +12,7 @@ type ServiceRecord = {
   title: string
   description: string
   price: number
+  currency?: string | null
   createdAt?: string
   deliveryTime?: string | null
   category?: string | null
@@ -25,9 +26,13 @@ type ServiceRecord = {
     freelancerProfile?: {
       firstName?: string | null
       lastName?: string | null
+      tagline?: string | null
+      availability?: string | null
+      location?: string | null
       hourlyRate?: number | null
       bio?: string | null
       skills?: string | null
+      preferredCurrency?: string | null
     } | null
   }
 }
@@ -42,6 +47,9 @@ type FreelancerCard = {
   featuredService: string
   servicesCount: number
   avatar: string
+  tagline: string
+  availability: string
+  location: string
   isVerified: boolean
   topMatchScore: number | null
   topMatchReasons: string[]
@@ -54,6 +62,7 @@ type MarketplaceComparisonOption = {
     title: string
     category?: string | null
     price: number
+    currency?: string | null
     deliveryTime?: string | null
     matchScore: number
     matchReasons: string[]
@@ -146,9 +155,12 @@ export default function FreelancerMarketplace() {
         grouped.set(service.freelancer.id, {
           id: service.freelancer.id,
           name,
+          tagline: profile?.tagline || '',
+          availability: profile?.availability || 'AVAILABLE',
+          location: profile?.location || '',
           bio: profile?.bio || service.description,
           skills,
-          rate: formatMoney(profile?.hourlyRate || service.price),
+          rate: formatMoney(profile?.hourlyRate || service.price, profile?.preferredCurrency || service.currency || 'GHS'),
           category: service.category || 'General',
           featuredService: service.title,
           servicesCount: 1,
@@ -201,6 +213,12 @@ export default function FreelancerMarketplace() {
     return Array.from(new Set(freelancerCards.map((card) => card.category))).filter(Boolean)
   }, [freelancerCards])
 
+  const locations = useMemo(() => {
+    return Array.from(new Set(freelancerCards.map((card) => card.location))).filter(Boolean).sort()
+  }, [freelancerCards])
+
+  const [selectedLocations, setSelectedLocations] = useState<string[]>([])
+
   const filteredFreelancers = useMemo(() => {
     return freelancerCards.filter((freelancer) => {
       const q = search.toLowerCase()
@@ -214,9 +232,12 @@ export default function FreelancerMarketplace() {
       const matchesCategory =
         selectedCategories.length === 0 || selectedCategories.includes(freelancer.category)
 
-      return matchesSearch && matchesCategory
+      const matchesLocation =
+        selectedLocations.length === 0 || selectedLocations.includes(freelancer.location)
+
+      return matchesSearch && matchesCategory && matchesLocation
     })
-  }, [freelancerCards, search, selectedCategories])
+  }, [freelancerCards, search, selectedCategories, selectedLocations])
 
   const liveServiceCount = services.length
   const canCompareMarketplace = user?.role === 'SEEKER' || user?.role === 'EMPLOYER'
@@ -277,8 +298,9 @@ export default function FreelancerMarketplace() {
   return (
     <div className="container animate-in fade-in pt-24 pb-24 duration-1000 md:pt-28 xl:pt-32">
       <SEO 
-        title="Hire Elite Freelancers in Ghana"
-        description="Connect with top-rated Ghanaian developers, designers, and digital markers. Verified talent for your next high-growth project."
+        title="Hire Elite Freelancers in Ghana | Tech & Design Talent"
+        description="Connect with top-rated Ghanaian software engineers, UI/UX designers, and digital marketers. Verified talent for global high-growth projects."
+        keywords="hire ghanaian developers, freelance designers accra, top talent ghana, jobwahala marketplace"
       />
       <header className="dashboard-hero mb-8 px-5 py-6 sm:px-7 sm:py-7 lg:px-8 lg:py-8">
         <div className="relative z-10 flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
@@ -362,6 +384,32 @@ export default function FreelancerMarketplace() {
                   ))}
                 </div>
               </div>
+
+              {locations.length > 0 ? (
+                <div>
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-text-light mb-6 block">City/Location</label>
+                  <div className="space-y-4">
+                    {locations.map((loc) => (
+                      <label key={loc} className="flex items-center gap-3 cursor-pointer group">
+                        <div className="h-5 w-5 rounded-lg border border-surface-border group-hover:border-secondary transition-all flex items-center justify-center bg-white shadow-sm">
+                          <div className={`h-2 w-2 rounded-sm bg-accent transition-opacity ${selectedLocations.includes(loc) ? 'opacity-100' : 'opacity-0'}`}></div>
+                        </div>
+                        <input
+                          type="checkbox"
+                          className="hidden"
+                          checked={selectedLocations.includes(loc)}
+                          onChange={() => {
+                            setSelectedLocations(prev => 
+                              prev.includes(loc) ? prev.filter(v => v !== loc) : [...prev, loc]
+                            )
+                          }}
+                        />
+                        <span className="text-sm font-bold text-text-muted group-hover:text-text-main transition-colors">{loc}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
             </div>
           </div>
         </aside>
@@ -548,7 +596,7 @@ export default function FreelancerMarketplace() {
 
                           <p className="mt-4 text-sm font-black text-text-main">{option.topService.title}</p>
                           <p className="mt-2 text-sm font-medium text-text-muted">
-                            {formatMoney(option.topService.price)} • {option.topService.deliveryTime || 'Flexible delivery'}
+                            {formatMoney(option.topService.price, option.topService.currency || 'GHS')} • {option.topService.deliveryTime || 'Flexible delivery'}
                           </p>
 
                           <div className="mt-4 flex flex-wrap gap-2">
@@ -616,9 +664,22 @@ export default function FreelancerMarketplace() {
                           hideWhenUnverified
                           showText={false}
                         />
+                        <div className="ml-auto flex items-center gap-1.5">
+                           <div className={`h-2 w-2 rounded-full ${
+                              freelancer.availability === 'AVAILABLE' ? 'bg-success' : 
+                              freelancer.availability === 'BUSY' ? 'bg-accent' : 'bg-text-light'
+                           }`}></div>
+                           <span className="text-[9px] font-black uppercase tracking-widest text-text-light">
+                              {freelancer.availability.replace('_', ' ')}
+                           </span>
+                        </div>
                       </div>
-                    <p className="text-text-muted font-bold text-sm mb-4 uppercase tracking-wider">{freelancer.category}</p>
-                    <p className="text-sm text-text-muted leading-relaxed">{freelancer.bio}</p>
+                    <p className="text-text-muted font-bold text-sm mb-1 uppercase tracking-wider">{freelancer.category}</p>
+                    {freelancer.location && (
+                       <p className="text-[10px] font-black text-text-light uppercase tracking-[0.15em] mb-4">{freelancer.location}, GH</p>
+                    )}
+                    <h4 className="text-base font-black text-text-main tracking-tight mb-2 italic">“{freelancer.tagline || 'Expert Professional'}”</h4>
+                    <p className="text-sm text-text-muted leading-relaxed line-clamp-2">{freelancer.bio}</p>
                   </div>
 
                   <div className="flex flex-wrap gap-2 mb-6 relative z-10">

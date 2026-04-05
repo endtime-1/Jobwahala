@@ -135,6 +135,11 @@ const env = {
   apiRateLimitWindowMs: parseNumber(process.env.API_RATE_LIMIT_WINDOW_MS, 60 * 1000),
   apiRateLimitMax: parseNumber(process.env.API_RATE_LIMIT_MAX, 240),
   logRequests: parseBoolean(process.env.LOG_REQUESTS, !isProduction),
+  smileIdPartnerId: process.env.SMILE_ID_PARTNER_ID || '',
+  smileIdApiKey: process.env.SMILE_ID_API_KEY || '',
+  smileIdServer: process.env.SMILE_ID_SERVER || '0', // 0 for sandbox, 1 for production
+  platformFeePercentage: parseNumber(process.env.PLATFORM_FEE_PERCENTAGE, 5),
+  payoutHoldDurationHours: parseNumber(process.env.PAYOUT_HOLD_DURATION_HOURS, 24),
 } as const;
 
 export default env;

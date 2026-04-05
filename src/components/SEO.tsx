@@ -11,11 +11,11 @@ interface SEOProps {
 
 export default function SEO({
   title,
-  description = "JobWahala — Africa's Elite Talent Platform. Connecting Ghana's top professionals with global high-growth opportunities.",
+  description = "JobWahala — Africa's Elite Talent Workspace. Connecting Ghana's top tech professionals with global high-growth opportunities.",
   canonical = 'https://jobwahala.com',
   ogImage = 'https://jobwahala.com/og-image.png',
   ogType = 'website',
-  keywords = 'jobs in ghana, freelance ghana, remote work africa, hire ghanaian developers, jobwahala, accra tech jobs'
+  keywords = 'jobs in ghana, freelance accra, remote work ghana, hire software engineers ghana, tech talent ghana, jobwahala'
 }: SEOProps) {
   const siteTitle = 'JobWahala'
   const fullTitle = title ? `${title} | ${siteTitle}` : `${siteTitle} — Africa's Elite Talent Platform`

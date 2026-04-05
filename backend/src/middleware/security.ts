@@ -107,3 +107,9 @@ export const notFoundHandler = (req: Request, res: Response) => {
     requestId: res.locals.requestId,
   });
 };
+
+export const strictAiRateLimit = createRateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 10, // 10 AI generations per hour
+  scope: 'ai',
+});

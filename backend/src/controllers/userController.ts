@@ -805,14 +805,32 @@ const getDashboardOverviewData = async (userId: string, role: string) => {
   }
 
   if (role === 'FREELANCER') {
-    const services = await prisma.freelanceService.findMany({
-      where: { freelancerId: userId },
-      orderBy: { createdAt: 'desc' },
-      take: 6
-    });
+    const [services, successPayments, pendingPayments] = await Promise.all([
+      prisma.freelanceService.findMany({
+        where: { freelancerId: userId },
+        orderBy: { createdAt: 'desc' },
+        take: 6
+      }),
+      prisma.payment.findMany({
+        where: { payeeId: userId, payoutStatus: 'SUCCESS' },
+        select: { payoutAmount: true }
+      }),
+      prisma.payment.findMany({
+        where: { payeeId: userId, payoutStatus: 'PENDING', status: 'SUCCEEDED' },
+        select: { amount: true }
+      })
+    ]);
+
+    const totalEarnings = successPayments.reduce((acc, p) => acc + parseFloat(p.payoutAmount || '0'), 0);
+    const pendingEscrow = pendingPayments.reduce((acc, p) => acc + parseFloat(p.amount || '0'), 0);
 
     return {
       services,
+      earnings: {
+        total: totalEarnings.toFixed(2),
+        pending: pendingEscrow.toFixed(2),
+        currency: 'GHS'
+      }
     };
   }
 

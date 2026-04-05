@@ -2,7 +2,7 @@ import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import { ShieldCheck, Users, Briefcase, Flag, Wrench, Trash2, RefreshCw, BadgeCheck, AlertTriangle } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import {
-  apiCreateAdminJob, apiDeleteAdminUser, apiUpdateAdminDisputeStatus,
+  apiCreateAdminJob, apiDeleteAdminUser, apiResolveDispute,
   apiUpdateAdminJobsStatusBulk, apiUpdateAdminJobStatus,
   apiUpdateAdminReportsStatusBulk, apiUpdateAdminReportStatus,
   apiUpdateAdminServicesStatusBulk, apiUpdateAdminServiceStatus,
@@ -25,6 +25,7 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<'reports' | 'users' | 'jobs' | 'services' | 'verifications' | 'disputes'>('reports')
   const [isActing, setIsActing] = useState(false)
   const [verificationDrafts, setVerificationDrafts] = useState<Record<string, { reviewNote: string; internalNote: string }>>({})
+  const [disputeDrafts, setDisputeDrafts] = useState<Record<string, { resolutionNote: string }>>({})
   const [adminJobForm, setAdminJobForm] = useState(initialAdminJobForm)
   const [companySearch, setCompanySearch] = useState('')
   const [jobSearch, setJobSearch] = useState('')
@@ -97,6 +98,17 @@ export default function AdminDashboard() {
 
   // Bulk selection helpers
   const toggleId = (id: string, setter: React.Dispatch<React.SetStateAction<string[]>>) => setter((c) => c.includes(id) ? c.filter((v) => v !== id) : [...c, id])
+  const updateDisputeDraft = (id: string, value: string) => {
+    setDisputeDrafts((c) => ({ ...c, [id]: { resolutionNote: value } }))
+  }
+
+  const handleDisputeAction = (id: string, status: 'RESOLVED' | 'DISMISSED') => {
+    const draft = disputeDrafts[id] || { resolutionNote: '' }
+    const resolutionNote = draft.resolutionNote.trim()
+    if (!resolutionNote) { setError('A resolution note is required.'); return }
+    void handleAction(async () => { await apiResolveDispute(id, { status, resolutionNote }); setDisputeDrafts((c) => { const n = { ...c }; delete n[id]; return n }) })
+  }
+
   const handleBulk = (ids: string[], status: string, apiFn: (ids: string[], status: string) => Promise<unknown>, setter: React.Dispatch<React.SetStateAction<string[]>>) => {
     if (ids.length === 0) { setError('Select at least one item.'); return }
     void handleAction(async () => { await apiFn(ids, status); setter([]) })
@@ -366,11 +378,34 @@ export default function AdminDashboard() {
                         <p className="mt-2 text-[10px] font-black uppercase tracking-[0.2em] text-text-light">Opened by {creatorName} / Counterparty {cpName}</p>
                         <p className="mt-4 text-sm text-text-main leading-relaxed whitespace-pre-wrap">{d.description}</p>
                         {d.evidenceUrl ? <a href={d.evidenceUrl} target="_blank" rel="noreferrer" className="mt-4 inline-flex text-[10px] font-black uppercase tracking-[0.2em] text-primary hover:underline">Open evidence</a> : null}
-                        {d.resolutionNote ? <p className="mt-4 rounded-2xl border border-surface-border bg-white px-4 py-3 text-xs font-semibold text-text-muted">Resolution note: {d.resolutionNote}</p> : null}
+                        {d.resolutionNote ? <p className="mt-4 rounded-2xl border border-surface-border bg-white px-4 py-3 text-xs font-semibold text-text-muted">Resolution note: {d.resolutionNote}</p> : (
+                          d.status !== 'RESOLVED' && d.status !== 'DISMISSED' && (
+                            <div className="mt-5">
+                              <label htmlFor={`dr-note-${d.id}`} className="block text-[10px] font-black uppercase tracking-[0.2em] text-text-light mb-2">Resolution Note (Required to resolve/dismiss)</label>
+                              <textarea
+                                id={`dr-note-${d.id}`}
+                                value={disputeDrafts[d.id]?.resolutionNote || ''}
+                                onChange={(e) => updateDisputeDraft(d.id, e.target.value)}
+                                className="w-full rounded-2xl border border-surface-border bg-white px-4 py-3 text-sm text-text-main outline-none focus:border-primary min-h-[80px]"
+                                placeholder="Explain the reasoning for this resolution..."
+                              />
+                            </div>
+                          )
+                        )}
                       </div>
                       <div className="flex flex-wrap items-center gap-3">
-                        <span className={`badge ${d.status === 'RESOLVED' ? 'bg-success text-white' : d.status === 'DISMISSED' ? 'bg-surface-alt text-text-main' : d.status === 'UNDER_REVIEW' ? 'bg-secondary text-white' : 'bg-error text-white'}`}>{d.status}</span>
-                        {disputeStatuses.map((s) => (<button key={s} type="button" disabled={isActing || d.status === s || ['RESOLVED', 'DISMISSED'].includes(d.status)} onClick={() => handleAction(() => apiUpdateAdminDisputeStatus(d.id, s as any))} className={`rounded-xl px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] transition-all ${d.status === s ? 'bg-primary text-white' : 'bg-white border border-surface-border text-text-muted hover:border-primary hover:text-primary'}`}>{s}</button>))}
+                        <span className={`badge ${d.status === 'RESOLVED' ? 'bg-success text-white' : d.status === 'DISMISSED' ? 'bg-surface-alt text-text-main' : d.status === 'UNDER_REVIEW' ? 'bg-secondary text-white' : 'bg-primary text-white'}`}>{d.status}</span>
+                        {['RESOLVED', 'DISMISSED'].map((s) => (
+                          <button
+                            key={s}
+                            type="button"
+                            disabled={isActing || d.status === s || ['RESOLVED', 'DISMISSED'].includes(d.status)}
+                            onClick={() => handleDisputeAction(d.id, s as any)}
+                            className={`rounded-xl px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] transition-all bg-white border border-surface-border text-text-muted hover:border-primary hover:text-primary`}
+                          >
+                            Set {s}
+                          </button>
+                        ))}
                       </div>
                     </div>
                   </div>
