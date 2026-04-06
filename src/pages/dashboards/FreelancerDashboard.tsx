@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Star, Briefcase, Award, ChevronRight, ShieldCheck, UserCheck, MessageSquare, PlusCircle, Pencil, Trash2, Handshake, Sparkles } from 'lucide-react'
+import { Star, Briefcase, Award, ChevronRight, ShieldCheck, UserCheck, MessageSquare, PlusCircle, Pencil, Trash2, Handshake, Sparkles, Wallet } from 'lucide-react'
 import VerifiedBadge from '../../components/VerifiedBadge'
 import VerificationPanel from '../../components/VerificationPanel'
 import PayoutPanel from '../../components/PayoutPanel'

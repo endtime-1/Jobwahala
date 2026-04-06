@@ -7,9 +7,15 @@ import logger from '../config/logger';
 let io: Server;
 
 export const initSocket = (server: HttpServer) => {
+  const corsOrigin = env.corsAllowedOrigins.length > 0 ? env.corsAllowedOrigins : '*';
+
+  if (corsOrigin === '*' && env.isProduction) {
+    logger.warn('socket_cors_wildcard', { message: 'Socket.io CORS is set to wildcard (*) in production. Set CORS_ALLOWED_ORIGINS.' });
+  }
+
   io = new Server(server, {
     cors: {
-      origin: env.corsAllowedOrigins.length > 0 ? env.corsAllowedOrigins : '*',
+      origin: corsOrigin,
       methods: ['GET', 'POST'],
       credentials: true,
     },

@@ -14,6 +14,7 @@ model User {
   status        String   @default("ACTIVE") // ACTIVE, FLAGGED, SUSPENDED
   emailVerified Boolean  @default(false)
   identityVerified Boolean @default(false)
+  tokenVersion  Int      @default(0)
   preferredCurrency String @default("GHS")
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -451,6 +452,8 @@ model Payment {
   payoutAmount  String?   // Net amount sent to freelancer (after fees)
   platformFee   String?   // JobWahala fee if applicable
 
+  payoutAttemptedAt DateTime? // Idempotency guard for payout worker
+
   completedAt  DateTime?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -465,6 +468,7 @@ model Payment {
   @@index([payerId])
   @@index([payeeId])
   @@index([status])
+  @@index([payoutStatus])
   @@index([createdAt])
 }
 

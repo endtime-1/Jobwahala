@@ -67,6 +67,18 @@ export const securityHeadersMiddleware = (_req: Request, res: Response, next: Ne
 export const createRateLimit = ({ windowMs, max, scope, skip }: RateLimitOptions) => {
   const store = new Map<string, RateLimitEntry>();
 
+  // Periodically evict expired entries to prevent memory leaks
+  const cleanupIntervalMs = Math.max(windowMs, 5 * 60 * 1000); // At least every 5 min
+  const cleanup = setInterval(() => {
+    const now = Date.now();
+    for (const [key, entry] of store) {
+      if (entry.resetAt <= now) {
+        store.delete(key);
+      }
+    }
+  }, cleanupIntervalMs);
+  cleanup.unref(); // Don't block process shutdown
+
   return (req: Request, res: Response, next: NextFunction) => {
     if (skip?.(req)) {
       next();
@@ -74,7 +86,7 @@ export const createRateLimit = ({ windowMs, max, scope, skip }: RateLimitOptions
     }
 
     const now = Date.now();
-    const key = `${scope}:${req.ip}`;
+    const key = `${scope}:${req.ip || 'unknown'}`;
     const current = store.get(key);
 
     if (!current || current.resetAt <= now) {

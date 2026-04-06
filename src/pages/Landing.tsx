@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Briefcase, Users, Shield, Search, ArrowRight, Star, Zap, TrendingUp, Code2, MapPin, Clock } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import VerifiedBadge from '../components/VerifiedBadge'
 import { apiGetPlatformStats } from '../lib/api'
 import SEO from '../components/SEO'
@@ -55,6 +55,8 @@ const timeAgo = (dateStr: string) => {
 export default function Landing() {
   const [stats, setStats] = useState<PlatformStats | null>(null)
   const [statsLoaded, setStatsLoaded] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const navigate = useNavigate()
 
   useEffect(() => {
     apiGetPlatformStats()
@@ -148,7 +150,13 @@ export default function Landing() {
               {/* Hero Search */}
               <div className="max-w-3xl relative group">
                 <div className="absolute -inset-4 bg-gradient-to-r from-primary/10 via-secondary/10 to-primary/10 rounded-[4rem] blur-2xl opacity-0 group-hover:opacity-100 transition duration-1000 group-hover:duration-500"></div>
-                <div className="relative bg-white border border-surface-border/50 shadow-premium-2xl p-2 md:p-3 rounded-[3.5rem] flex flex-col md:flex-row items-center gap-3">
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault()
+                    navigate(searchQuery.trim() ? `/jobs?search=${encodeURIComponent(searchQuery.trim())}` : '/jobs')
+                  }}
+                  className="relative bg-white border border-surface-border/50 shadow-premium-2xl p-2 md:p-3 rounded-[3.5rem] flex flex-col md:flex-row items-center gap-3"
+                >
                   <div className="flex-grow flex items-center w-full pl-2">
                     <div className="h-14 w-14 bg-surface-alt rounded-full flex items-center justify-center flex-shrink-0 shadow-sm border border-surface-border/30 group-focus-within:border-primary/30 transition-colors">
                       <Search className="h-6 w-6 text-primary" />
@@ -157,23 +165,26 @@ export default function Landing() {
                       <input 
                         type="text" 
                         placeholder="Design, Engineering, or Remote roles..." 
-                        className="w-full border-none bg-transparent py-4 text-xl font-bold text-text-main placeholder:text-text-muted/50 focus:ring-0"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full border-none bg-transparent py-4 text-xl font-bold text-text-main placeholder:text-text-muted/50 focus:ring-0 focus:outline-none"
                       />
-                      <div className="absolute right-0 top-1/2 -translate-y-1/2 hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-surface-border bg-surface-alt/50 text-[10px] font-black text-text-light shadow-inner">
-                        <span className="opacity-50">Press</span> Cmd+K
-                      </div>
                     </div>
                   </div>
-                  <Link to="/onboarding?role=seeker" className="btn btn-primary btn-lg px-12 rounded-full w-full md:w-auto shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all text-sm font-black uppercase tracking-widest">
+                  <button type="submit" className="btn btn-primary btn-lg px-12 rounded-full w-full md:w-auto shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all text-sm font-black uppercase tracking-widest">
                     Search Gigs
-                  </Link>
-                </div>
+                  </button>
+                </form>
                 
                 {/* Trending Tags */}
                 <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-3 px-4 md:px-8 animate-in fade-in slide-in-from-top-4 duration-1000 delay-500">
                   <span className="text-[10px] font-black uppercase tracking-[0.2em] text-text-light italic">Trending Now</span>
                   {['Product Design', 'Solidity', 'Full-stack', 'Remote'].map((tag) => (
-                    <button key={tag} className="text-xs font-bold text-text-muted hover:text-primary transition-colors flex items-center gap-1.5 group">
+                    <button
+                      key={tag}
+                      onClick={() => navigate(`/jobs?search=${encodeURIComponent(tag)}`)}
+                      className="text-xs font-bold text-text-muted hover:text-primary transition-colors flex items-center gap-1.5 group"
+                    >
                       <span className="h-1 w-1 rounded-full bg-surface-border group-hover:bg-primary transition-colors"></span>
                       {tag}
                     </button>
@@ -254,18 +265,18 @@ export default function Landing() {
         </section>
       )}
 
-      {/* Trusted By Section */}
+      {/* Platform Infrastructure Section */}
       <section className="border-y border-surface-border py-16 md:py-20 bg-surface-alt/20">
         <div className="container">
           <div className="flex flex-col lg:flex-row items-center gap-16 lg:gap-32 overflow-hidden">
             <div className="shrink-0 text-center lg:text-left">
-              <p className="text-[9px] font-bold uppercase tracking-[0.4em] text-text-muted mb-1">Elite Infrastructure</p>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-text-main whitespace-nowrap">Powering Top Teams</p>
+              <p className="text-[9px] font-bold uppercase tracking-[0.4em] text-text-muted mb-1">Built For Scale</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-text-main whitespace-nowrap">Enterprise-Grade Platform</p>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:flex lg:flex-wrap justify-center lg:justify-between items-center gap-x-20 gap-y-12 flex-grow">
-              {['MEST_GHANA', 'ACCRA_HUB', 'GHLAB', 'VODA_GH', 'MTN_BIZ'].map(logo => (
-                <div key={logo} className="font-black text-xl tracking-tighter text-text-main grayscale opacity-40 hover:grayscale-0 hover:opacity-100 transition-all duration-500 cursor-default select-none">
-                  {logo}
+              {['AI Matching', 'Escrow Payments', 'Verified Talent', 'Real-Time Chat', 'Milestone Tracking'].map(feature => (
+                <div key={feature} className="font-black text-xl tracking-tighter text-text-main opacity-40 hover:opacity-100 transition-all duration-500 cursor-default select-none">
+                  {feature}
                 </div>
               ))}
             </div>

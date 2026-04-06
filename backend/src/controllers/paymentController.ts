@@ -17,9 +17,15 @@ const isPaystackSignatureValid = (payload: unknown, signature: string | undefine
     .update(JSON.stringify(payload))
     .digest('hex');
 
-  // Direct comparison if timingSafeEqual feels overkill for this specific string format, 
-  // but it's best practice.
-  return expectedSignature === signature;
+  // Timing-safe comparison to prevent timing attacks on webhook signature
+  const expectedBuffer = Buffer.from(expectedSignature, 'hex');
+  const signatureBuffer = Buffer.from(signature, 'hex');
+
+  if (expectedBuffer.length !== signatureBuffer.length) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(expectedBuffer, signatureBuffer);
 };
 
 /**

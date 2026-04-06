@@ -49,11 +49,11 @@ const authenticateRequest = async (
   }
 
   try {
-    const decoded = jwt.verify(token, env.jwtSecret) as { id: string; role: string };
+    const decoded = jwt.verify(token, env.jwtSecret) as { id: string; role: string; tokenVersion?: number };
 
     const user = await prisma.user.findUnique({
       where: { id: decoded.id },
-      select: { id: true, role: true, status: true }
+      select: { id: true, role: true, status: true, tokenVersion: true }
     });
 
     if (!user) {
@@ -62,6 +62,11 @@ const authenticateRequest = async (
 
     if (user.status !== 'ACTIVE') {
       return res.status(403).json({ success: false, message: 'Account is not active' });
+    }
+
+    // Reject tokens issued before last password change / forced logout
+    if (typeof decoded.tokenVersion === 'number' && decoded.tokenVersion !== user.tokenVersion) {
+      return res.status(401).json({ success: false, message: 'Session expired. Please log in again.' });
     }
 
     req.user = { id: user.id, role: user.role };

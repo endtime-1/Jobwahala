@@ -7,14 +7,15 @@ import env from '../config/env';
 import { AuthRequest } from '../middleware/auth';
 import { serializeVerificationStatus } from '../utils/verification';
 import { sendVerificationEmail, sendPasswordResetEmail } from '../services/emailService';
+import logger from '../config/logger';
 
 const allowedRegistrationRoles = ['SEEKER', 'EMPLOYER', 'FREELANCER'] as const;
 
-const generateToken = (id: string, role: string) => {
+const generateToken = (id: string, role: string, tokenVersion: number) => {
   const options: jwt.SignOptions = {
     expiresIn: env.jwtExpiresIn as jwt.SignOptions['expiresIn'],
   };
-  return jwt.sign({ id, role }, env.jwtSecret, options);
+  return jwt.sign({ id, role, tokenVersion }, env.jwtSecret, options);
 };
 
 const generateSecureToken = () => crypto.randomBytes(32).toString('hex');
@@ -70,10 +71,10 @@ export const register = async (req: Request, res: Response) => {
 
     // Fire-and-forget: don't block registration on email delivery
     sendVerificationEmail(user.email, verificationToken).catch((err) => {
-      console.error('[jobwahala] Failed to send verification email:', err.message);
+      logger.error('verification_email_failed', { email: user.email, error: err.message });
     });
 
-    const token = generateToken(user.id, user.role);
+    const token = generateToken(user.id, user.role, 0);
 
     res.status(201).json({
       success: true,
@@ -106,7 +107,7 @@ export const login = async (req: Request, res: Response) => {
       return res.status(403).json({ success: false, message: 'Account is not active' });
     }
 
-    const token = generateToken(user.id, user.role);
+    const token = generateToken(user.id, user.role, user.tokenVersion);
 
     res.json({
       success: true,
@@ -231,7 +232,7 @@ export const resendVerification = async (req: Request, res: Response) => {
     });
 
     sendVerificationEmail(user.email, verificationToken).catch((err) => {
-      console.error('[jobwahala] Failed to resend verification email:', err.message);
+      logger.error('resend_verification_email_failed', { email: user.email, error: err.message });
     });
 
     res.json({ success: true, message: 'If an account exists with that email and is unverified, a verification email has been sent.' });
@@ -281,7 +282,7 @@ export const forgotPassword = async (req: Request, res: Response) => {
     });
 
     sendPasswordResetEmail(user.email, resetToken).catch((err) => {
-      console.error('[jobwahala] Failed to send password reset email:', err.message);
+      logger.error('password_reset_email_failed', { email: user.email, error: err.message });
     });
 
     res.json({ success: true, message: 'If an account exists with that email, a password reset link has been sent.' });
@@ -316,7 +317,10 @@ export const resetPassword = async (req: Request, res: Response) => {
     await prisma.$transaction([
       prisma.user.update({
         where: { id: record.userId },
-        data: { password: hashedPassword },
+        data: {
+          password: hashedPassword,
+          tokenVersion: { increment: 1 }, // Invalidate all existing sessions
+        },
       }),
       prisma.passwordResetToken.update({
         where: { id: record.id },

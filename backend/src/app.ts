@@ -167,19 +167,20 @@ app.use(notFoundHandler);
 
 app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
   const status = typeof err?.status === 'number' ? err.status : 500;
-  const message = String(err) + (err?.message ? ' | ' + err.message : '') + (err?.stack ? ' | ' + err.stack.toString().split('\\n')[0] : '');
+  const internalMessage = err instanceof Error ? err.message : String(err);
 
   logger.error('request_failed', {
     requestId: res.locals.requestId,
     method: req.method,
     path: req.originalUrl,
     status,
-    error: err instanceof Error ? err.message : String(err),
+    error: internalMessage,
+    stack: err?.stack,
   });
 
   res.status(status).json({
     success: false,
-    message,
+    message: env.isProduction && status >= 500 ? 'Internal Server Error' : internalMessage,
     requestId: res.locals.requestId,
   });
 });

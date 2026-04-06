@@ -24,6 +24,7 @@ const Blog = lazy(() => import('./pages/Blog'))
 const BlogPost = lazy(() => import('./pages/BlogPost'))
 const Support = lazy(() => import('./pages/Support'))
 const IdentityVerification = lazy(() => import('./pages/IdentityVerification'))
+const NotFound = lazy(() => import('./pages/NotFound'))
 
 function RouteFallback() {
   return (
@@ -82,6 +83,7 @@ function App() {
           <Route path="/blog/:id" element={<BlogPost />} />
           <Route path="/support" element={<Support />} />
           <Route path="/verify-identity" element={renderProtected(<IdentityVerification />)} />
+          <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
     </Suspense>

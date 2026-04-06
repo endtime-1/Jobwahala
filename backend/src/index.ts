@@ -25,21 +25,27 @@ server.keepAliveTimeout = 5000;
 const payoutPollIntervalMs = 15 * 60 * 1000;
 const payoutTask = setInterval(async () => {
   try {
-     const maturePayments = await (prisma.payment as any).findMany({
+     const maturePayments = await prisma.payment.findMany({
        where: {
          payoutStatus: 'PENDING',
          status: 'SUCCEEDED',
+         payoutAttemptedAt: null, // Idempotency: skip already-attempted payouts
          completedAt: {
            lte: new Date(Date.now() - env.payoutHoldDurationHours * 60 * 60 * 1000),
          }
        },
-       select: { milestoneId: true }
+       select: { id: true, milestoneId: true }
      });
 
      if (maturePayments.length > 0) {
        logger.info('payout_worker_processing', { count: maturePayments.length });
        for (const payment of maturePayments) {
          if (payment.milestoneId) {
+           // Mark as attempted before processing to prevent double payouts on crash/restart
+           await prisma.payment.update({
+             where: { id: payment.id },
+             data: { payoutAttemptedAt: new Date() },
+           });
            await processPayout(payment.milestoneId).catch(err => 
               logger.error('payout_worker_failed_single', { milestoneId: payment.milestoneId, error: err.message })
            );
