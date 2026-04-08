@@ -13,7 +13,7 @@
     "prisma:generate:postgres": "npx prisma generate --config prisma.postgresql.config.ts",
     "prisma:migrate:deploy": "npx prisma migrate deploy",
     "prisma:migrate:deploy:postgres": "npx prisma db push --config prisma.postgresql.config.ts --accept-data-loss",
-    "bootstrap:admin": "npm run build && node scripts/bootstrapAdmin.js",
+    "bootstrap:admin": "node scripts/bootstrapAdmin.js",
     "smoke:test": "npm run build && node scripts/smokeTest.js",
     "test": "vitest run",
     "test:watch": "vitest"
