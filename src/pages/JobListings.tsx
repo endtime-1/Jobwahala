@@ -177,7 +177,7 @@ export default function JobListings() {
   }
 
   return (
-    <div className="container animate-in fade-in pt-24 pb-24 duration-700 md:pt-28 xl:pt-32">
+    <div className="container animate-in fade-in pt-32 pb-24 duration-700 md:pt-32 xl:pt-36">
       <SEO 
         title="Find Tech & Design Jobs in Ghana"
         description="Filter and apply for elite full-time, contract, and freelance roles in Accra and across Ghana. Updated daily with high-growth global opportunities."

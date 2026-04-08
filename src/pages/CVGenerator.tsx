@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { AlignmentType, BorderStyle, Document, HeadingLevel, Packer, Paragraph, TextRun } from 'docx'
-import { Sparkles, Download, Copy, RefreshCw, Layout, FileText, User, Briefcase, GraduationCap, Plus, Trash2, Wand2, History } from 'lucide-react'
+import { Sparkles, Download, Copy, RefreshCw, Layout, FileText, User, Briefcase, GraduationCap, Plus, Trash2, Wand2, History, Target, Eye, Pencil, CheckCircle2, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react'
 import { apiGetCVById, apiGetMyCVs, apiGetProfileOptimization, apiSaveCVGeneration } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
 import { formatRelativeTime } from '../lib/display'
@@ -263,30 +263,30 @@ const getSafeCvFileName = (name: string) =>
 const getCvTemplateTheme = (template: CvTemplate) => {
   if (template === 'studio') {
     return {
-      shellClassName: 'rounded-[2.5rem] border border-primary/10 bg-white shadow-premium-2xl overflow-hidden',
-      headerClassName: 'bg-[radial-gradient(circle_at_top_left,_rgba(58,99,245,0.95),_rgba(15,23,42,0.98)_60%)] p-16 text-white text-center',
-      sectionSpacingClassName: 'p-16 space-y-14',
-      sectionCardClassName: 'space-y-3 rounded-[1.8rem] border border-primary/10 bg-primary/5 p-5',
-      chipClassName: 'rounded-full border border-white/20 bg-white/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-white/85',
+      shellClassName: 'rounded-[1.5rem] border border-primary/10 bg-white shadow-premium-2xl overflow-hidden sm:rounded-[2.5rem]',
+      headerClassName: 'bg-[radial-gradient(circle_at_top_left,_rgba(58,99,245,0.95),_rgba(15,23,42,0.98)_60%)] p-6 text-white text-center sm:p-10 lg:p-16',
+      sectionSpacingClassName: 'p-5 space-y-8 sm:p-10 lg:p-16 lg:space-y-14',
+      sectionCardClassName: 'space-y-3 rounded-[1.2rem] border border-primary/10 bg-primary/5 p-4 sm:rounded-[1.8rem] sm:p-5',
+      chipClassName: 'rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-white/85 sm:px-4 sm:py-2',
     }
   }
 
   if (template === 'compact') {
     return {
-      shellClassName: 'rounded-[2rem] border border-surface-border bg-white shadow-premium-xl overflow-hidden',
-      headerClassName: 'bg-surface-alt p-12 text-center text-text-main border-b border-surface-border',
-      sectionSpacingClassName: 'p-10 space-y-10',
-      sectionCardClassName: 'space-y-3 rounded-[1.2rem] border border-surface-border bg-surface-alt/20 p-4',
-      chipClassName: 'rounded-full border border-surface-border bg-surface-alt/30 px-4 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-text-main',
+      shellClassName: 'rounded-[1.5rem] border border-surface-border bg-white shadow-premium-xl overflow-hidden sm:rounded-[2rem]',
+      headerClassName: 'bg-surface-alt p-6 text-center text-text-main border-b border-surface-border sm:p-10 lg:p-12',
+      sectionSpacingClassName: 'p-5 space-y-8 sm:p-8 lg:p-10 lg:space-y-10',
+      sectionCardClassName: 'space-y-3 rounded-[1rem] border border-surface-border bg-surface-alt/20 p-3 sm:rounded-[1.2rem] sm:p-4',
+      chipClassName: 'rounded-full border border-surface-border bg-surface-alt/30 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-text-main sm:px-4 sm:py-2',
     }
   }
 
   return {
-    shellClassName: 'rounded-[2.5rem] border border-surface-border bg-white shadow-premium-2xl overflow-hidden',
-    headerClassName: 'bg-text-main p-16 text-white text-center',
-    sectionSpacingClassName: 'p-16 space-y-16',
-    sectionCardClassName: 'space-y-3 rounded-[1.6rem] border border-surface-border bg-surface-alt/20 p-5',
-    chipClassName: 'rounded-full border border-white/15 bg-white/5 px-4 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-white/80',
+    shellClassName: 'rounded-[1.5rem] border border-surface-border bg-white shadow-premium-2xl overflow-hidden sm:rounded-[2.5rem]',
+    headerClassName: 'bg-text-main p-6 text-white text-center sm:p-10 lg:p-16',
+    sectionSpacingClassName: 'p-5 space-y-8 sm:p-10 lg:p-16 lg:space-y-16',
+    sectionCardClassName: 'space-y-3 rounded-[1.2rem] border border-surface-border bg-surface-alt/20 p-4 sm:rounded-[1.6rem] sm:p-5',
+    chipClassName: 'rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-white/80 sm:px-4 sm:py-2',
   }
 }
 
@@ -822,10 +822,40 @@ export default function CVGenerator() {
   const [optimization, setOptimization] = useState<ProfileOptimization | null>(null)
   const [isOptimizationLoading, setIsOptimizationLoading] = useState(false)
   const [optimizationError, setOptimizationError] = useState('')
+  const [targetJobDescription, setTargetJobDescription] = useState('')
+  const [isEditing, setIsEditing] = useState(false)
+  const [editableContent, setEditableContent] = useState('')
+  const [showJobTailor, setShowJobTailor] = useState(false)
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({})
   const hasPrefilledProfile = useRef(false)
+  const DRAFT_KEY = 'jw_cv_draft'
+
+  const toggleSection = (key: string) =>
+    setCollapsedSections((prev) => ({ ...prev, [key]: !prev[key] }))
+
+  // Persist form to localStorage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(DRAFT_KEY)
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        setFormData((prev) => ({ ...prev, ...parsed }))
+      }
+    } catch {
+      // ignore
+    }
+  }, [])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(formData))
+    } catch {
+      // ignore
+    }
+  }, [formData])
 
   const loadHistory = async () => {
-    if (role !== 'SEEKER') {
+    if (!user) {
       setHistory([])
       return
     }
@@ -845,7 +875,7 @@ export default function CVGenerator() {
 
   useEffect(() => {
     void loadHistory()
-  }, [role])
+  }, [user?.id])
 
   const loadOptimization = async () => {
     if (role !== 'SEEKER') {
@@ -1060,8 +1090,11 @@ export default function CVGenerator() {
       certificationLines || 'No certification details provided.',
       '',
       'Generate a modern ATS-friendly CV in Markdown with these sections when data is available: Summary, Core Skills, Selected Achievements, Experience, Projects, Education, Certifications, and Languages. Keep formatting clean, professional, and recruiter-ready.',
-    ].join('\n')
-  }, [formData])
+      targetJobDescription.trim()
+        ? `\nTarget job description to tailor the CV for:\n${targetJobDescription.trim()}`
+        : '',
+    ].filter(Boolean).join('\n')
+  }, [formData, targetJobDescription])
 
   const handleGenerate = async () => {
     setIsGenerating(true)
@@ -1069,16 +1102,19 @@ export default function CVGenerator() {
     setStep(2)
 
     try {
-      if (role === 'SEEKER') {
+      if (user) {
+        // All logged-in users get AI-powered generation via the backend
         const data = await apiSaveCVGeneration(seekerPrompt)
         const nextCv = data.cv as CvHistoryRecord
 
         setGeneratedData(null)
         setGeneratedContent(nextCv.content)
+        setEditableContent(nextCv.content)
         setSelectedCvId(nextCv.id)
-        setSaveStatus('Generated by the backend and saved to your CV history.')
+        setSaveStatus('AI-generated and saved to your CV history.')
         await loadHistory()
       } else {
+        // Guest: local smart template generation
         const nextGenerated = {
           summary:
             formData.summary ||
@@ -1093,10 +1129,12 @@ export default function CVGenerator() {
           suggestedSkills: ['Agile Delivery', 'Strategic Planning', 'Cross-functional Leadership', 'Systems Thinking', 'Stakeholder Communication'],
         }
 
+        const localContent = buildLocalCvMarkdown(formData, nextGenerated)
         setGeneratedData(nextGenerated)
-        setGeneratedContent(buildLocalCvMarkdown(formData, nextGenerated))
+        setGeneratedContent(localContent)
+        setEditableContent(localContent)
         setSelectedCvId(null)
-        setSaveStatus('Generated locally. Backend AI generation is enabled for seeker accounts.')
+        setSaveStatus('Generated locally. Sign in to save drafts and use AI generation.')
       }
     } catch (err: any) {
       setSaveStatus(err.message || 'Unable to generate your CV right now.')
@@ -1132,9 +1170,11 @@ export default function CVGenerator() {
     setSaveStatus('Print dialog opened. Use Save as PDF to export your CV.')
   }
 
-  const previewText = formatGeneratedDocument(generatedContent)
+  const activeContent = isEditing ? editableContent : generatedContent
+  const previewText = formatGeneratedDocument(activeContent)
   const previewHeader = getPreviewHeader(previewText, formData)
   const selectedTemplateTheme = getCvTemplateTheme(selectedTemplate)
+  const liveScore = profileScoreFallback(formData)
 
   const handleDownloadMarkdown = () => {
     const draftContent = previewText.trim()
@@ -1198,7 +1238,9 @@ export default function CVGenerator() {
       const nextCv = (data.cv || record) as CvHistoryRecord
       setSelectedCvId(nextCv.id)
       setGeneratedContent(nextCv.content)
+      setEditableContent(nextCv.content)
       setGeneratedData(null)
+      setIsEditing(false)
       setSaveStatus('Loaded a saved CV draft from your history.')
       setStep(3)
     } catch (err: any) {
@@ -1212,11 +1254,34 @@ export default function CVGenerator() {
     setStep(1)
     setGeneratedData(null)
     setGeneratedContent('')
+    setEditableContent('')
     setSelectedCvId(null)
     setSaveStatus('')
+    setIsEditing(false)
   }
 
-  const renderForm = () => (
+  const handleRegenerate = () => {
+    setStep(1)
+    setGeneratedData(null)
+    setGeneratedContent('')
+    setEditableContent('')
+    setSelectedCvId(null)
+    setSaveStatus('')
+    setIsEditing(false)
+  }
+
+  const handleClearDraft = () => {
+    try { localStorage.removeItem(DRAFT_KEY) } catch { /* ignore */ }
+    setFormData({
+      fullName: '', headline: '', email: '', phone: '', location: '',
+      website: '', linkedin: '', portfolio: '', summary: '', achievements: '',
+      languages: '', education: [{ ...emptyEducation }], experience: [{ ...emptyExperience }],
+      projects: [{ ...emptyProject }], certifications: [{ ...emptyCertification }], skills: '',
+    })
+    setSaveStatus('Form cleared.')
+  }
+
+const renderForm = () => (
     <div className="dashboard-panel animate-in fade-in slide-in-from-bottom-4 space-y-10 p-5 duration-700 no-print sm:p-7 lg:p-8">
       {role === 'SEEKER' ? (
         <div className="rounded-[1.9rem] border border-primary/10 bg-primary/5 p-5 sm:p-6">
@@ -1301,6 +1366,69 @@ export default function CVGenerator() {
           ) : null}
         </div>
       ) : null}
+
+      {/* Live ATS Score */}
+      <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-surface-border bg-surface-alt/30 px-5 py-4">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl font-black text-lg text-white ${liveScore >= 80 ? 'bg-success' : liveScore >= 50 ? 'bg-secondary' : 'bg-error'}`}>
+            {liveScore}
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-text-main">
+              Live ATS Score
+            </p>
+            <p className="mt-0.5 text-[11px] font-medium text-text-muted">
+              {liveScore >= 80 ? 'Strong profile — ready to generate.' : liveScore >= 50 ? 'Good start — fill in more details.' : 'Add name, summary, and skills to improve your score.'}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          {[
+            { label: 'Name', done: !!formData.fullName.trim() },
+            { label: 'Summary', done: formData.summary.trim().length >= 80 },
+            { label: 'Skills', done: formData.skills.split(',').filter((s) => s.trim()).length >= 3 },
+            { label: 'Experience', done: formData.experience.some((e) => e.description.trim().length >= 40) },
+          ].map((check) => (
+            <span key={check.label} className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-widest ${check.done ? 'bg-success/10 text-success' : 'bg-surface-border/30 text-text-light'}`}>
+              {check.done ? <CheckCircle2 className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
+              {check.label}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* Target Job Description */}
+      <div className="rounded-2xl border border-secondary/20 bg-secondary/5 px-5 py-4">
+        <button
+          type="button"
+          onClick={() => setShowJobTailor((v) => !v)}
+          className="flex w-full items-center justify-between gap-3"
+        >
+          <div className="flex items-center gap-3">
+            <Target className="h-4 w-4 text-secondary" />
+            <div className="text-left">
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-text-main">Tailor to a Job Description</p>
+              <p className="mt-0.5 text-[11px] font-medium text-text-muted">Paste a JD to generate a CV optimised for that role</p>
+            </div>
+          </div>
+          {showJobTailor ? <ChevronUp className="h-4 w-4 text-text-light" /> : <ChevronDown className="h-4 w-4 text-text-light" />}
+        </button>
+        {showJobTailor ? (
+          <div className="mt-4">
+            <textarea
+              placeholder="Paste the full job description here. The AI will use it to tailor keywords, skills, and emphasis in your CV..."
+              className="min-h-[140px] border-secondary/30 py-3 text-sm"
+              value={targetJobDescription}
+              onChange={(e) => setTargetJobDescription(e.target.value)}
+            />
+            {targetJobDescription.trim() ? (
+              <p className="mt-2 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-success">
+                <CheckCircle2 className="h-3 w-3" /> Job description added — CV will be tailored to this role
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
 
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-2">
         <div className="space-y-6">
@@ -1406,19 +1534,26 @@ export default function CVGenerator() {
       </div>
 
       <div className="space-y-8">
-        <div className="flex justify-between items-center border-b border-surface-border pb-4">
-          <h3 className="font-black text-lg tracking-tight text-text-main flex items-center gap-3">
+        <div className="flex items-center justify-between border-b border-surface-border pb-4">
+          <h3 className="flex items-center gap-3 text-lg font-black tracking-tight text-text-main">
             <Briefcase className="h-5 w-5 text-primary" /> Career Trajectory
           </h3>
-          <button
-            type="button"
-            onClick={addExperience}
-            className="text-primary font-black text-[10px] uppercase tracking-widest flex items-center gap-1 hover:opacity-70 transition-opacity"
-          >
-            <Plus className="h-3 w-3" /> Add Milestone
-          </button>
+          <div className="flex items-center gap-3">
+            {!collapsedSections['experience'] ? (
+              <button
+                type="button"
+                onClick={addExperience}
+                className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-primary transition-opacity hover:opacity-70"
+              >
+                <Plus className="h-3 w-3" /> Add Milestone
+              </button>
+            ) : null}
+            <button type="button" onClick={() => toggleSection('experience')} className="text-[10px] font-black uppercase tracking-widest text-text-light">
+              {collapsedSections['experience'] ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+            </button>
+          </div>
         </div>
-        {formData.experience.map((exp, index) => (
+        {!collapsedSections['experience'] && formData.experience.map((exp, index) => (
           <div key={index} className="relative space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <input
@@ -1485,15 +1620,18 @@ export default function CVGenerator() {
           <h3 className="flex items-center gap-3 text-lg font-black tracking-tight text-text-main">
             <Layout className="h-5 w-5 text-primary" /> Projects
           </h3>
-          <button
-            type="button"
-            onClick={addProject}
-            className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-primary transition-opacity hover:opacity-70"
-          >
-            <Plus className="h-3 w-3" /> Add Project
-          </button>
+          <div className="flex items-center gap-3">
+            {!collapsedSections['projects'] ? (
+              <button type="button" onClick={addProject} className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-primary transition-opacity hover:opacity-70">
+                <Plus className="h-3 w-3" /> Add Project
+              </button>
+            ) : null}
+            <button type="button" onClick={() => toggleSection('projects')} className="text-text-light">
+              {collapsedSections['projects'] ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+            </button>
+          </div>
         </div>
-        {formData.projects.map((project, index) => (
+        {!collapsedSections['projects'] && formData.projects.map((project, index) => (
           <div key={index} className="space-y-4">
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <input
@@ -1569,19 +1707,22 @@ export default function CVGenerator() {
       </div>
 
       <div className="space-y-8">
-        <div className="flex justify-between items-center border-b border-surface-border pb-4">
-          <h3 className="font-black text-lg tracking-tight text-text-main flex items-center gap-3">
+        <div className="flex items-center justify-between border-b border-surface-border pb-4">
+          <h3 className="flex items-center gap-3 text-lg font-black tracking-tight text-text-main">
             <GraduationCap className="h-5 w-5 text-secondary" /> Education
           </h3>
-          <button
-            type="button"
-            onClick={addEducation}
-            className="text-secondary font-black text-[10px] uppercase tracking-widest flex items-center gap-1 hover:opacity-70 transition-opacity"
-          >
-            <Plus className="h-3 w-3" /> Add Entry
-          </button>
+          <div className="flex items-center gap-3">
+            {!collapsedSections['education'] ? (
+              <button type="button" onClick={addEducation} className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-secondary transition-opacity hover:opacity-70">
+                <Plus className="h-3 w-3" /> Add Entry
+              </button>
+            ) : null}
+            <button type="button" onClick={() => toggleSection('education')} className="text-text-light">
+              {collapsedSections['education'] ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+            </button>
+          </div>
         </div>
-        {formData.education.map((edu, index) => (
+        {!collapsedSections['education'] && formData.education.map((edu, index) => (
           <div key={index} className="relative">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <input
@@ -1638,15 +1779,18 @@ export default function CVGenerator() {
           <h3 className="flex items-center gap-3 text-lg font-black tracking-tight text-text-main">
             <FileText className="h-5 w-5 text-secondary" /> Certifications
           </h3>
-          <button
-            type="button"
-            onClick={addCertification}
-            className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-secondary transition-opacity hover:opacity-70"
-          >
-            <Plus className="h-3 w-3" /> Add Certification
-          </button>
+          <div className="flex items-center gap-3">
+            {!collapsedSections['certs'] ? (
+              <button type="button" onClick={addCertification} className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-secondary transition-opacity hover:opacity-70">
+                <Plus className="h-3 w-3" /> Add Certification
+              </button>
+            ) : null}
+            <button type="button" onClick={() => toggleSection('certs')} className="text-text-light">
+              {collapsedSections['certs'] ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+            </button>
+          </div>
         </div>
-        {formData.certifications.map((certification, index) => (
+        {!collapsedSections['certs'] && formData.certifications.map((certification, index) => (
           <div key={index} className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <input
               type="text"
@@ -1736,16 +1880,34 @@ export default function CVGenerator() {
         </div>
         <h2 className="text-3xl font-black text-text-main tracking-tight mb-4">Building your CV draft</h2>
         <p className="text-base text-text-muted font-medium leading-relaxed">
-          {role === 'SEEKER'
-            ? 'The backend is generating and saving a new draft to your CV history.'
-            : 'The local CV builder is preparing your preview.'}
+          {user
+            ? 'The AI is crafting your professional CV and saving a draft to your history.'
+            : 'Preparing your CV preview using your form inputs.'}
         </p>
       </div>
     </div>
   )
 
   const renderPreview = () => (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-6">
+      {/* Mobile sticky export bar */}
+      <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-surface-border bg-white/80 p-3 shadow-premium-sm no-print lg:hidden">
+        <span className="text-[10px] font-black uppercase tracking-widest text-text-light">Export:</span>
+        <button type="button" onClick={handleDownload} className="btn btn-primary btn-sm flex items-center gap-2 font-black text-[10px]">
+          <FileText className="h-3.5 w-3.5" /> PDF
+        </button>
+        <button type="button" onClick={handleDownloadWord} className="btn btn-outline btn-sm bg-white flex items-center gap-2 font-black text-[10px]">
+          <Download className="h-3.5 w-3.5" /> DOCX
+        </button>
+        <button type="button" onClick={() => void handleCopy()} className="btn btn-outline btn-sm bg-white flex items-center gap-2 font-black text-[10px]">
+          <Copy className="h-3.5 w-3.5" /> Copy
+        </button>
+        <button type="button" onClick={handleRegenerate} className="ml-auto flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-text-muted hover:text-primary transition-colors">
+          <RefreshCw className="h-3.5 w-3.5" /> Regenerate
+        </button>
+      </div>
+
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
       <div className="lg:col-span-8" id="cv-preview">
         <div className={selectedTemplateTheme.shellClassName}>
           <header className={selectedTemplateTheme.headerClassName}>
@@ -1777,16 +1939,39 @@ export default function CVGenerator() {
           <div className={selectedTemplateTheme.sectionSpacingClassName}>
             <section>
               <div className="mb-8 flex items-center justify-between gap-4 border-b border-surface-border pb-4">
-                <h2 className="text-[10px] font-black text-text-light uppercase tracking-[0.3em]">
-                  {role === 'SEEKER' ? 'Saved CV Draft' : 'Generated CV Draft'}
-                </h2>
-                {selectedCvId ? (
-                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Saved draft</span>
-                ) : null}
+                <div className="flex items-center gap-3">
+                  <h2 className="text-[10px] font-black text-text-light uppercase tracking-[0.3em]">
+                    {role === 'SEEKER' ? 'Saved CV Draft' : 'Generated CV Draft'}
+                  </h2>
+                  {selectedCvId ? (
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Saved</span>
+                  ) : null}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!isEditing) {
+                      setEditableContent(generatedContent)
+                    }
+                    setIsEditing((v) => !v)
+                  }}
+                  className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-[10px] font-black uppercase tracking-widest transition-all ${isEditing ? 'bg-success/10 text-success' : 'bg-surface-alt/40 text-text-muted hover:text-primary'}`}
+                >
+                  {isEditing ? <><Eye className="h-3.5 w-3.5" /> Preview</> : <><Pencil className="h-3.5 w-3.5" /> Edit</>}
+                </button>
               </div>
-              <div className="space-y-8">
-                {renderMarkdownPreview(previewText, selectedTemplateTheme)}
-              </div>
+              {isEditing ? (
+                <textarea
+                  className="min-h-[600px] w-full rounded-2xl border border-surface-border bg-surface-alt/20 p-5 font-mono text-sm leading-relaxed text-text-main focus:outline-none focus:border-primary/40 focus:bg-white"
+                  value={editableContent}
+                  onChange={(e) => setEditableContent(e.target.value)}
+                  spellCheck={false}
+                />
+              ) : (
+                <div className="space-y-8">
+                  {renderMarkdownPreview(previewText, selectedTemplateTheme)}
+                </div>
+              )}
             </section>
           </div>
         </div>
@@ -1864,7 +2049,7 @@ export default function CVGenerator() {
             {saveStatus ? <p className="mt-4 text-xs font-bold text-text-muted leading-relaxed">{saveStatus}</p> : null}
           </div>
 
-          {role === 'SEEKER' ? (
+          {user ? (
             <div className="dashboard-panel p-5 sm:p-6">
               <div className="flex items-center justify-between mb-8 pb-6 border-b border-surface-border/50">
                 <h3 className="font-black text-xs uppercase tracking-[0.2em] text-text-main flex items-center gap-3">
@@ -1899,7 +2084,11 @@ export default function CVGenerator() {
                       }`}
                     >
                       <p className="text-xs font-black text-text-main leading-relaxed">
-                        {record.prompt?.slice(0, 80) || 'Saved CV draft'}
+                        {(() => {
+                          const nameLine = record.prompt?.split('\n').find((l) => l.startsWith('Candidate name:'))
+                          const name = nameLine?.replace('Candidate name:', '').trim()
+                          return name && name !== 'Not provided' ? `CV — ${name}` : 'Saved CV Draft'
+                        })()}
                       </p>
                       <p className="mt-2 text-[10px] font-black uppercase tracking-[0.2em] text-text-light">
                         {historyLoadingId === record.id ? 'Loading draft...' : formatRelativeTime(record.createdAt)}
@@ -1911,20 +2100,30 @@ export default function CVGenerator() {
             </div>
           ) : null}
 
-          <button
-            type="button"
-            onClick={handleStartOver}
-            className="w-full py-4 text-[10px] font-black uppercase tracking-[0.3em] text-text-light hover:text-primary transition-all flex items-center justify-center gap-3"
-          >
-            <RefreshCw className="h-4 w-4" /> Start Over
-          </button>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={handleRegenerate}
+              className="btn btn-outline w-full rounded-2xl bg-white font-black text-xs uppercase tracking-widest"
+            >
+              <RefreshCw className="h-4 w-4" /> Regenerate
+            </button>
+            <button
+              type="button"
+              onClick={handleStartOver}
+              className="btn w-full rounded-2xl bg-surface-alt/50 font-black text-xs uppercase tracking-widest text-text-muted hover:text-primary"
+            >
+              Start Over
+            </button>
+          </div>
         </div>
       </div>
+    </div>
     </div>
   )
 
   return (
-    <div className="container pt-24 pb-24 md:pt-28 xl:pt-32">
+    <div className="container pt-32 pb-24 md:pt-32 xl:pt-36">
       <section className="dashboard-hero mb-8 px-5 py-6 no-print sm:px-7 sm:py-7 lg:px-8 lg:py-8">
         <div className="relative z-10 flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-2xl">
@@ -1944,12 +2143,12 @@ export default function CVGenerator() {
               <p className="text-2xl font-black text-text-main">{history.length}</p>
               <p className="mt-1 text-[9px] font-black uppercase tracking-[0.18em] text-text-light">Drafts</p>
             </div>
-            <div className="rounded-2xl bg-white/80 px-3 py-4 text-center shadow-premium-sm">
-              <p className="text-2xl font-black text-text-main">{step}</p>
-              <p className="mt-1 text-[9px] font-black uppercase tracking-[0.18em] text-text-light">Step</p>
+            <div className={`rounded-2xl px-3 py-4 text-center shadow-premium-sm ${liveScore >= 80 ? 'bg-success/10' : liveScore >= 50 ? 'bg-secondary/10' : 'bg-white/80'}`}>
+              <p className={`text-2xl font-black ${liveScore >= 80 ? 'text-success' : liveScore >= 50 ? 'text-secondary' : 'text-text-main'}`}>{liveScore}</p>
+              <p className="mt-1 text-[9px] font-black uppercase tracking-[0.18em] text-text-light">ATS Score</p>
             </div>
             <div className="rounded-2xl bg-white/80 px-3 py-4 text-center shadow-premium-sm">
-              <p className="text-2xl font-black text-text-main">{role === 'SEEKER' ? 'AI' : 'LOCAL'}</p>
+              <p className="text-2xl font-black text-text-main">{user ? 'AI' : 'LOCAL'}</p>
               <p className="mt-1 text-[9px] font-black uppercase tracking-[0.18em] text-text-light">Mode</p>
             </div>
           </div>
@@ -1957,24 +2156,48 @@ export default function CVGenerator() {
       </section>
 
       <div className="mx-auto max-w-6xl">
-        <div className="mb-12 flex justify-center no-print">
-          <div className="dashboard-panel flex items-center gap-3 p-2">
+        <div className="mb-12 flex flex-wrap items-center justify-center gap-4 no-print">
+          <div className="dashboard-panel flex items-center gap-1 p-2">
             {[
               { num: 1, icon: <User className="h-3.5 w-3.5" />, label: 'Details' },
               { num: 2, icon: <GraduationCap className="h-3.5 w-3.5" />, label: 'Generate' },
               { num: 3, icon: <Layout className="h-3.5 w-3.5" />, label: 'Preview' },
-            ].map((s) => (
-              <div
-                key={s.num}
-                className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all ${
-                  step === s.num ? 'bg-text-main text-white shadow-lg' : step > s.num ? 'text-primary' : 'text-text-light'
-                }`}
-              >
-                {s.icon}
-                {s.label}
+            ].map((s, i) => (
+              <div key={s.num} className="flex items-center gap-1">
+                {i > 0 && <div className="h-px w-4 bg-surface-border" />}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (s.num < step || (s.num === 1)) setStep(s.num)
+                    if (s.num === 3 && generatedContent) setStep(3)
+                  }}
+                  disabled={s.num === 2 || (s.num === 3 && !generatedContent)}
+                  className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all disabled:cursor-default ${
+                    step === s.num
+                      ? 'bg-text-main text-white shadow-lg'
+                      : step > s.num && s.num !== 2
+                        ? 'cursor-pointer text-primary hover:bg-primary/5'
+                        : s.num === 3 && generatedContent
+                          ? 'cursor-pointer text-primary hover:bg-primary/5'
+                          : 'text-text-light'
+                  }`}
+                >
+                  {s.icon}
+                  <span className="hidden sm:inline">{s.label}</span>
+                </button>
               </div>
             ))}
           </div>
+
+          {step === 1 && (
+            <button
+              type="button"
+              onClick={handleClearDraft}
+              className="text-[10px] font-black uppercase tracking-widest text-text-light transition-colors hover:text-error"
+            >
+              Clear Draft
+            </button>
+          )}
         </div>
 
         {step === 1 ? renderForm() : null}

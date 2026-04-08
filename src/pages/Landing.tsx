@@ -81,7 +81,7 @@ export default function Landing() {
         keywords="jobs in accra, hire ghanaian developers, remote work ghana, tech jobs ghana, jobs in kumasi, jobwahala launch"
       />
       {/* Hero Section */}
-      <section className="relative overflow-hidden pt-24 pb-20 md:pt-28 md:pb-24 xl:pt-32 xl:pb-32">
+      <section className="relative overflow-hidden pt-32 pb-20 md:pt-32 md:pb-24 xl:pt-36 xl:pb-32">
         <div className="container relative z-10">
           <div className="grid grid-cols-1 gap-14 lg:grid-cols-12 lg:items-center lg:gap-16">
             {/* Left Content Column */}

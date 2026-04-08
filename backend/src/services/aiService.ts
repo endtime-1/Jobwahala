@@ -1,4 +1,26 @@
+import Anthropic from '@anthropic-ai/sdk'
+
 const DEFAULT_MODEL = process.env.OPENAI_MODEL || 'gpt-4o-mini'
+const CLAUDE_MODEL = process.env.ANTHROPIC_MODEL || 'claude-haiku-4-5-20251001'
+
+const getAnthropicClient = (): Anthropic | null => {
+  const key = process.env.ANTHROPIC_API_KEY
+  if (!key) return null
+  return new Anthropic({ apiKey: key })
+}
+
+const callClaude = async (systemPrompt: string, userContent: string): Promise<string> => {
+  const client = getAnthropicClient()
+  if (!client) return ''
+  const msg = await client.messages.create({
+    model: CLAUDE_MODEL,
+    max_tokens: 2048,
+    system: systemPrompt,
+    messages: [{ role: 'user', content: userContent }],
+  })
+  const block = msg.content.find((b) => b.type === 'text')
+  return block && block.type === 'text' ? block.text.trim() : ''
+}
 
 export type ProposalDraftContext = {
   type: 'JOB' | 'SERVICE'
@@ -313,23 +335,204 @@ export type MarketplaceFreelancerComparisonContext = {
   options: ServiceComparisonOptionContext[]
 }
 
-const fallbackCV = (prompt: string) => `# Generated CV
+const buildSmartFallbackCV = (prompt: string): string => {
+  const lines = prompt.split('\n').map((l) => l.trim()).filter(Boolean)
+  const get = (prefix: string) => {
+    const line = lines.find((l) => l.toLowerCase().startsWith(prefix.toLowerCase()))
+    return line ? line.slice(prefix.length).trim().replace(/^:\s*/, '') : ''
+  }
 
-## Professional Summary
-Candidate profile generated from the provided prompt.
+  const name = get('Candidate name') || get('Full name') || 'Professional'
+  const headline = get('Professional headline') || get('Headline') || 'Professional'
+  const email = get('Email') || ''
+  const phone = get('Phone') || ''
+  const location = get('Location') || ''
+  const summary = get('Professional summary') || get('Summary') || ''
+  const skills = get('Skills') || ''
+  const achievements = get('Achievements') || ''
+  const languages = get('Languages') || ''
+  const website = get('Website') || ''
+  const linkedin = get('LinkedIn') || ''
+  const portfolio = get('Portfolio') || ''
 
-## Source Prompt
-${prompt || 'No prompt was provided.'}
+  const skillList = skills.split(',').map((s) => s.trim()).filter(Boolean)
+  const achievementList = achievements.split('\n').map((s) => s.trim()).filter(Boolean)
+  const langList = languages.split(',').map((s) => s.trim()).filter(Boolean)
+  const contactParts = [email, phone, location].filter(Boolean)
+  const linkParts = [portfolio, linkedin, website].filter(Boolean)
 
-## Experience Highlights
-- Add measurable outcomes for recent work.
-- Focus on responsibilities that match the target role.
+  // Extract experience blocks
+  const expBlocks: Array<{ company: string; role: string; period: string; details: string }> = []
+  let currentExp: { company: string; role: string; period: string; details: string } | null = null
+  for (const line of lines) {
+    if (/^Experience \d+:$/i.test(line)) {
+      if (currentExp) expBlocks.push(currentExp)
+      currentExp = { company: '', role: '', period: '', details: '' }
+    } else if (currentExp) {
+      if (line.startsWith('Company:')) currentExp.company = line.slice(8).trim()
+      else if (line.startsWith('Role:')) currentExp.role = line.slice(5).trim()
+      else if (line.startsWith('Period:')) currentExp.period = line.slice(7).trim()
+      else if (line.startsWith('Details:')) currentExp.details = line.slice(8).trim()
+    }
+  }
+  if (currentExp) expBlocks.push(currentExp)
 
-## Skills
-- Communication
-- Problem Solving
-- Team Collaboration
-`
+  // Extract education blocks
+  const eduBlocks: Array<{ school: string; degree: string; year: string }> = []
+  let currentEdu: { school: string; degree: string; year: string } | null = null
+  for (const line of lines) {
+    if (/^Education \d+:$/i.test(line)) {
+      if (currentEdu) eduBlocks.push(currentEdu)
+      currentEdu = { school: '', degree: '', year: '' }
+    } else if (currentEdu) {
+      if (line.startsWith('School:')) currentEdu.school = line.slice(7).trim()
+      else if (line.startsWith('Degree:')) currentEdu.degree = line.slice(7).trim()
+      else if (line.startsWith('Year:')) currentEdu.year = line.slice(5).trim()
+    }
+  }
+  if (currentEdu) eduBlocks.push(currentEdu)
+
+  // Extract project blocks
+  const projBlocks: Array<{ name: string; role: string; stack: string; link: string; impact: string }> = []
+  let currentProj: { name: string; role: string; stack: string; link: string; impact: string } | null = null
+  for (const line of lines) {
+    if (/^Project \d+:$/i.test(line)) {
+      if (currentProj) projBlocks.push(currentProj)
+      currentProj = { name: '', role: '', stack: '', link: '', impact: '' }
+    } else if (currentProj) {
+      if (line.startsWith('Name:')) currentProj.name = line.slice(5).trim()
+      else if (line.startsWith('Role:')) currentProj.role = line.slice(5).trim()
+      else if (line.startsWith('Stack:')) currentProj.stack = line.slice(6).trim()
+      else if (line.startsWith('Link:')) currentProj.link = line.slice(5).trim()
+      else if (line.startsWith('Impact:')) currentProj.impact = line.slice(7).trim()
+    }
+  }
+  if (currentProj) projBlocks.push(currentProj)
+
+  // Extract certification blocks
+  const certBlocks: Array<{ name: string; issuer: string; year: string; link: string }> = []
+  let currentCert: { name: string; issuer: string; year: string; link: string } | null = null
+  for (const line of lines) {
+    if (/^Certification \d+:$/i.test(line)) {
+      if (currentCert) certBlocks.push(currentCert)
+      currentCert = { name: '', issuer: '', year: '', link: '' }
+    } else if (currentCert) {
+      if (line.startsWith('Name:')) currentCert.name = line.slice(5).trim()
+      else if (line.startsWith('Issuer:')) currentCert.issuer = line.slice(7).trim()
+      else if (line.startsWith('Year:')) currentCert.year = line.slice(5).trim()
+      else if (line.startsWith('Link:')) currentCert.link = line.slice(5).trim()
+    }
+  }
+  if (currentCert) certBlocks.push(currentCert)
+
+  const parts: string[] = []
+
+  parts.push(`# ${name}`)
+  if (headline) parts.push(`Headline: ${headline}`)
+  if (contactParts.length) parts.push(contactParts.join(' | '))
+  if (linkParts.length) parts.push(`Links: ${linkParts.join(' | ')}`)
+  parts.push('')
+
+  // Summary
+  parts.push('## Summary')
+  if (summary && summary.toLowerCase() !== 'not provided') {
+    parts.push(summary)
+  } else {
+    const roleStr = expBlocks[0]?.role || headline
+    const skillStr = skillList.slice(0, 3).join(', ') || 'industry-standard tools'
+    parts.push(
+      `Results-driven ${roleStr} with hands-on expertise in ${skillStr}. Proven ability to deliver high-quality outcomes in fast-paced environments and cross-functional teams.`
+    )
+  }
+  parts.push('')
+
+  // Skills
+  if (skillList.length > 0) {
+    parts.push('## Core Skills')
+    for (const skill of skillList) parts.push(`- ${skill}`)
+    parts.push('')
+  }
+
+  // Achievements
+  if (achievementList.length > 0) {
+    parts.push('## Selected Achievements')
+    for (const item of achievementList) parts.push(`- ${item}`)
+    parts.push('')
+  }
+
+  // Experience
+  const validExp = expBlocks.filter((e) => e.company || e.role)
+  if (validExp.length > 0) {
+    parts.push('## Experience')
+    for (const exp of validExp) {
+      parts.push(`### ${exp.role || 'Professional Role'}`)
+      const subLine = [exp.company, exp.period].filter(Boolean).join(' | ')
+      if (subLine) parts.push(subLine)
+      parts.push('')
+      if (exp.details && exp.details.toLowerCase() !== 'not provided') {
+        parts.push(exp.details)
+      } else {
+        parts.push(
+          `Delivered impactful work as ${exp.role || 'a key team member'} at ${exp.company || 'the organization'}, contributing to team goals and measurable outcomes through disciplined execution.`
+        )
+      }
+      parts.push('')
+    }
+  }
+
+  // Projects
+  const validProj = projBlocks.filter((p) => p.name)
+  if (validProj.length > 0) {
+    parts.push('## Projects')
+    for (const proj of validProj) {
+      parts.push(`### ${proj.name}`)
+      const subLine = [proj.role, proj.stack].filter(Boolean).join(' | ')
+      if (subLine) parts.push(subLine)
+      if (proj.link && proj.link.toLowerCase() !== 'not provided') parts.push(`Link: ${proj.link}`)
+      parts.push('')
+      if (proj.impact && proj.impact.toLowerCase() !== 'not provided') {
+        parts.push(proj.impact)
+      } else {
+        parts.push(`Built and shipped ${proj.name}, demonstrating strong technical ownership and delivery skills.`)
+      }
+      parts.push('')
+    }
+  }
+
+  // Education
+  const validEdu = eduBlocks.filter((e) => e.school || e.degree)
+  if (validEdu.length > 0) {
+    parts.push('## Education')
+    for (const edu of validEdu) {
+      const line = [edu.degree, edu.school, edu.year ? `(${edu.year})` : ''].filter(Boolean).join(', ')
+      parts.push(`- ${line}`)
+    }
+    parts.push('')
+  }
+
+  // Certifications
+  const validCerts = certBlocks.filter((c) => c.name)
+  if (validCerts.length > 0) {
+    parts.push('## Certifications')
+    for (const cert of validCerts) {
+      const line = [cert.name, cert.issuer, cert.year].filter(Boolean).join(' | ')
+      parts.push(`- ${line}`)
+      if (cert.link && cert.link.toLowerCase() !== 'not provided') parts.push(`  ${cert.link}`)
+    }
+    parts.push('')
+  }
+
+  // Languages
+  if (langList.length > 0) {
+    parts.push('## Languages')
+    for (const lang of langList) parts.push(`- ${lang}`)
+    parts.push('')
+  }
+
+  return parts.join('\n')
+}
+
+const fallbackCV = buildSmartFallbackCV
 
 const extractOutputText = (payload: any): string => {
   if (typeof payload?.output_text === 'string' && payload.output_text.trim()) {
@@ -494,44 +697,45 @@ export const generateCVFromPrompt = async (prompt: string): Promise<string> => {
   const cleanPrompt = prompt.trim()
 
   if (!cleanPrompt) {
-    return fallbackCV('')
+    return buildSmartFallbackCV('')
   }
 
-  const apiKey = process.env.OPENAI_API_KEY
-  if (!apiKey) {
-    return fallbackCV(cleanPrompt)
-  }
+  const systemPrompt =
+    'You are an expert CV writer for JobWahala, the premier African talent marketplace. Produce a concise, ATS-friendly CV in Markdown using only the information provided. Use these sections when data is available: Summary, Core Skills, Selected Achievements, Experience (with ### for each role), Projects (with ### for each project), Education, Certifications, Languages. Focus on highlighting skills relevant to high-growth opportunities in Ghana and the broader African continent. Do not invent employers, degrees, dates, certifications, or achievements. Keep formatting clean, professional, and recruiter-ready. Output only the Markdown content, no preamble.'
 
+  // Try Claude (Anthropic) first
   try {
-    const response = await fetch('https://api.openai.com/v1/responses', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: DEFAULT_MODEL,
-        instructions:
-          'You are an expert CV writer for JobWahala, the premier African talent marketplace. Produce a concise, ATS-friendly CV in Markdown using only the information provided. Focus on highlighting skills relevant to high-growth opportunities in Ghana and the broader African continent. Do not invent employers, degrees, dates, certifications, or achievements. If key details are missing, keep the section generic and clearly useful.',
-        input: `Create a professional CV for a JobWahala user from this request:\n\n${cleanPrompt}`,
-      }),
-    })
-
-    const payload = await response.json().catch(() => ({}))
-
-    if (!response.ok) {
-      throw new Error(payload?.error?.message || payload?.message || 'OpenAI request failed')
-    }
-
-    const output = extractOutputText(payload)
-    if (!output) {
-      throw new Error('OpenAI response did not contain text output')
-    }
-
-    return output
+    const claudeOutput = await callClaude(systemPrompt, `Create a professional CV for a JobWahala user from this request:\n\n${cleanPrompt}`)
+    if (claudeOutput) return claudeOutput
   } catch {
-    return fallbackCV(cleanPrompt)
+    // fall through to OpenAI or smart fallback
   }
+
+  // Try OpenAI as second option
+  const openAiKey = process.env.OPENAI_API_KEY
+  if (openAiKey) {
+    try {
+      const response = await fetch('https://api.openai.com/v1/responses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${openAiKey}` },
+        body: JSON.stringify({
+          model: DEFAULT_MODEL,
+          instructions: systemPrompt,
+          input: `Create a professional CV for a JobWahala user from this request:\n\n${cleanPrompt}`,
+        }),
+      })
+      const payload = await response.json().catch(() => ({}))
+      if (response.ok) {
+        const output = extractOutputText(payload)
+        if (output) return output
+      }
+    } catch {
+      // fall through
+    }
+  }
+
+  // Smart template-based fallback — always produces a useful structured CV
+  return buildSmartFallbackCV(cleanPrompt)
 }
 
 export const generateProposalDraft = async (
@@ -1839,11 +2043,6 @@ export const generateSeekerProfileOptimization = async (
   context: SeekerProfileOptimizationContext,
 ): Promise<GeneratedSeekerProfileOptimization> => {
   const fallback = fallbackSeekerProfileOptimization(context)
-  const apiKey = process.env.OPENAI_API_KEY
-
-  if (!apiKey) {
-    return fallback
-  }
 
   const prompt = `
 Generate seeker profile optimization advice in JSON.
@@ -1886,52 +2085,58 @@ ${context.recommendedJobs
   .join('\n\n')}
 `.trim()
 
-  try {
-    const response = await fetch('https://api.openai.com/v1/responses', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: DEFAULT_MODEL,
-        instructions:
-          'You are a recruiter-oriented career coach. Return strict JSON only.',
-        input: prompt,
-      }),
-    })
-
-    const payload = await response.json().catch(() => ({}))
-
-    if (!response.ok) {
-      throw new Error(payload?.error?.message || payload?.message || 'OpenAI request failed')
-    }
-
-    const output = extractOutputText(payload)
+  const parseOptimization = (output: string, fb: typeof fallback) => {
     const parsed = extractFirstJsonObject(output)
-
-    if (!parsed || typeof parsed !== 'object') {
-      throw new Error('OpenAI response did not contain valid optimization JSON')
-    }
-
+    if (!parsed || typeof parsed !== 'object') return null
     const record = parsed as Record<string, unknown>
-
     return {
-      score:
-        typeof record.score === 'number' && Number.isFinite(record.score)
-          ? clampScore(record.score)
-          : fallback.score,
-      headline: sanitizeProposalField(record.headline, fallback.headline),
-      strengths: sanitizeStringArray(record.strengths, fallback.strengths),
-      improvements: sanitizeStringArray(record.improvements, fallback.improvements),
-      suggestedSummary: sanitizeProposalField(record.suggestedSummary, fallback.suggestedSummary),
-      suggestedSkills: sanitizeStringArray(record.suggestedSkills, fallback.suggestedSkills),
-      nextCvPrompt: sanitizeProposalField(record.nextCvPrompt, fallback.nextCvPrompt),
-      targetRoles: sanitizeStringArray(record.targetRoles, fallback.targetRoles),
+      score: typeof record.score === 'number' && Number.isFinite(record.score) ? clampScore(record.score) : fb.score,
+      headline: sanitizeProposalField(record.headline, fb.headline),
+      strengths: sanitizeStringArray(record.strengths, fb.strengths),
+      improvements: sanitizeStringArray(record.improvements, fb.improvements),
+      suggestedSummary: sanitizeProposalField(record.suggestedSummary, fb.suggestedSummary),
+      suggestedSkills: sanitizeStringArray(record.suggestedSkills, fb.suggestedSkills),
+      nextCvPrompt: sanitizeProposalField(record.nextCvPrompt, fb.nextCvPrompt),
+      targetRoles: sanitizeStringArray(record.targetRoles, fb.targetRoles),
+    }
+  }
+
+  // Try Claude first
+  try {
+    const output = await callClaude('You are a recruiter-oriented career coach. Return strict JSON only — no markdown, no preamble.', prompt)
+    if (output) {
+      const result = parseOptimization(output, fallback)
+      if (result) return result
     }
   } catch {
-    return fallback
+    // fall through
   }
+
+  // Try OpenAI as fallback
+  const openAiKey = process.env.OPENAI_API_KEY
+  if (openAiKey) {
+    try {
+      const response = await fetch('https://api.openai.com/v1/responses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${openAiKey}` },
+        body: JSON.stringify({
+          model: DEFAULT_MODEL,
+          instructions: 'You are a recruiter-oriented career coach. Return strict JSON only.',
+          input: prompt,
+        }),
+      })
+      const payload = await response.json().catch(() => ({}))
+      if (response.ok) {
+        const output = extractOutputText(payload)
+        const result = parseOptimization(output, fallback)
+        if (result) return result
+      }
+    } catch {
+      // fall through
+    }
+  }
+
+  return fallback
 }
 
 const fallbackJobApplicationCoaching = (

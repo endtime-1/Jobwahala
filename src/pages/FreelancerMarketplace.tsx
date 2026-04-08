@@ -296,7 +296,7 @@ export default function FreelancerMarketplace() {
   }
 
   return (
-    <div className="container animate-in fade-in pt-24 pb-24 duration-1000 md:pt-28 xl:pt-32">
+    <div className="container animate-in fade-in pt-32 pb-24 duration-1000 md:pt-32 xl:pt-36">
       <SEO 
         title="Hire Elite Freelancers in Ghana | Tech & Design Talent"
         description="Connect with top-rated Ghanaian software engineers, UI/UX designers, and digital marketers. Verified talent for global high-growth projects."

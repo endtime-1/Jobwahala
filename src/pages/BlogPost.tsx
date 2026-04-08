@@ -17,7 +17,7 @@ export default function BlogPost() {
   }
 
   return (
-    <div className="fade-in pt-24 pb-20 md:pt-28 md:pb-24 xl:pt-32 xl:pb-32">
+    <div className="fade-in pt-32 pb-20 md:pt-32 md:pb-24 xl:pt-36 xl:pb-32">
       <SEO 
         title={`${post.title} — JobWahala Resource Center`}
         description={post.excerpt}

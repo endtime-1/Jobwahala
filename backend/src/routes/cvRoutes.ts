@@ -4,7 +4,7 @@ import { authMiddleware, roleMiddleware } from '../middleware/auth';
 
 const router = Router();
 
-router.use(authMiddleware, roleMiddleware(['SEEKER']));
+router.use(authMiddleware);
 router.post('/', saveCVGeneration);
 router.get('/', getMyCVs);
 router.get('/:id', getCVById);

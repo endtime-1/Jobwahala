@@ -215,7 +215,7 @@ export default function JobDetails() {
   const locationLabel = formatJobLocationWithWorkMode(job.location)
 
   return (
-    <div className="container animate-in fade-in slide-in-from-bottom-4 pt-24 pb-24 duration-700 md:pt-28 xl:pt-32">
+    <div className="container animate-in fade-in slide-in-from-bottom-4 pt-32 pb-24 duration-700 md:pt-32 xl:pt-36">
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <Link to="/jobs" className="group flex items-center gap-2 text-sm font-semibold text-text-muted transition-all hover:text-primary">
           <ChevronLeft className="h-4 w-4 transform group-hover:-translate-x-1 transition-transform" /> Back to Job Search

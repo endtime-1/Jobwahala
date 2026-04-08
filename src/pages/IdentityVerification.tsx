@@ -92,7 +92,7 @@ const IdentityVerification = () => {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
       <Navbar />
-      <main className="flex-grow pt-24 pb-12 px-4">
+      <main className="flex-grow pt-32 pb-12 px-4">
         <div className="max-w-4xl mx-auto">
           <button 
             onClick={() => navigate(-1)}

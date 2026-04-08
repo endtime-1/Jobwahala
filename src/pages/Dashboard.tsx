@@ -18,7 +18,7 @@ export default function Dashboard() {
   const { role } = useAuth()
 
   return (
-    <div className="container pt-[calc(env(safe-area-inset-top)+7.25rem)] pb-8 md:pt-[calc(env(safe-area-inset-top)+7.75rem)] md:pb-12 xl:pt-[calc(env(safe-area-inset-top)+8.5rem)]">
+    <div className="container pt-[calc(env(safe-area-inset-top)+8rem)] pb-8 md:pt-[calc(env(safe-area-inset-top)+8rem)] md:pb-12 xl:pt-[calc(env(safe-area-inset-top)+9rem)]">
       <Suspense fallback={<DashboardFallback />}>
         {role === 'SEEKER' && <SeekerDashboard />}
         {role === 'EMPLOYER' && <EmployerDashboard />}

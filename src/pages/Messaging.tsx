@@ -993,8 +993,8 @@ export default function Messaging() {
   )
 
   return (
-    <div className="min-h-screen bg-surface-alt/10 pt-24 pb-[calc(env(safe-area-inset-bottom)+6.5rem)] md:pt-28 md:pb-10">
-      <div className="container mx-auto h-[calc(100vh-156px)] max-w-7xl overflow-hidden md:h-[calc(100vh-172px)]">
+    <div className="min-h-screen bg-surface-alt/10 pt-32 pb-[calc(env(safe-area-inset-bottom)+6.5rem)] md:pt-32 md:pb-10">
+      <div className="container mx-auto h-[calc(100vh-188px)] max-w-7xl overflow-hidden md:h-[calc(100vh-188px)]">
         <div className="flex h-full overflow-hidden rounded-[2rem] border border-surface-border/50 bg-white shadow-premium-2xl md:rounded-[3rem]">
           {(isMobile && !showChat) || !isMobile ? renderSidebar() : null}
           {(isMobile && showChat) || !isMobile ? renderChat() : null}

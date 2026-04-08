@@ -404,14 +404,14 @@ export default function Navbar() {
       </nav>
 
       {isOpen ? (
-        <div className="fixed inset-0 z-40 xl:hidden">
+        <div className="fixed inset-0 z-[55] xl:hidden">
           <button
             type="button"
             aria-label="Close menu"
             onClick={() => setIsOpen(false)}
             className="absolute inset-0 bg-[#101a2b]/24 backdrop-blur-md"
           />
-          <div className="absolute inset-x-0 bottom-0 rounded-t-[2rem] border-t border-white/60 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(244,247,251,0.98)_100%)] px-5 pb-[calc(env(safe-area-inset-bottom)+1.5rem)] pt-4 shadow-premium-xl">
+          <div className="absolute inset-x-0 bottom-0 max-h-[90dvh] overflow-y-auto rounded-t-[2rem] border-t border-white/60 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(244,247,251,0.98)_100%)] px-5 pb-[calc(env(safe-area-inset-bottom)+1.5rem)] pt-4 shadow-premium-xl">
             <div className="mx-auto mb-5 h-1.5 w-16 rounded-full bg-surface-border" />
 
             <div className="mb-6 flex items-center justify-between gap-3 rounded-[1.6rem] border border-white/60 bg-white/78 px-4 py-4 shadow-premium-sm">

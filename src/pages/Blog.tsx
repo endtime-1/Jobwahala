@@ -5,7 +5,7 @@ import { blogPosts } from '../data/blogData'
 
 export default function Blog() {
   return (
-    <div className="fade-in pt-24 pb-20 md:pt-28 md:pb-24 xl:pt-32 xl:pb-32">
+    <div className="fade-in pt-32 pb-20 md:pt-32 md:pb-24 xl:pt-36 xl:pb-32">
       <SEO 
         title="Resource Center — Insights on Hiring & Remote Work in Ghana"
         description="Your toolkit for the Ghanaian job market. Expert hiring guides for Accra-based teams and remote work playbooks for local freelancers."
