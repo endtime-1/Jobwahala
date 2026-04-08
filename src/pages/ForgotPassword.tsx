@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Rocket, Mail, ArrowLeft, Zap, CheckCircle } from 'lucide-react'
+import { Mail, ArrowLeft, ArrowRight, CheckCircle, Briefcase } from 'lucide-react'
 import { apiForgotPassword } from '../lib/api'
 
 export default function ForgotPassword() {
@@ -8,7 +8,7 @@ export default function ForgotPassword() {
   const [isLoading, setIsLoading] = useState(false)
   const [sent, setSent] = useState(false)
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: { preventDefault(): void }) => {
     e.preventDefault()
     if (!email || isLoading) return
     setIsLoading(true)
@@ -23,105 +23,151 @@ export default function ForgotPassword() {
   }
 
   return (
-    <div className="auth-dark relative flex min-h-screen items-center justify-center overflow-hidden bg-text-main px-4 py-[calc(env(safe-area-inset-top)+1rem)] sm:px-6 lg:py-0">
-      {/* Animated Background */}
-      <div className="absolute inset-0 bg-primary/10 mix-blend-overlay z-0"></div>
-      <div className="absolute top-[10%] left-[20%] w-[800px] h-[800px] bg-primary/20 rounded-full blur-[120px] mix-blend-screen animate-pulse z-0 pointer-events-none"></div>
-      <div className="absolute bottom-[-10%] right-[10%] w-[600px] h-[600px] bg-secondary/30 rounded-full blur-[100px] mix-blend-screen z-0 pointer-events-none" style={{ animation: 'pulse 8s cubic-bezier(0.4, 0, 0.6, 1) infinite' }}></div>
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-text-main/80 to-text-main z-0 pointer-events-none"></div>
+    <div className="flex min-h-screen">
+      {/* Left panel */}
+      <div className="hidden lg:flex lg:w-[52%] flex-col justify-between p-14 relative overflow-hidden bg-[#0d1829]">
+        <div className="absolute top-[-120px] right-[-80px] w-[400px] h-[400px] rounded-full bg-[#2f6df6]/20 blur-[80px] pointer-events-none" />
+        <div className="absolute bottom-[-80px] left-[-60px] w-[300px] h-[300px] rounded-full bg-[#2f6df6]/10 blur-[60px] pointer-events-none" />
+        <div
+          className="absolute inset-0 opacity-[0.04] pointer-events-none"
+          style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '28px 28px' }}
+        />
 
-      <div className="relative z-10 w-full max-w-md animate-in slide-in-from-bottom duration-700">
-        <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center gap-3 group">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-primary/30 bg-primary/20 shadow-primary/20 transition-all group-hover:-rotate-12 group-hover:bg-primary">
-              <Rocket className="h-6 w-6 text-white" />
-            </div>
-            <span className="text-3xl font-black tracking-tighter text-white">Job<span className="text-primary drop-shadow-[0_0_15px_rgba(var(--color-primary),0.5)]">Wahala</span></span>
+        <Link to="/" className="relative z-10 flex items-center gap-2.5">
+          <div className="h-9 w-9 rounded-xl bg-[#2f6df6] flex items-center justify-center shadow-lg shadow-[#2f6df6]/30">
+            <Briefcase className="h-4 w-4 text-white" strokeWidth={2.5} />
+          </div>
+          <span className="text-xl font-bold tracking-tight text-white">
+            Job<span className="text-[#2f6df6]">Wahala</span>
+          </span>
+        </Link>
+
+        <div className="relative z-10">
+          <h2 className="text-[38px] font-bold leading-[1.15] text-white mb-4">
+            Forgot your<br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#2f6df6] to-[#6fa0ff]">
+              password?
+            </span>
+          </h2>
+          <p className="text-[#7a8fa8] text-base leading-relaxed max-w-xs">
+            No worries — it happens to everyone. Enter your email and we'll send you a link to get back in.
+          </p>
+          <div className="mt-8 space-y-3">
+            {[
+              'Link expires after 1 hour',
+              'Check your spam folder if needed',
+              'Your account stays secure',
+            ].map((item) => (
+              <div key={item} className="flex items-center gap-3 text-sm text-[#7a8fa8]">
+                <div className="h-5 w-5 rounded-full bg-[#2f6df6]/15 border border-[#2f6df6]/25 flex items-center justify-center shrink-0">
+                  <div className="h-1.5 w-1.5 rounded-full bg-[#2f6df6]" />
+                </div>
+                {item}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <p className="relative z-10 text-xs text-[#3d4f63]">© {new Date().getFullYear()} JobWahala. All rights reserved.</p>
+      </div>
+
+      {/* Right panel */}
+      <div className="flex flex-1 flex-col bg-[#f7f9fc]">
+        <div className="lg:hidden flex items-center px-6 pt-8 pb-2">
+          <Link to="/" className="text-xl font-bold tracking-tight text-[#101a2b]">
+            Job<span className="text-[#2f6df6]">Wahala</span>
           </Link>
         </div>
 
-        <div className="relative overflow-hidden rounded-[2rem] border border-white/20 bg-white/10 p-8 shadow-[0_0_50px_rgba(0,0,0,0.3)] shadow-primary/10 backdrop-blur-3xl sm:p-10">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full blur-[80px] -mr-32 -mt-32 mix-blend-screen opacity-50 z-0"></div>
-
-          <div className="relative z-10">
-            {!sent ? (
-              <div className="space-y-6">
-                <div className="text-center">
-                  <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white/80 backdrop-blur-md shadow-inner mb-4">
-                    <Zap className="h-3.5 w-3.5 text-primary" /> Recovery Protocol
-                  </div>
-                  <h1 className="text-3xl font-black tracking-tighter text-white mb-3">
-                    Reset <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-secondary to-primary animate-gradient bg-[length:200%_auto]">Password</span>
-                  </h1>
-                  <p className="text-white/60 font-medium text-sm">
-                    Enter the email address associated with your account. We'll send you a secure link to reset your password.
-                  </p>
-                </div>
-
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="relative group/input">
-                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-white/60 mb-2 block group-focus-within/input:text-white transition-colors">Access Protocol</label>
-                    <div className="relative">
-                      <Mail className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-white/40 group-focus-within/input:text-primary transition-colors z-10" />
-                      <input
-                        type="email"
-                        placeholder="name@enterprise.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="h-16 w-full rounded-2xl border border-white/10 bg-white/5 pl-14 pr-6 font-bold text-white placeholder:text-white/30 outline-none transition-all focus:border-primary/50 focus:bg-white/10 focus:ring-4 focus:ring-primary/20"
-                        required
-                        autoFocus
-                      />
+        <div className="flex flex-1 items-center justify-center px-6 py-12 sm:px-10">
+          <div className="w-full max-w-[400px]">
+            <div className="bg-white rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.06)] border border-[#e8eef5] p-8">
+              {!sent ? (
+                <>
+                  <div className="mb-7">
+                    <div className="h-11 w-11 rounded-xl bg-[#edf4ff] flex items-center justify-center mb-4">
+                      <Mail className="h-5 w-5 text-[#2f6df6]" />
                     </div>
+                    <h1 className="text-[22px] font-bold text-[#111c2d] mb-1">Reset your password</h1>
+                    <p className="text-sm text-[#6b7a8d]">
+                      Enter your email and we'll send you a reset link.
+                    </p>
                   </div>
 
-                  <button
-                    type="submit"
-                    disabled={isLoading}
-                    className="group/btn flex h-16 w-full items-center justify-center gap-3 rounded-2xl bg-primary font-black uppercase tracking-widest text-white shadow-[0_0_30px_rgba(var(--color-primary),0.3)] shadow-primary/40 transition-all hover:scale-[1.02] hover:bg-white hover:text-text-main hover:shadow-primary/60 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {isLoading ? 'Sending...' : 'Send Reset Link'}
-                  </button>
-                </form>
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                      <label className="block text-[13px] font-semibold text-[#374151] mb-1.5">
+                        Email address
+                      </label>
+                      <div className="relative">
+                        <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9caab8]" />
+                        <input
+                          type="email"
+                          placeholder="you@example.com"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          className="w-full h-[44px] pl-10 pr-4 rounded-xl border border-[#dde3ec] bg-[#f7f9fc] text-sm text-[#111c2d] placeholder:text-[#9caab8] outline-none transition-all focus:bg-white focus:border-[#2f6df6] focus:ring-3 focus:ring-[#2f6df6]/10"
+                          required
+                          autoFocus
+                          autoComplete="email"
+                        />
+                      </div>
+                    </div>
 
-                <div className="text-center">
-                  <Link to="/login" className="inline-flex items-center gap-2 text-primary font-black uppercase tracking-widest text-[11px] hover:text-white transition-colors">
-                    <ArrowLeft className="h-3.5 w-3.5" /> Back to Login
-                  </Link>
-                </div>
-              </div>
-            ) : (
-              <div className="text-center space-y-6">
-                <div className="flex justify-center">
-                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/20 border border-emerald-500/30">
-                    <CheckCircle className="h-10 w-10 text-emerald-400" />
+                    <button
+                      type="submit"
+                      disabled={isLoading}
+                      className="w-full h-[44px] rounded-xl bg-gradient-to-r from-[#2f6df6] to-[#4d85ff] text-white text-sm font-semibold flex items-center justify-center gap-2 shadow-md shadow-[#2f6df6]/20 hover:shadow-lg hover:shadow-[#2f6df6]/30 hover:brightness-105 transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                      {isLoading ? (
+                        <span className="flex items-center gap-2">
+                          <span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                          Sending…
+                        </span>
+                      ) : (
+                        <>Send reset link <ArrowRight className="h-4 w-4" /></>
+                      )}
+                    </button>
+                  </form>
+
+                  <div className="mt-5 text-center">
+                    <Link to="/login" className="inline-flex items-center gap-1.5 text-[13px] text-[#6b7a8d] hover:text-[#111c2d] transition-colors font-medium">
+                      <ArrowLeft className="h-3.5 w-3.5" /> Back to sign in
+                    </Link>
                   </div>
-                </div>
-                <div>
-                  <h1 className="text-2xl font-black text-white mb-2">Check Your Email</h1>
-                  <p className="text-white/60 font-medium text-sm">
-                    If an account exists with <span className="text-white font-bold">{email}</span>, we've sent a password reset link. Check your inbox (and spam folder).
+                </>
+              ) : (
+                <div className="text-center py-2">
+                  <div className="h-14 w-14 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center mx-auto mb-5">
+                    <CheckCircle className="h-7 w-7 text-emerald-500" />
+                  </div>
+                  <h1 className="text-[22px] font-bold text-[#111c2d] mb-2">Check your inbox</h1>
+                  <p className="text-sm text-[#6b7a8d] leading-relaxed mb-1">
+                    We sent a reset link to
                   </p>
+                  <p className="text-sm font-semibold text-[#111c2d] mb-6">{email}</p>
+
+                  <div className="rounded-xl bg-[#f7f9fc] border border-[#e8eef5] px-4 py-3 mb-6">
+                    <p className="text-[12px] text-[#9caab8]">The link expires in <span className="font-semibold text-[#6b7a8d]">1 hour</span>. Check your spam folder if you don't see it.</p>
+                  </div>
+
+                  <div className="space-y-3">
+                    <button
+                      onClick={() => { setSent(false); setEmail('') }}
+                      className="w-full h-[44px] rounded-xl border border-[#dde3ec] bg-white text-sm font-semibold text-[#374151] hover:bg-[#f7f9fc] hover:border-[#b8c8dc] transition-all"
+                    >
+                      Try a different email
+                    </button>
+                    <Link
+                      to="/login"
+                      className="w-full h-[44px] rounded-xl bg-gradient-to-r from-[#2f6df6] to-[#4d85ff] text-white text-sm font-semibold flex items-center justify-center gap-2 shadow-md shadow-[#2f6df6]/20 hover:brightness-105 transition-all"
+                    >
+                      <ArrowLeft className="h-4 w-4" /> Back to sign in
+                    </Link>
+                  </div>
                 </div>
-                <div className="bg-white/5 border border-white/10 rounded-xl px-4 py-3">
-                  <p className="text-white/50 text-xs font-semibold">The link expires in 1 hour</p>
-                </div>
-                <div className="space-y-3">
-                  <button
-                    onClick={() => { setSent(false); setEmail(''); }}
-                    className="flex h-12 w-full items-center justify-center rounded-2xl bg-white/5 border border-white/10 font-black uppercase tracking-widest text-white text-[10px] hover:bg-white/10 transition-all"
-                  >
-                    Try Different Email
-                  </button>
-                  <Link
-                    to="/login"
-                    className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-primary font-black uppercase tracking-widest text-white text-[10px] transition-all hover:scale-[1.02] hover:bg-white hover:text-text-main"
-                  >
-                    <ArrowLeft className="h-3.5 w-3.5" /> Back to Login
-                  </Link>
-                </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </div>
