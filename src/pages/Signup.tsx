@@ -96,7 +96,7 @@ export default function Signup() {
       {/* Right panel */}
       <div className="flex flex-1 flex-col bg-[#f7f9fc]">
         {/* Mobile header */}
-        <div className="lg:hidden flex items-center justify-between px-6 pt-8 pb-2">
+        <div className="lg:hidden flex items-center justify-between px-4 pt-6 pb-2">
           <Link to="/" className="text-xl font-bold tracking-tight text-[#101a2b]">
             Job<span className="text-[#2f6df6]">Wahala</span>
           </Link>
@@ -105,10 +105,10 @@ export default function Signup() {
           </Link>
         </div>
 
-        <div className="flex flex-1 items-center justify-center px-6 py-12 sm:px-10 overflow-y-auto">
-          <div className="w-full max-w-[400px]">
+        <div className="flex flex-1 flex-col justify-start sm:justify-center px-4 py-6 sm:px-10 sm:py-12 overflow-y-auto">
+          <div className="w-full max-w-[400px] mx-auto">
             {/* Card */}
-            <div className="bg-white rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.06)] border border-[#e8eef5] p-8">
+            <div className="bg-white rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.06)] border border-[#e8eef5] p-5 sm:p-8">
               <div className="mb-7">
                 <h1 className="text-[22px] font-bold text-[#111c2d] mb-1">Create your account</h1>
                 <p className="text-sm text-[#6b7a8d]">Get started — it only takes a minute</p>
