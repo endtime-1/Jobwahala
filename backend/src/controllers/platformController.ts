@@ -25,14 +25,14 @@ export const getPlatformStats = async (_req: Request, res: Response) => {
       recentJobs,
       topFreelancers,
     ] = await Promise.all([
-      prisma.job.count({ where: { status: 'OPEN' } }),
+      prisma.job.count({ where: { status: 'ACTIVE' } }),
       prisma.user.count({ where: { role: 'FREELANCER', status: 'ACTIVE' } }),
       prisma.user.count({ where: { role: 'SEEKER', status: 'ACTIVE' } }),
       prisma.user.count({ where: { role: 'EMPLOYER', status: 'ACTIVE' } }),
       prisma.freelanceService.count({ where: { status: 'ACTIVE' } }),
       prisma.application.count(),
       prisma.job.findMany({
-        where: { status: 'OPEN' },
+        where: { status: 'ACTIVE' },
         select: {
           id: true,
           title: true,
