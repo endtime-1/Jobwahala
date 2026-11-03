@@ -26,6 +26,7 @@ import {
   getApplicantDecisionBadgeClass,
 } from './utils'
 import { getErrorMessage } from '../../../lib/errors'
+import ApplicantBoard from './ApplicantBoard'
 
 type Props = {
   jobs: EmployerJob[]
@@ -63,6 +64,7 @@ export default function EmployerApplicantsPanel({
   const [applicantDecisionLoadingId, setApplicantDecisionLoadingId] = useState<string | null>(null)
   const [proposalTarget, setProposalTarget] = useState<ProposalTarget | null>(null)
   const [error, setError] = useState('')
+  const [view, setView] = useState<'list' | 'board'>('list')
 
   const shortlistedCount = applicants.filter((a) => a.status === 'SHORTLISTED').length
 
@@ -78,6 +80,14 @@ export default function EmployerApplicantsPanel({
     } finally {
       setIsUpdatingApplication(false)
     }
+  }
+
+  const reviewApplicant = (applicationId: string) => {
+    setView('list')
+    window.setTimeout(
+      () => document.getElementById(`applicant-${applicationId}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
+      60,
+    )
   }
 
   const handleGenerateShortlistSummary = async () => {
@@ -187,6 +197,21 @@ export default function EmployerApplicantsPanel({
             <span className="badge bg-secondary text-white border-none text-[9px] uppercase tracking-widest">
               {applicants.length} loaded
             </span>
+            <div role="group" aria-label="Applicant view" className="inline-flex rounded-xl border border-surface-border bg-white p-0.5">
+              {(['list', 'board'] as const).map((mode) => (
+                <button
+                  key={mode}
+                  type="button"
+                  aria-pressed={view === mode}
+                  onClick={() => setView(mode)}
+                  className={`min-h-9 rounded-[0.6rem] px-3 text-[10px] font-black uppercase tracking-widest transition-colors ${
+                    view === mode ? 'bg-primary text-white' : 'text-text-muted hover:text-text-main'
+                  }`}
+                >
+                  {mode === 'list' ? 'List' : 'Board'}
+                </button>
+              ))}
+            </div>
             <button
               type="button"
               disabled={!selectedJobId || applicants.length === 0 || isApplicantsLoading || isGeneratingShortlistSummary}
@@ -299,8 +324,17 @@ export default function EmployerApplicantsPanel({
               ) : null}
             </div>
 
+            {view === 'board' ? (
+              <ApplicantBoard
+                applicants={applicants}
+                busy={isUpdatingApplication}
+                onMove={(applicationId, status) => void handleApplicationStatusUpdate(applicationId, status)}
+                onReview={reviewApplicant}
+              />
+            ) : null}
+
             {/* Applicant cards */}
-            {applicants.map((application) => {
+            {(view === 'list' ? applicants : []).map((application) => {
               const name = getDisplayName(
                 application.seeker.jobSeekerProfile?.firstName,
                 application.seeker.jobSeekerProfile?.lastName,
@@ -308,7 +342,7 @@ export default function EmployerApplicantsPanel({
               )
 
               return (
-                <div key={application.id} className="rounded-[1.75rem] border border-surface-border bg-surface-alt/20 p-4 sm:p-6">
+                <div key={application.id} id={`applicant-${application.id}`} className="scroll-mt-32 rounded-[1.75rem] border border-surface-border bg-surface-alt/20 p-4 sm:p-6">
                   <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
                     <div className="flex gap-4">
                       <div className="h-12 w-12 bg-white border border-surface-border rounded-2xl flex items-center justify-center text-[10px] font-black text-text-main shadow-sm">
