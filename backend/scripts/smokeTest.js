@@ -172,7 +172,9 @@ async function main() {
   const dbFileName = `smoke-${Date.now()}.db`;
   const dbRelativePath = `./.tmp/${dbFileName}`;
   const dbPath = path.join(tempDir, dbFileName);
-  const databaseUrl = `file:${dbRelativePath}`;
+  // SMOKE_DATABASE_URL targets a disposable Postgres database (tables are wiped); default is a copy of dev.db.
+  const externalDatabaseUrl = process.env.SMOKE_DATABASE_URL;
+  const databaseUrl = externalDatabaseUrl || `file:${dbRelativePath}`;
   const templateDbPath = path.join(backendRoot, 'dev.db');
   const env = {
     ...process.env,
@@ -181,7 +183,7 @@ async function main() {
     JWT_SECRET: 'smoke-test-secret',
   };
 
-  await fsp.copyFile(templateDbPath, dbPath);
+  if (!externalDatabaseUrl) await fsp.copyFile(templateDbPath, dbPath);
 
   process.env.DATABASE_URL = databaseUrl;
   process.env.JWT_SECRET = env.JWT_SECRET;
