@@ -4,6 +4,7 @@ import {
   saveEvidenceUpload,
   UploadCategory,
   UploadContentType,
+  UploadValidationError,
 } from '../utils/uploads';
 import { getErrorMessage } from '../utils/errors';
 
@@ -35,7 +36,7 @@ export const uploadEvidence = async (req: AuthRequest, res: Response) => {
   } catch (error) {
     const message = getErrorMessage(error, 'Unable to upload evidence right now');
     const statusCode =
-      message.includes('5 MB') || message.includes('empty') ? 400 : 500;
+      error instanceof UploadValidationError || message.includes('5 MB') || message.includes('empty') ? 400 : 500;
 
     return res.status(statusCode).json({ success: false, message });
   }

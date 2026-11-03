@@ -19,7 +19,7 @@ const fetch: typeof globalThis.fetch = async (input, init) => {
   }
 }
 
-export type EvidenceUploadCategory = 'verification' | 'dispute' | 'message'
+export type EvidenceUploadCategory = 'verification' | 'dispute' | 'message' | 'logo'
 
 const maxEvidenceFileBytes = 5 * 1024 * 1024
 const supportedEvidenceTypes = new Set([
@@ -109,6 +109,38 @@ export const uploadEvidenceFile = async (
   if (data?.file?.url) {
     data.file.url = normalizePublicEvidenceUrl(data.file.url)
   }
+
+  return data
+}
+
+export const toSiteRelativeUrl = (url: string) => {
+  if (typeof window === 'undefined') return url
+
+  try {
+    const parsed = new URL(url, window.location.origin)
+    return parsed.origin === window.location.origin ? parsed.pathname + parsed.search : url
+  } catch {
+    return url
+  }
+}
+
+export const maxLogoFileBytes = 1024 * 1024
+const supportedLogoTypes = ['image/png', 'image/jpeg', 'image/webp']
+
+/** Company logos are public images: images only, 1 MB at most (the server checks again). */
+export const uploadLogoFile = async (file: File) => {
+  if (!supportedLogoTypes.includes(file.type)) {
+    throw new Error('Logos must be a PNG, JPG or WEBP image')
+  }
+
+  if (file.size > maxLogoFileBytes) {
+    throw new Error('Logos must be 1 MB or smaller')
+  }
+
+  const data = await uploadEvidenceFile('logo', file)
+
+  // Store our own files as a site-relative path so a future domain change cannot break saved logos.
+  if (data?.file?.url) data.file.url = toSiteRelativeUrl(data.file.url)
 
   return data
 }

@@ -12,12 +12,23 @@ export type LandingCounts = {
 }
 
 export type LandingJob = PreviewJob & {
-  employer?: { email?: string; employerProfile?: { companyName?: string | null } | null } | null
+  employer?: { email?: string; employerProfile?: { companyName?: string | null; logoUrl?: string | null } | null } | null
   companyName?: string
 }
 
 export const companyOf = (job: LandingJob) =>
   job.companyName || job.employer?.employerProfile?.companyName || 'Verified employer'
+
+export const logoOf = (job: LandingJob) => job.employer?.employerProfile?.logoUrl ?? null
+
+export type HiringCompany = {
+  id: string
+  companyName: string
+  industry?: string | null
+  logoUrl?: string | null
+  isVerified: boolean
+  openRoles: number
+}
 
 export const timeAgo = (iso?: string) => {
   if (!iso) return ''

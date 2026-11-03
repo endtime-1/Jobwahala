@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { matchesStoredUploadUrl } from '../services/evidenceStorage';
 
 const trimmedOptionalString = (max: number) =>
   z.preprocess(
@@ -30,11 +31,23 @@ const seekerProfileBodySchema = z
   })
   .strict();
 
+// A logo is shown publicly, so it must be an image uploaded through JobWahala (never a hot-linked
+// external address that could be swapped later). An empty value clears the logo.
+const logoUrlField = () =>
+  z
+    .preprocess((value) => (typeof value === 'string' ? value.trim() : value), z.string().max(500).optional())
+    .refine((value) => !value || matchesStoredUploadUrl('logo', value), {
+      message: 'Upload your logo through JobWahala',
+    });
+
 const employerProfileBodySchema = z
   .object({
-    companyName: trimmedOptionalString(120),
+    companyName: z.preprocess(
+      (value) => (typeof value === 'string' ? value.trim() : value),
+      z.string().min(1, 'Company name cannot be empty').max(120).optional(),
+    ),
     industry: trimmedOptionalString(120),
-    logoUrl: optionalUrl(),
+    logoUrl: logoUrlField(),
     website: optionalUrl(),
     description: trimmedOptionalString(2000),
   })

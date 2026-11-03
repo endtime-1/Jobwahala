@@ -7,10 +7,12 @@ import Landing from './Landing'
 
 const apiGetJobsMock = vi.fn()
 const apiGetPlatformStatsMock = vi.fn()
+const apiGetHiringCompaniesMock = vi.fn()
 
 vi.mock('../lib/api', () => ({
   apiGetJobs: (...args: unknown[]) => apiGetJobsMock(...args),
   apiGetPlatformStats: (...args: unknown[]) => apiGetPlatformStatsMock(...args),
+  apiGetHiringCompanies: (...args: unknown[]) => apiGetHiringCompaniesMock(...args),
 }))
 
 const recent = new Date(Date.now() - 2 * 86_400_000).toISOString()
@@ -48,6 +50,7 @@ describe('Landing page', () => {
         },
       ],
     })
+    apiGetHiringCompaniesMock.mockResolvedValue({ companies: [] })
     apiGetPlatformStatsMock.mockResolvedValue({
       success: true,
       stats: { counts: { openJobs: 2, freelancers: 1, seekers: 7, employers: 4, activeServices: 1, totalTalent: 8 } },
@@ -128,6 +131,7 @@ describe('Landing page quick wins', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     apiGetJobsMock.mockResolvedValue({ jobs: [] })
+    apiGetHiringCompaniesMock.mockResolvedValue({ companies: [] })
     apiGetPlatformStatsMock.mockResolvedValue({ success: true, stats: { counts: {} } })
   })
 
@@ -147,5 +151,29 @@ describe('Landing page quick wins', () => {
     expect(screen.getByRole('heading', { name: /no cv yet/i })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /build my cv/i })).toHaveAttribute('href', '/cv-generator')
     expect(screen.getByText(/example only/i)).toBeInTheDocument()
+  })
+
+  it('shows who is hiring, linking each company to its page', async () => {
+    apiGetHiringCompaniesMock.mockResolvedValue({
+      companies: [
+        { id: 'emp-1', companyName: 'Achiba Star Hotel', logoUrl: '/api/uploads/logo/a.png', isVerified: true, openRoles: 2 },
+        { id: 'emp-2', companyName: 'Kumasi Foods', logoUrl: null, isVerified: false, openRoles: 1 },
+      ],
+    })
+
+    renderLanding()
+
+    const hotel = await screen.findByRole('link', { name: /achiba star hotel/i })
+    expect(hotel).toHaveAttribute('href', '/companies/emp-1')
+    expect(hotel).toHaveTextContent('2 open roles')
+    expect(screen.getByRole('link', { name: /kumasi foods/i })).toHaveTextContent('1 open role')
+    expect(screen.getByRole('img', { name: 'Achiba Star Hotel logo' })).toBeInTheDocument()
+  })
+
+  it('shows no hiring strip when no company has open roles', async () => {
+    renderLanding()
+
+    await screen.findByText(/be the first employer people see/i)
+    expect(screen.queryByText(/who is hiring/i)).not.toBeInTheDocument()
   })
 })

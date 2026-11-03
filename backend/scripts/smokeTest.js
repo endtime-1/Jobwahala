@@ -1361,6 +1361,81 @@ async function main() {
     await prisma.job.deleteMany({ where: { title: { in: ['ZebraQuest Coordinator', 'Welding Supervisor'] } } });
     await prisma.notification.deleteMany({ where: { type: 'JOB_ALERT' } });
 
+    // Company profiles: employers upload a logo, and the public company page shows it with open roles.
+    const pngBytes = Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.alloc(64, 7)]);
+    const logoUpload = await uploadEvidence({
+      baseUrl,
+      token: employerToken,
+      category: 'logo',
+      fileName: 'company-logo.png',
+      contentType: 'image/png',
+      rawContent: pngBytes,
+    });
+    const logoUrl = logoUpload.json.file.url;
+    assert.ok(logoUrl.includes('/logo/'), 'Logos are stored in their own public folder');
+
+    const sendLogo = (body) =>
+      requestJson(baseUrl, '/api/uploads/evidence', { method: 'POST', token: employerToken, body });
+    const fakeImage = await sendLogo({
+      category: 'logo',
+      fileName: 'evil.png',
+      contentType: 'image/png',
+      dataBase64: Buffer.from('<html><script>alert(1)</script></html>').toString('base64'),
+    });
+    assert.equal(fakeImage.status, 400, 'A file that is not really an image must be rejected as a logo');
+    const pdfLogo = await sendLogo({
+      category: 'logo',
+      fileName: 'logo.pdf',
+      contentType: 'application/pdf',
+      dataBase64: Buffer.from('%PDF-1.7 pretend').toString('base64'),
+    });
+    assert.equal(pdfLogo.status, 400, 'A PDF cannot be a logo');
+    const hugeLogo = await sendLogo({
+      category: 'logo',
+      fileName: 'huge.png',
+      contentType: 'image/png',
+      dataBase64: Buffer.concat([pngBytes, Buffer.alloc(1024 * 1024)]).toString('base64'),
+    });
+    assert.equal(hugeLogo.status, 400, 'Logos over 1 MB must be rejected');
+
+    const externalLogo = await requestJson(baseUrl, '/api/users/profile', {
+      method: 'PUT',
+      token: employerToken,
+      body: { logoUrl: 'https://evil.example.com/pixel.png' },
+    });
+    assert.equal(externalLogo.status, 400, 'A hot-linked external logo must be rejected');
+    const blankName = await requestJson(baseUrl, '/api/users/profile', {
+      method: 'PUT',
+      token: employerToken,
+      body: { companyName: '   ' },
+    });
+    assert.equal(blankName.status, 400, 'Company name cannot be blank');
+
+    const saveCompany = await requestJson(baseUrl, '/api/users/profile', {
+      method: 'PUT',
+      token: employerToken,
+      body: { companyName: 'Smoke Hotel Ltd', industry: 'Hospitality', website: 'smoke-hotel.example.com', description: 'A test employer.', logoUrl },
+    });
+    assert.equal(saveCompany.status, 200, 'Employers can save their company profile with an uploaded logo');
+
+    const companyPage = await requestJson(baseUrl, `/api/companies/${employerId}`);
+    assert.equal(companyPage.status, 200, 'Company pages are public');
+    assert.equal(companyPage.json.company.companyName, 'Smoke Hotel Ltd');
+    assert.equal(companyPage.json.company.logoUrl, logoUrl);
+    assert.equal(companyPage.json.company.website, 'https://smoke-hotel.example.com');
+    assert.ok(companyPage.json.company.jobs.length >= 1, 'The company page lists open roles');
+    assert.ok(!JSON.stringify(companyPage.json).includes('employer@example.com'), 'No real email on a public company page');
+
+    const hiringList = await requestJson(baseUrl, '/api/companies');
+    assert.equal(hiringList.status, 200);
+    const listed = hiringList.json.companies.find((company) => company.id === employerId);
+    assert.ok(listed && listed.openRoles >= 1 && listed.logoUrl === logoUrl, 'Hiring companies appear with logo and open role count');
+
+    const missingCompany = await requestJson(baseUrl, '/api/companies/does-not-exist');
+    assert.equal(missingCompany.status, 404);
+    const seekerAsCompany = await requestJson(baseUrl, `/api/companies/${activeSeekerRegister.json.user.id}`);
+    assert.equal(seekerAsCompany.status, 404, 'Only employers have company pages');
+
     const seekerJobComparison = await requestJson(baseUrl, '/api/jobs/compare', {
       method: 'POST',
       token: activeSeekerToken,

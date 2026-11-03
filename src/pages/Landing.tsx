@@ -10,8 +10,8 @@ import MatchLab from '../components/landing/MatchLab'
 import MoneyPath from '../components/landing/MoneyPath'
 import Reveal from '../components/landing/Reveal'
 import TrustGrid from '../components/landing/TrustGrid'
-import type { Audience, LandingCounts, LandingJob } from '../components/landing/types'
-import { apiGetJobs, apiGetPlatformStats } from '../lib/api'
+import type { Audience, HiringCompany, LandingCounts, LandingJob } from '../components/landing/types'
+import { apiGetHiringCompanies, apiGetJobs, apiGetPlatformStats } from '../lib/api'
 
 function Section({ eyebrow, title, intro, children }: { eyebrow: string; title: string; intro?: string; children: ReactNode }) {
   return (
@@ -32,6 +32,7 @@ export default function Landing() {
   const [audience, setAudience] = useState<Audience>('talent')
   const [jobs, setJobs] = useState<LandingJob[]>([])
   const [counts, setCounts] = useState<LandingCounts | null>(null)
+  const [companies, setCompanies] = useState<HiringCompany[]>([])
   const [jobsLoading, setJobsLoading] = useState(true)
 
   useEffect(() => {
@@ -49,6 +50,12 @@ export default function Landing() {
     apiGetPlatformStats()
       .then((res: { success?: boolean; stats?: { counts?: LandingCounts } }) => {
         if (!cancelled && res.success && res.stats?.counts) setCounts(res.stats.counts)
+      })
+      .catch(() => undefined)
+
+    apiGetHiringCompanies()
+      .then((res: { companies?: HiringCompany[] }) => {
+        if (!cancelled && Array.isArray(res.companies)) setCompanies(res.companies)
       })
       .catch(() => undefined)
 
@@ -103,7 +110,7 @@ export default function Landing() {
       </Section>
 
       <Section eyebrow="On the board" title="Open roles.">
-        <MarketPulse jobs={jobs} counts={counts} />
+        <MarketPulse jobs={jobs} counts={counts} companies={companies} />
       </Section>
 
       <Section eyebrow="Good to know" title="Questions people ask first.">

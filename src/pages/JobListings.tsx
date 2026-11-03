@@ -1,10 +1,11 @@
 import { Search, MapPin, Clock, Filter, ChevronRight, Flag, Sparkles } from 'lucide-react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
 import ReportModal from '../components/ReportModal'
+import CompanyLogo from '../components/CompanyLogo'
 import VerifiedBadge from '../components/VerifiedBadge'
 import { apiCompareJobs, apiGetJobs } from '../lib/api'
-import { emailHandle, formatMoney, formatRelativeTime, getInitials } from '../lib/display'
+import { emailHandle, formatMoney, formatRelativeTime } from '../lib/display'
 import {
   formatJobLocationWithWorkMode,
   getJobWorkModeBadgeClass,
@@ -36,6 +37,7 @@ type JobRecord = {
     isVerified?: boolean
     employerProfile?: {
       companyName?: string | null
+      logoUrl?: string | null
     } | null
   }
 }
@@ -519,9 +521,7 @@ export default function JobListings() {
                   >
                     <div className="absolute top-0 right-0 h-32 w-32 bg-primary/5 rounded-full -mr-16 -mt-16 group-hover:bg-primary/10 transition-colors"></div>
 
-                    <div className="relative z-10 flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-2xl bg-surface-alt text-xl font-black text-text-main shadow-sm sm:h-20 sm:w-20 sm:text-2xl">
-                      {getInitials(companyName)}
-                    </div>
+                    <CompanyLogo name={companyName} logoUrl={job.employer.employerProfile?.logoUrl} className="relative z-10 h-16 w-16 rounded-2xl text-xl sm:h-20 sm:w-20 sm:text-2xl" />
 
                     <div className="flex-grow relative z-10">
                       <div className="flex flex-wrap justify-between items-start gap-4 mb-4">
@@ -541,7 +541,11 @@ export default function JobListings() {
                               />
                             </div>
                           </div>
-                          <p className="text-sm font-bold tracking-tight text-text-muted">{companyName}</p>
+                          <p className="text-sm font-bold tracking-tight text-text-muted">
+                            <Link to={`/companies/${job.employer.id}`} onClick={(event) => event.stopPropagation()} className="hover:text-secondary hover:underline">
+                              {companyName}
+                            </Link>
+                          </p>
                         </div>
                         <div className="flex flex-col items-end gap-3 text-right">
                           <p className="text-xl font-black text-text-main tracking-tighter">{job.salary || 'Salary on request'}</p>

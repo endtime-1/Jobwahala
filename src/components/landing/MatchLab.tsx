@@ -2,7 +2,8 @@ import { useMemo, useState, type KeyboardEvent } from 'react'
 import { ArrowRight, Clock, MapPin, Plus, Sparkles, X } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { parseSkills, rankJobsForSkills } from '../../lib/matchPreview'
-import { companyOf, recentAge, type LandingJob } from './types'
+import CompanyLogo from '../CompanyLogo'
+import { companyOf, logoOf, recentAge, type LandingJob } from './types'
 
 const SUGGESTIONS = ['Customer service', 'Excel', 'Accounting', 'Graphic design', 'Writing', 'Sales', 'React', 'Hospitality']
 
@@ -163,9 +164,12 @@ function JobRow({ job, score, matched }: { job: LandingJob; score?: number; matc
       className="block rounded-2xl border border-surface-border bg-white p-4 transition-all hover:-translate-y-0.5 hover:border-secondary/40 hover:shadow-premium-sm"
     >
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="truncate text-[15px] font-black text-text-main">{job.title}</p>
-          <p className="truncate text-xs font-semibold text-text-muted">{companyOf(job)}</p>
+        <div className="flex min-w-0 items-center gap-3">
+          <CompanyLogo name={companyOf(job)} logoUrl={logoOf(job)} className="h-10 w-10 rounded-xl text-sm" />
+          <div className="min-w-0">
+            <p className="truncate text-[15px] font-black text-text-main">{job.title}</p>
+            <p className="truncate text-xs font-semibold text-text-muted">{companyOf(job)}</p>
+          </div>
         </div>
         {score !== undefined && (
           <span className="flex-none rounded-xl bg-success/12 px-2.5 py-1 text-sm font-black text-success">{score}%</span>

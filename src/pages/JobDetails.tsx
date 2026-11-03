@@ -2,9 +2,10 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import { MapPin, CheckCircle, ChevronLeft, Send, Clock, Share2, Bookmark, AlertTriangle, Building2, Globe, ChevronRight, BriefcaseBusiness, Sparkles } from 'lucide-react'
 import ReportModal from '../components/ReportModal'
+import CompanyLogo from '../components/CompanyLogo'
 import VerifiedBadge from '../components/VerifiedBadge'
 import { apiApplyForJob, apiDeleteApplication, apiGetJobApplicationCoaching, apiGetJobById, apiGetMyJobApplication } from '../lib/api'
-import { emailHandle, formatRelativeTime, getInitials } from '../lib/display'
+import { emailHandle, formatRelativeTime } from '../lib/display'
 import {
   formatJobLocationWithWorkMode,
   getJobWorkModeBadgeClass,
@@ -29,6 +30,7 @@ type JobDetail = {
     isVerified?: boolean
     employerProfile?: {
       companyName?: string | null
+      logoUrl?: string | null
       website?: string | null
       description?: string | null
     } | null
@@ -251,9 +253,7 @@ export default function JobDetails() {
         <div className="space-y-8 lg:col-span-8 lg:space-y-10">
           <div className="dashboard-hero px-5 py-6 sm:px-7 sm:py-7 lg:px-8 lg:py-8">
             <div className="relative z-10 flex flex-col gap-8 md:flex-row md:items-start">
-              <div className="flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-[1.75rem] border border-surface-border/50 bg-surface-alt text-3xl font-black text-text-main shadow-sm sm:h-24 sm:w-24 sm:text-4xl">
-                {getInitials(companyName)}
-              </div>
+              <CompanyLogo name={companyName} logoUrl={job.employer.employerProfile?.logoUrl} className="h-20 w-20 rounded-[1.75rem] text-3xl sm:h-24 sm:w-24 sm:text-4xl" />
               <div className="flex-grow">
                 <div className="dashboard-kicker mb-4">
                   <BriefcaseBusiness className="h-3.5 w-3.5" /> Live role briefing
@@ -268,7 +268,10 @@ export default function JobDetails() {
                 </div>
                 <div className="mb-8 flex flex-wrap items-center gap-x-6 gap-y-3 font-bold tracking-tight text-text-muted">
                   <span className="flex items-center gap-2 text-sm uppercase tracking-wider">
-                    <Building2 className="h-4 w-4 text-primary" /> {companyName}
+                    <Building2 className="h-4 w-4 text-primary" />{" "}
+                    <Link to={`/companies/${job.employer.id}`} className="hover:text-secondary hover:underline">
+                      {companyName}
+                    </Link>
                   </span>
                   <span className="flex items-center gap-2 text-sm uppercase tracking-wider">
                     <MapPin className="h-4 w-4 text-primary" /> {locationLabel}

@@ -1,13 +1,15 @@
 import { ArrowRight, Clock, MapPin } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { companyOf, recentAge, type LandingCounts, type LandingJob } from './types'
+import CompanyLogo from '../CompanyLogo'
+import { companyOf, logoOf, recentAge, type HiringCompany, type LandingCounts, type LandingJob } from './types'
 
 type MarketPulseProps = {
   jobs: LandingJob[]
   counts: LandingCounts | null
+  companies?: HiringCompany[]
 }
 
-export default function MarketPulse({ jobs, counts }: MarketPulseProps) {
+export default function MarketPulse({ jobs, counts, companies = [] }: MarketPulseProps) {
   const latest = [...jobs]
     .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
     .slice(0, 6)
@@ -36,6 +38,30 @@ export default function MarketPulse({ jobs, counts }: MarketPulseProps) {
         </p>
       )}
 
+      {companies.length > 0 && (
+        <div className="mb-8">
+          <p className="mb-3 text-[11px] font-black uppercase tracking-[0.18em] text-text-light">Who is hiring</p>
+          <ul className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
+            {companies.map((company) => (
+              <li key={company.id} className="snap-start">
+                <Link
+                  to={`/companies/${company.id}`}
+                  className="flex min-w-[13.5rem] items-center gap-3 rounded-2xl border border-surface-border bg-white/90 p-3 pr-4 transition-all hover:-translate-y-0.5 hover:border-secondary/40 hover:shadow-premium-sm"
+                >
+                  <CompanyLogo name={company.companyName} logoUrl={company.logoUrl} className="h-11 w-11 rounded-xl text-sm" />
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-black text-text-main">{company.companyName}</span>
+                    <span className="block text-xs font-semibold text-text-muted">
+                      {company.openRoles} open {company.openRoles === 1 ? 'role' : 'roles'}
+                    </span>
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {latest.length > 0 ? (
         <div className="-mx-4 flex snap-x gap-4 overflow-x-auto px-4 pb-4 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 lg:grid-cols-3">
           {latest.map((job) => (
@@ -44,7 +70,10 @@ export default function MarketPulse({ jobs, counts }: MarketPulseProps) {
               to={`/jobs/${job.id}`}
               className="min-w-[17rem] flex-1 snap-start rounded-3xl border border-surface-border bg-white/85 p-5 shadow-premium-sm transition-all hover:-translate-y-1 hover:shadow-premium-md"
             >
-              <p className="text-[11px] font-black uppercase tracking-widest text-secondary">{job.category || job.type || 'Open role'}</p>
+              <div className="flex items-center gap-3">
+                <CompanyLogo name={companyOf(job)} logoUrl={logoOf(job)} className="h-10 w-10 rounded-xl text-sm" />
+                <p className="text-[11px] font-black uppercase tracking-widest text-secondary">{job.category || job.type || 'Open role'}</p>
+              </div>
               <p className="mt-2 text-lg font-black leading-snug text-text-main">{job.title}</p>
               <p className="mt-1 text-sm font-semibold text-text-muted">{companyOf(job)}</p>
               <div className="mt-4 flex flex-wrap gap-x-3 gap-y-1 text-xs font-semibold text-text-light">

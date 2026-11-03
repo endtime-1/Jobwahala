@@ -96,6 +96,13 @@ export const apiResetPassword = (token: string, password: string) =>
 export const apiGetPlatformStats = () =>
   fetch(`${BASE_URL}/platform/stats`, { headers: headers() }).then(handleResponse);
 
+// Companies
+export const apiGetCompany = (id: string) =>
+  fetch(`${BASE_URL}/companies/${id}`, { headers: headers() }).then(handleResponse);
+
+export const apiGetHiringCompanies = () =>
+  fetch(`${BASE_URL}/companies`, { headers: headers() }).then(handleResponse);
+
 // Job alerts (saved searches)
 export const apiGetSavedSearches = () =>
   fetch(`${BASE_URL}/saved-searches`, { headers: headers(true) }).then(handleResponse);

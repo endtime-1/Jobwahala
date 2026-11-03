@@ -9,6 +9,7 @@ import VerificationPanel from '../../components/VerificationPanel'
 
 import { useEmployerDashboard, useJobApplicants } from './employer/hooks'
 import EmployerStatsCards from './employer/EmployerStatsCards'
+import CompanyProfilePanel from './employer/CompanyProfilePanel'
 import EmployerJobsPanel from './employer/EmployerJobsPanel'
 import EmployerApplicantsPanel from './employer/EmployerApplicantsPanel'
 import EmployerSidebar from './employer/EmployerSidebar'
@@ -142,6 +143,8 @@ export default function EmployerDashboard() {
           {error || (dashboardError instanceof Error ? dashboardError.message : 'Unable to load your employer dashboard right now.')}
         </div>
       ) : null}
+
+      <CompanyProfilePanel />
 
       <EmployerStatsCards
         jobCount={jobs.length}

@@ -28,6 +28,14 @@ const apiUpdateJobStatusMock = vi.fn()
 const subscribeToRealtimeEventsMock = vi.fn()
 let realtimeHandlers: Record<string, ((payload?: unknown) => void) | undefined> = {}
 
+// The dashboard now includes the company profile editor, which reads the signed-in employer.
+vi.mock('../../context/AuthContext', () => ({
+  useAuth: () => ({
+    user: { id: 'employer-1', role: 'EMPLOYER', employerProfile: { companyName: 'JobWahala Labs' } },
+    refreshUser: vi.fn(),
+  }),
+}))
+
 vi.mock('../../components/VerifiedBadge', () => ({
   default: () => <div>Verified Badge</div>,
 }))
