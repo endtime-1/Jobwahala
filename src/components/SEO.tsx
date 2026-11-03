@@ -13,7 +13,7 @@ export default function SEO({
   title,
   description = "JobWahala — Africa's Elite Talent Workspace. Connecting Ghana's top tech professionals with global high-growth opportunities.",
   canonical = 'https://jobwahala.com',
-  ogImage = 'https://jobwahala.com/og-image.png',
+  ogImage = 'https://jobwahala.com/og-image.jpg',
   ogType = 'website',
   keywords = 'jobs in ghana, freelance accra, remote work ghana, hire software engineers ghana, tech talent ghana, jobwahala'
 }: SEOProps) {
