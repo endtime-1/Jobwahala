@@ -16,6 +16,7 @@ type Service = {
   title: string
   description: string
   price: number
+  currency?: string | null
   matchScore?: number
   matchReasons?: string[]
   deliveryTime?: string | null
@@ -319,7 +320,7 @@ export default function FreelancerProfile() {
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-10">
         <div className="space-y-6 lg:col-span-4">
           <div className="dashboard-panel relative overflow-hidden p-6 text-center sm:p-8 lg:p-10">
-            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-secondary to-accent"></div>
+            <div className="heritage-strip absolute left-0 top-0 w-full" aria-hidden></div>
 
             <div className="relative mb-10 inline-block">
               <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-[2rem] bg-gradient-to-br from-secondary to-secondary-dark text-4xl font-black text-white shadow-2xl sm:h-32 sm:w-32 sm:rounded-[2.5rem] sm:text-5xl">
@@ -327,14 +328,14 @@ export default function FreelancerProfile() {
               </div>
             </div>
 
-            <div className="flex items-center justify-center gap-3">
-              <h1 className="text-4xl font-black text-text-main tracking-tighter mb-2">{name}</h1>
+            <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 mb-3">
+              <h1 className="text-4xl font-black text-text-main tracking-tight">{name}</h1>
               <VerifiedBadge
                 type="freelancer"
                 status={profile.isVerified ? 'APPROVED' : 'UNVERIFIED'}
                 hideWhenUnverified
               />
-              <div className="ml-2 flex items-center gap-1.5">
+              <div className="flex w-full items-center justify-center gap-1.5">
                 <div className={`h-2.5 w-2.5 rounded-full ${
                   profile.freelancerProfile?.availability === 'AVAILABLE' ? 'bg-success' : 
                   profile.freelancerProfile?.availability === 'BUSY' ? 'bg-accent' : 'bg-text-light'
@@ -348,14 +349,14 @@ export default function FreelancerProfile() {
               {profile.freelanceServices[0]?.category || 'Independent Professional'}
             </p>
             {profile.freelancerProfile?.location && (
-              <p className="text-[10px] font-black text-text-light uppercase tracking-[0.15em] mb-4">{profile.freelancerProfile.location}, GH</p>
+              <p className="text-[10px] font-black text-text-light uppercase tracking-[0.15em] mb-4">{profile.freelancerProfile.location}</p>
             )}
             <h4 className="text-lg font-black text-text-main tracking-tight mb-8 italic">“{profile.freelancerProfile?.tagline || 'Expert Professional'}”</h4>
 
             <div className="flex justify-center items-center gap-8 mb-12">
               <div>
                 <p className="text-2xl font-black text-text-main tracking-tighter">
-                  {formatMoney(profile.freelancerProfile?.hourlyRate || profile.freelanceServices[0]?.price)}
+                  {formatMoney(profile.freelancerProfile?.hourlyRate || profile.freelanceServices[0]?.price, profile.freelanceServices[0]?.currency || 'USD')}
                   <span className="text-[10px] text-text-light ml-1">/hr</span>
                 </p>
                 <p className="text-[9px] font-black text-text-light uppercase tracking-widest">Rate</p>
