@@ -413,12 +413,12 @@ export default function Proposals() {
 
             <div className="flex flex-wrap gap-3">
               {proposal.amount ? (
-                <span className="rounded-xl border border-surface-border bg-surface-alt/30 px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-text-main">
+                <span className="rounded-xl bg-gold px-4 py-2 text-lg font-extrabold text-primary">
                   {proposal.amount}
                 </span>
               ) : null}
               {proposal.timeline ? (
-                <span className="rounded-xl border border-surface-border bg-surface-alt/30 px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-text-main">
+                <span className="rounded-xl bg-surface-alt px-4 py-2 text-base font-bold text-text-main">
                   {proposal.timeline}
                 </span>
               ) : null}
@@ -745,7 +745,52 @@ export default function Proposals() {
         </div>
       ) : null}
 
-      <section className="dashboard-panel mb-8 p-5 sm:p-7 lg:p-8">
+      {isLoading ? (
+        <div className="dashboard-panel p-10">
+          <p className="text-sm font-black uppercase tracking-[0.2em] text-text-light">Loading proposals...</p>
+        </div>
+      ) : proposals.length === 0 ? (
+        <div className="dashboard-panel p-10 text-center">
+          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-3xl bg-primary/8 text-primary">
+            <ClipboardList className="h-7 w-7" />
+          </div>
+          <p className="text-lg font-black text-text-main">No proposals yet.</p>
+          <p className="mt-2 text-sm font-medium text-text-muted">
+            Create them from applicant review or incoming service request cards in your dashboards.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-10">
+          <section className="space-y-5">
+            <div className="flex items-center justify-between gap-4">
+              <h2 className="text-xs font-black uppercase tracking-[0.2em] text-text-light">Incoming Proposals</h2>
+              <Link to="/messaging" className="text-[10px] font-black uppercase tracking-widest text-primary hover:underline">
+                Open Inbox
+              </Link>
+            </div>
+            {incoming.length === 0 ? (
+              <div className="dashboard-panel p-6">
+                <p className="text-sm font-semibold text-text-light">No incoming proposals right now.</p>
+              </div>
+            ) : (
+              <div className="space-y-6">{incoming.map(renderProposalCard)}</div>
+            )}
+          </section>
+
+          <section className="space-y-5">
+            <h2 className="text-xs font-black uppercase tracking-[0.2em] text-text-light">Outgoing Proposals</h2>
+            {outgoing.length === 0 ? (
+              <div className="dashboard-panel p-6">
+                <p className="text-sm font-semibold text-text-light">No outgoing proposals right now.</p>
+              </div>
+            ) : (
+              <div className="space-y-6">{outgoing.map(renderProposalCard)}</div>
+            )}
+          </section>
+        </div>
+      )}
+
+      <section className="dashboard-panel mt-10 p-5 sm:p-7 lg:p-8">
         <div className="mb-6 flex flex-col gap-3 border-b border-surface-border/50 pb-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">AI Proposal Comparison</p>
@@ -846,50 +891,6 @@ export default function Proposals() {
         ) : null}
       </section>
 
-      {isLoading ? (
-        <div className="dashboard-panel p-10">
-          <p className="text-sm font-black uppercase tracking-[0.2em] text-text-light">Loading proposals...</p>
-        </div>
-      ) : proposals.length === 0 ? (
-        <div className="dashboard-panel p-10 text-center">
-          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-3xl bg-primary/8 text-primary">
-            <ClipboardList className="h-7 w-7" />
-          </div>
-          <p className="text-lg font-black text-text-main">No proposals yet.</p>
-          <p className="mt-2 text-sm font-medium text-text-muted">
-            Create them from applicant review or incoming service request cards in your dashboards.
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-10">
-          <section className="space-y-5">
-            <div className="flex items-center justify-between gap-4">
-              <h2 className="text-xs font-black uppercase tracking-[0.2em] text-text-light">Incoming Proposals</h2>
-              <Link to="/messaging" className="text-[10px] font-black uppercase tracking-widest text-primary hover:underline">
-                Open Inbox
-              </Link>
-            </div>
-            {incoming.length === 0 ? (
-              <div className="dashboard-panel p-6">
-                <p className="text-sm font-semibold text-text-light">No incoming proposals right now.</p>
-              </div>
-            ) : (
-              <div className="space-y-6">{incoming.map(renderProposalCard)}</div>
-            )}
-          </section>
-
-          <section className="space-y-5">
-            <h2 className="text-xs font-black uppercase tracking-[0.2em] text-text-light">Outgoing Proposals</h2>
-            {outgoing.length === 0 ? (
-              <div className="dashboard-panel p-6">
-                <p className="text-sm font-semibold text-text-light">No outgoing proposals right now.</p>
-              </div>
-            ) : (
-              <div className="space-y-6">{outgoing.map(renderProposalCard)}</div>
-            )}
-          </section>
-        </div>
-      )}
     </div>
   )
 }
