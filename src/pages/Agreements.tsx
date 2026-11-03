@@ -1,5 +1,6 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import EvidenceLink from '../components/EvidenceLink'
 import { Activity, AlertTriangle, Briefcase, ClipboardList, FileCheck, Handshake, PlusCircle, Sparkles, Star, Wallet } from 'lucide-react'
 import {
   apiCompareAgreements,
@@ -1252,14 +1253,12 @@ export default function Agreements() {
                         </div>
                         <p className="mt-3 text-sm font-medium leading-relaxed text-text-muted whitespace-pre-wrap">{dispute.description}</p>
                         {dispute.evidenceUrl ? (
-                          <a
+                          <EvidenceLink
                             href={dispute.evidenceUrl}
-                            target="_blank"
-                            rel="noreferrer"
                             className="mt-3 inline-flex text-[10px] font-black uppercase tracking-[0.2em] text-primary hover:underline"
                           >
                             Open Evidence Link
-                          </a>
+                          </EvidenceLink>
                         ) : null}
                         {dispute.resolutionNote ? (
                           <p className="mt-3 rounded-2xl border border-surface-border bg-surface px-4 py-3 text-xs font-semibold text-text-muted">

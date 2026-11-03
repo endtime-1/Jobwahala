@@ -1,6 +1,7 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import { ShieldCheck, Users, Briefcase, Flag, Wrench, Trash2, RefreshCw, BadgeCheck, AlertTriangle } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
+import EvidenceLink from '../../components/EvidenceLink'
 import {
   apiCreateAdminJob, apiDeleteAdminUser, apiResolveDispute,
   apiUpdateAdminJobsStatusBulk, apiUpdateAdminJobStatus,
@@ -334,7 +335,7 @@ export default function AdminDashboard() {
                         <p className="text-xl font-black text-text-main">{name}</p>
                         <p className="text-sm font-bold text-text-muted">{v.user.email}</p>
                         <p className="mt-4 text-sm text-text-main leading-relaxed whitespace-pre-wrap">{v.details}</p>
-                        {v.documentUrl ? <a href={v.documentUrl} target="_blank" rel="noreferrer" className="mt-4 inline-flex text-[10px] font-black uppercase tracking-[0.2em] text-primary hover:underline">Open evidence</a> : null}
+                        {v.documentUrl ? <EvidenceLink href={v.documentUrl} className="mt-4 inline-flex text-[10px] font-black uppercase tracking-[0.2em] text-primary hover:underline">Open evidence</EvidenceLink> : null}
                         {v.reviewNote ? <p className="mt-4 rounded-2xl border border-surface-border bg-white px-4 py-3 text-xs font-semibold text-text-muted">Review note: {v.reviewNote}</p> : null}
                         {v.internalNote ? <p className="mt-3 rounded-2xl border border-secondary/10 bg-secondary/5 px-4 py-3 text-xs font-semibold text-text-muted">Internal note: {v.internalNote}</p> : null}
                         {v.history?.length ? (
@@ -384,7 +385,7 @@ export default function AdminDashboard() {
                         <p className="text-sm font-bold text-text-muted">Agreement: {d.agreement.title}</p>
                         <p className="mt-2 text-[10px] font-black uppercase tracking-[0.2em] text-text-light">Opened by {creatorName} / Counterparty {cpName}</p>
                         <p className="mt-4 text-sm text-text-main leading-relaxed whitespace-pre-wrap">{d.description}</p>
-                        {d.evidenceUrl ? <a href={d.evidenceUrl} target="_blank" rel="noreferrer" className="mt-4 inline-flex text-[10px] font-black uppercase tracking-[0.2em] text-primary hover:underline">Open evidence</a> : null}
+                        {d.evidenceUrl ? <EvidenceLink href={d.evidenceUrl} className="mt-4 inline-flex text-[10px] font-black uppercase tracking-[0.2em] text-primary hover:underline">Open evidence</EvidenceLink> : null}
                         {d.resolutionNote ? <p className="mt-4 rounded-2xl border border-surface-border bg-white px-4 py-3 text-xs font-semibold text-text-muted">Resolution note: {d.resolutionNote}</p> : (
                           d.status !== 'RESOLVED' && d.status !== 'DISMISSED' && (
                             <div className="mt-5">

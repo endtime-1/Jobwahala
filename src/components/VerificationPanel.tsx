@@ -3,6 +3,7 @@ import { ShieldCheck, Send, Link2, Zap } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import VerifiedBadge from './VerifiedBadge'
 import EvidenceUploadField from './EvidenceUploadField'
+import EvidenceLink from './EvidenceLink'
 
 type VerificationState = {
   requiredType?: string | null
@@ -132,14 +133,12 @@ export default function VerificationPanel({
             Submitted {latestRequest?.createdAt ? new Date(latestRequest.createdAt).toLocaleDateString() : 'recently'}.
           </p>
           {latestRequest?.documentUrl ? (
-            <a
+            <EvidenceLink
               href={latestRequest.documentUrl}
-              target="_blank"
-              rel="noreferrer"
               className="mt-3 inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary hover:underline"
             >
               <Link2 className="h-3.5 w-3.5" /> Review linked evidence
-            </a>
+            </EvidenceLink>
           ) : null}
         </div>
       ) : null}
@@ -168,14 +167,12 @@ export default function VerificationPanel({
                 : 'Share enough detail for the admin team to confirm your account.'}
             </p>
             {latestRequest?.documentUrl ? (
-              <a
+              <EvidenceLink
                 href={latestRequest.documentUrl}
-                target="_blank"
-                rel="noreferrer"
                 className="mt-3 inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary hover:underline"
               >
                 <Link2 className="h-3.5 w-3.5" /> Review linked evidence
-              </a>
+              </EvidenceLink>
             ) : null}
           </div>
 
@@ -282,14 +279,12 @@ export default function VerificationPanel({
                   </p>
                 ) : null}
                 {entry.documentUrl ? (
-                  <a
+                  <EvidenceLink
                     href={entry.documentUrl}
-                    target="_blank"
-                    rel="noreferrer"
                     className="mt-3 inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary hover:underline"
                   >
                     <Link2 className="h-3.5 w-3.5" /> Review linked evidence
-                  </a>
+                  </EvidenceLink>
                 ) : null}
               </div>
             ))}

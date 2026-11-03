@@ -1,6 +1,10 @@
 import { z } from 'zod';
 import { uploadCategoryValues, uploadContentTypeValues } from '../utils/uploads';
 
+export const signUploadSchema = z.object({
+  body: z.object({ url: z.string().trim().min(1).max(600) }).strict(),
+});
+
 export const uploadEvidenceSchema = z.object({
   body: z
     .object({

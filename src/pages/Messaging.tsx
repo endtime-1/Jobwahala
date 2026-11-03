@@ -1,6 +1,7 @@
 import { Search, Send, MoreVertical, PlusCircle, Smile, ChevronLeft, Check, CheckCheck, Paperclip, Mic, LoaderCircle, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import EvidenceLink, { ProtectedImage } from '../components/EvidenceLink'
 import { apiGetConversationSidebar, apiGetMessageDelta, apiGetMessages, apiMarkMessagesRead, apiSendMessage, type MessageAttachmentPayload } from '../lib/api'
 import { emailHandle, formatRelativeTime, getInitials } from '../lib/display'
 import { uploadEvidenceFile, evidenceUploadConstraints } from '../lib/evidenceUpload'
@@ -828,18 +829,16 @@ export default function Messaging() {
                 >
                   {message.attachmentUrl ? (
                     message.attachmentContentType?.startsWith('image/') ? (
-                      <a href={message.attachmentUrl} target="_blank" rel="noreferrer" className="block">
-                        <img
+                      <EvidenceLink href={message.attachmentUrl} className="block">
+                        <ProtectedImage
                           src={message.attachmentUrl}
                           alt={message.attachmentName || 'Attachment'}
                           className="mb-2 max-h-64 w-full rounded-2xl object-cover"
                         />
-                      </a>
+                      </EvidenceLink>
                     ) : (
-                      <a
+                      <EvidenceLink
                         href={message.attachmentUrl}
-                        target="_blank"
-                        rel="noreferrer"
                         className={`mb-2 flex items-center justify-between gap-4 rounded-2xl border px-4 py-3 transition ${
                           isMine
                             ? 'border-white/15 bg-white/10 hover:bg-white/15'
@@ -864,7 +863,7 @@ export default function Messaging() {
                         <span className={`text-[10px] font-black uppercase tracking-[0.16em] ${isMine ? 'text-white/70' : 'text-primary'}`}>
                           Open
                         </span>
-                      </a>
+                      </EvidenceLink>
                     )
                   ) : null}
                   {message.content ? (

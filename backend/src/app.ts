@@ -1,3 +1,4 @@
+import path from 'path';
 import express, { NextFunction, Request, Response } from 'express';
 import cors from 'cors';
 import prisma from './config/prisma';
@@ -145,7 +146,17 @@ app.use(express.json({ limit: env.bodyLimit }));
 app.use(express.urlencoded({ extended: true, limit: env.bodyLimit }));
 
 if (isLocalEvidenceStorage) {
-  app.use('/api/uploads', express.static(getLocalEvidenceUploadsDir()));
+  // Only company logos are public. Verification, dispute and message files are never served as open
+  // static files: they go through the signed-link route in uploadRoutes.
+  app.use(
+    '/api/uploads/logo',
+    express.static(path.join(getLocalEvidenceUploadsDir(), 'logo'), {
+      index: false,
+      dotfiles: 'deny',
+      maxAge: '1d',
+      setHeaders: (res) => res.setHeader('X-Content-Type-Options', 'nosniff'),
+    }),
+  );
 }
 app.use('/api/auth', authRateLimit, authRoutes);
 app.use('/api', apiRateLimit);

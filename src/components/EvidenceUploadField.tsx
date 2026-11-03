@@ -1,5 +1,6 @@
 import { useRef, useState, type ChangeEvent } from 'react'
 import { Link2, LoaderCircle, Paperclip, UploadCloud } from 'lucide-react'
+import EvidenceLink from './EvidenceLink'
 import {
   evidenceUploadConstraints,
   type EvidenceUploadCategory,
@@ -115,15 +116,13 @@ export default function EvidenceUploadField({
         </button>
 
         {value ? (
-          <a
+          <EvidenceLink
             href={value}
-            target="_blank"
-            rel="noreferrer"
             className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.18em] text-primary hover:underline"
           >
             <Link2 className="h-3.5 w-3.5" />
             Open linked evidence
-          </a>
+          </EvidenceLink>
         ) : null}
       </div>
 

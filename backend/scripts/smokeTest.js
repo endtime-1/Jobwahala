@@ -66,6 +66,16 @@ const requestBinary = async (baseUrl, pathname, options = {}) => {
   return { status: response.status, buffer };
 };
 
+const signFile = (baseUrl, token, url) =>
+  requestJson(baseUrl, '/api/uploads/sign', { method: 'POST', token, body: { url: String(url) } });
+
+// Asks for a signed link and opens it, the way the app does.
+const fetchSigned = async (baseUrl, token, url) => {
+  const signed = await signFile(baseUrl, token, url);
+  if (signed.status !== 200) return { status: signed.status, buffer: Buffer.alloc(0) };
+  return requestBinary(baseUrl, signed.json.url);
+};
+
 const openRealtimeStream = async (baseUrl, token) => {
   const controller = new AbortController();
   const response = await fetch(`${baseUrl}/api/realtime/stream`, {
@@ -352,20 +362,32 @@ async function main() {
       freelancerVerificationEvidenceUpload.json.file.url,
       baseUrl,
     ).toString();
-    const freelancerVerificationEvidenceFile = await requestBinary(
+    // Private evidence is never an open file: it needs a signed link from someone allowed to see it.
+    const freelancerVerificationEvidenceOpen = await requestBinary(
       baseUrl,
       freelancerVerificationEvidenceUpload.json.file.url,
     );
-    assert.equal(
-      freelancerVerificationEvidenceFile.status,
-      200,
-      'Uploaded verification evidence should be publicly retrievable from the app path',
+    assert.equal(freelancerVerificationEvidenceOpen.status, 403, 'Verification evidence must not be openly retrievable');
+    const freelancerVerificationEvidenceFile = await fetchSigned(
+      baseUrl,
+      freelancerToken,
+      freelancerVerificationEvidenceUpload.json.file.url,
     );
+    assert.equal(freelancerVerificationEvidenceFile.status, 200, 'The uploader can open their own evidence through a signed link');
     assert.equal(
       freelancerVerificationEvidenceFile.buffer.byteLength > 0,
       true,
       'Uploaded verification evidence should return a non-empty file payload',
     );
+    const ownLink = await signFile(baseUrl, freelancerToken, freelancerVerificationEvidenceUpload.json.file.url);
+    const tamperedLink = ownLink.json.url.split('sig=')[0] + 'sig=' + '0'.repeat(64);
+    assert.equal((await requestBinary(baseUrl, tamperedLink)).status, 403, 'A link with a forged signature must be refused');
+    const otherFileLink = ownLink.json.url.replace('/verification/', '/dispute/');
+    assert.equal((await requestBinary(baseUrl, otherFileLink)).status, 403, 'A signed link only works for the file it was issued for');
+    const pasted = await signFile(baseUrl, freelancerToken, 'https://example.com/portfolio.pdf');
+    assert.equal(pasted.json.protected, false, 'Links to other sites are passed through untouched');
+    const traversal = await requestBinary(baseUrl, '/api/uploads/verification/..%2F..%2F.env?exp=9999999999999&sig=' + '0'.repeat(64));
+    assert.ok([403, 404].includes(traversal.status), 'Path traversal attempts must be refused');
 
     const freelancerVerificationRequest = await requestJson(baseUrl, '/api/users/verification', {
       method: 'POST',
@@ -451,6 +473,8 @@ async function main() {
     assert.equal(alternativeFreelancerRegister.status, 201, 'Alternative freelancer registration should succeed');
     const alternativeFreelancerId = alternativeFreelancerRegister.json.user.id;
     const alternativeFreelancerToken = alternativeFreelancerRegister.json.token;
+    const strangerVerificationLink = await signFile(baseUrl, alternativeFreelancerToken, freelancerVerificationEvidenceUpload.json.file.url);
+    assert.equal(strangerVerificationLink.status, 403, "Another active user must not get a link to someone else's ID document");
 
     const alternativeService = await requestJson(baseUrl, '/api/services', {
       method: 'POST',
@@ -2001,15 +2025,10 @@ async function main() {
       messageAttachmentUpload.json.file.url,
       baseUrl,
     ).toString();
-    const uploadedMessageAttachment = await requestBinary(
-      baseUrl,
-      messageAttachmentUpload.json.file.url,
-    );
-    assert.equal(
-      uploadedMessageAttachment.status,
-      200,
-      'Uploaded message attachments should be publicly retrievable from the app path',
-    );
+    const uploadedMessageAttachmentOpen = await requestBinary(baseUrl, messageAttachmentUpload.json.file.url);
+    assert.equal(uploadedMessageAttachmentOpen.status, 403, 'Message attachments must not be openly retrievable');
+    const uploadedMessageAttachment = await fetchSigned(baseUrl, employerToken, messageAttachmentUpload.json.file.url);
+    assert.equal(uploadedMessageAttachment.status, 200, 'The sender can preview their attachment before sending');
 
     const attachmentMessage = await requestJson(baseUrl, '/api/messages', {
       method: 'POST',
@@ -2024,6 +2043,11 @@ async function main() {
       },
     });
     assert.equal(attachmentMessage.status, 201, 'Attachment-only messages should succeed');
+
+    const recipientAttachment = await fetchSigned(baseUrl, activeSeekerToken, messageAttachmentUpload.json.file.url);
+    assert.equal(recipientAttachment.status, 200, 'The other person in the conversation can open the attachment');
+    const outsiderAttachment = await signFile(baseUrl, freelancerToken, messageAttachmentUpload.json.file.url);
+    assert.equal(outsiderAttachment.status, 403, 'Someone outside the conversation must not get the attachment');
 
     const realtimeAttachmentRefresh = await activeSeekerRealtimeStream.readUntilEvent(
       'messages.refresh',
@@ -2246,15 +2270,10 @@ async function main() {
       disputeEvidenceUpload.json.file.url,
       baseUrl,
     ).toString();
-    const disputeEvidenceFile = await requestBinary(
-      baseUrl,
-      disputeEvidenceUpload.json.file.url,
-    );
-    assert.equal(
-      disputeEvidenceFile.status,
-      200,
-      'Uploaded dispute evidence should be publicly retrievable from the app path',
-    );
+    const disputeEvidenceOpen = await requestBinary(baseUrl, disputeEvidenceUpload.json.file.url);
+    assert.equal(disputeEvidenceOpen.status, 403, 'Dispute evidence must not be openly retrievable');
+    const disputeEvidenceFile = await fetchSigned(baseUrl, activeSeekerToken, disputeEvidenceUpload.json.file.url);
+    assert.equal(disputeEvidenceFile.status, 200, 'The uploader can open their own dispute evidence');
     assert.equal(
       disputeEvidenceFile.buffer.byteLength > 0,
       true,
@@ -2273,6 +2292,11 @@ async function main() {
     });
     assert.equal(openDispute.status, 201, 'Agreement participants should be able to open a dispute');
     const disputeId = openDispute.json.dispute.id;
+
+    const counterpartyEvidence = await fetchSigned(baseUrl, employerToken, disputeEvidenceUpload.json.file.url);
+    assert.equal(counterpartyEvidence.status, 200, 'The other party on the agreement can open the dispute evidence');
+    const outsiderEvidence = await signFile(baseUrl, freelancerToken, disputeEvidenceUpload.json.file.url);
+    assert.equal(outsiderEvidence.status, 403, 'Someone not on the agreement must not get the dispute evidence');
 
     const duplicateDispute = await requestJson(baseUrl, `/api/agreements/${agreementId}/disputes`, {
       method: 'POST',
@@ -2342,6 +2366,15 @@ async function main() {
     });
     assert.equal(adminLogin.status, 200, 'Admin login should succeed');
     const adminToken = adminLogin.json.token;
+
+    for (const [label, url] of [
+      ['verification evidence', freelancerVerificationEvidenceUpload.json.file.url],
+      ['message attachment', messageAttachmentUpload.json.file.url],
+      ['dispute evidence', disputeEvidenceUpload.json.file.url],
+    ]) {
+      const adminView = await fetchSigned(baseUrl, adminToken, url);
+      assert.equal(adminView.status, 200, `Admins can open ${label} for review`);
+    }
 
     const nonAdminUsersAccess = await requestJson(baseUrl, '/api/admin/users', {
       token: employerToken,

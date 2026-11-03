@@ -1,6 +1,8 @@
 import { randomUUID } from 'crypto';
 import path from 'path';
+import env from '../config/env';
 import { persistEvidenceFile } from '../services/evidenceStorage';
+import { uploaderTag } from './fileAccess';
 
 // "logo" files are shown publicly (company logos), so they get stricter checks than private evidence.
 export const uploadCategoryValues = ['verification', 'dispute', 'message', 'logo'] as const;
@@ -83,11 +85,13 @@ export const saveEvidenceUpload = async ({
   fileName,
   contentType,
   dataBase64,
+  uploaderId,
 }: {
   category: UploadCategory;
   fileName: string;
   contentType: UploadContentType;
   dataBase64: string;
+  uploaderId?: string;
 }) => {
   const encodedPayload = normalizeBase64Payload(dataBase64);
   const buffer = Buffer.from(encodedPayload, 'base64');
@@ -101,7 +105,9 @@ export const saveEvidenceUpload = async ({
     .replace(/-{2,}/g, '-')
     .replace(/^-|-$/g, '')
     .slice(0, 60) || 'evidence';
-  const storedFileName = `${Date.now()}-${randomUUID()}-${safeBaseName}${extension}`;
+  // The uploader tag lets people preview their own files before attaching them anywhere.
+  const uploaderPart = uploaderId ? `u${uploaderTag(uploaderId, env.jwtSecret)}-` : '';
+  const storedFileName = `${Date.now()}-${uploaderPart}${randomUUID()}-${safeBaseName}${extension}`;
   return persistEvidenceFile({
     category,
     storedFileName,
