@@ -1,6 +1,6 @@
-import { Search, Send, MoreVertical, PlusCircle, Smile, ChevronLeft, Check, CheckCheck, Paperclip, Mic, LoaderCircle, X } from 'lucide-react'
+import { Search, Send, MoreVertical, PlusCircle, Smile, ChevronLeft, Check, CheckCheck, Paperclip, Mic, LoaderCircle, X, MessageSquare } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import EvidenceLink, { ProtectedImage } from '../components/EvidenceLink'
 import { apiGetConversationSidebar, apiGetMessageDelta, apiGetMessages, apiMarkMessagesRead, apiSendMessage, type MessageAttachmentPayload } from '../lib/api'
 import { emailHandle, formatRelativeTime, getInitials } from '../lib/display'
@@ -713,7 +713,19 @@ export default function Messaging() {
         {isLoadingConversations ? (
           <div className="px-4 py-6 text-sm font-semibold text-text-light">Loading conversations...</div>
         ) : filteredContacts.length === 0 && !showPendingRecipient ? (
-          <div className="px-4 py-6 text-sm font-semibold text-text-light">No conversations yet.</div>
+          <div className="px-4 py-8 text-center">
+            <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary/10 text-secondary">
+              <MessageSquare className="h-7 w-7" />
+            </span>
+            <p className="mt-4 text-lg font-extrabold text-text-main">No conversations yet</p>
+            <p className="mt-1 text-sm font-medium text-text-muted">
+              Chats start when you apply to a job, send a proposal or contact a freelancer.
+            </p>
+            <div className="mt-5 flex flex-col gap-2">
+              <Link to="/jobs" className="btn btn-primary btn-sm justify-center">Browse jobs</Link>
+              <Link to="/freelancers" className="btn btn-outline btn-sm justify-center">Find freelancers</Link>
+            </div>
+          </div>
         ) : (
           filteredContacts.map((conversation) => {
             const participant = conversation.participant
@@ -993,8 +1005,8 @@ export default function Messaging() {
   )
 
   return (
-    <div className="min-h-screen bg-surface-alt/10 pt-32 pb-[calc(env(safe-area-inset-bottom)+6.5rem)] md:pt-32 md:pb-10">
-      <div className="container mx-auto h-[calc(100vh-188px)] max-w-7xl overflow-hidden md:h-[calc(100vh-188px)]">
+    <div className="min-h-screen bg-surface-alt/10 pt-36 pb-[calc(env(safe-area-inset-bottom)+6.5rem)] md:pb-10">
+      <div className="container mx-auto h-[calc(100vh-220px)] max-w-7xl overflow-hidden md:h-[calc(100vh-220px)]">
         <div className="flex h-full overflow-hidden rounded-[2rem] border border-surface-border/50 bg-white shadow-premium-2xl md:rounded-[3rem]">
           {(isMobile && !showChat) || !isMobile ? renderSidebar() : null}
           {(isMobile && showChat) || !isMobile ? renderChat() : null}
