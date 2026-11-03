@@ -2573,6 +2573,19 @@ async function main() {
       'Users suspended by admin must be blocked from protected routes immediately',
     );
 
+    // Public endpoints must not leak real email addresses to anonymous callers, but signed-in users keep them.
+    const realEmail = (response) => /"email":"[^"*]+@[^"]+"/.test(JSON.stringify(response.json));
+    for (const publicPath of ['/api/jobs', '/api/services']) {
+      const anonymous = await requestJson(baseUrl, publicPath);
+      assert.equal(anonymous.status, 200, `${publicPath} should stay public`);
+      assert.ok(!realEmail(anonymous), `${publicPath} must mask emails for anonymous callers`);
+
+      const signedIn = await requestJson(baseUrl, publicPath, { token: employerToken });
+      assert.equal(signedIn.status, 200);
+    }
+    const anonymousJobs = await requestJson(baseUrl, '/api/jobs');
+    assert.ok(JSON.stringify(anonymousJobs.json).includes('***@'), 'masked emails keep their domain for display');
+
     console.log('Smoke test passed');
   } finally {
     await cleanup();

@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { maskPublicEmails } from '../middleware/privacy';
 import { compareJobsForSeeker, createJob, generateJobApplicantComparison, generateJobApplicantDecisionBrief, generateJobDraft, getJobs, getJobById, applyForJob, getJobApplicants, updateApplicationStatus, deleteApplication, updateOwnedJobStatus, getMyJobApplication, generateJobShortlistSummary, getJobApplicationCoaching } from '../controllers/jobController';
 import { authMiddleware, roleMiddleware } from '../middleware/auth';
 import { validate } from '../middleware/validate';
@@ -7,12 +8,12 @@ import { applyForJobSchema, compareJobsSchema, createJobSchema, generateApplican
 
 const router = Router();
 
-router.get('/', getJobs);
+router.get('/', maskPublicEmails, getJobs);
 router.get('/:id/my-application', authMiddleware, roleMiddleware(['SEEKER']), validate(jobIdParamSchema), getMyJobApplication);
 router.get('/:id/application-coaching', authMiddleware, roleMiddleware(['SEEKER']), validate(jobIdParamSchema), strictAiRateLimit, getJobApplicationCoaching);
 router.post('/draft', authMiddleware, roleMiddleware(['EMPLOYER']), validate(generateJobDraftSchema), strictAiRateLimit, generateJobDraft);
 router.post('/compare', authMiddleware, roleMiddleware(['SEEKER']), validate(compareJobsSchema), strictAiRateLimit, compareJobsForSeeker);
-router.get('/:id', getJobById);
+router.get('/:id', maskPublicEmails, getJobById);
 
 // Protected routes
 router.post('/', authMiddleware, roleMiddleware(['EMPLOYER']), validate(createJobSchema), createJob);

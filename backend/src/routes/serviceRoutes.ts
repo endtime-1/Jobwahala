@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { maskPublicEmails } from '../middleware/privacy';
 import { 
   compareMarketplaceFreelancers,
   createService, 
@@ -33,8 +34,8 @@ import {
 const router = Router();
 
 // Public Routes
-router.get('/', getServices);
-router.get('/freelancer/:id', getFreelancerDetails);
+router.get('/', maskPublicEmails, getServices);
+router.get('/freelancer/:id', maskPublicEmails, getFreelancerDetails);
 router.get('/freelancer/:id/comparison', authMiddleware, roleMiddleware(['SEEKER', 'EMPLOYER']), validate(serviceIdParamSchema), getFreelancerComparison);
 
 // Authenticated Service Request Routes
