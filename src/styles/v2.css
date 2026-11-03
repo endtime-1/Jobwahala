@@ -122,3 +122,131 @@
   padding: 0.5rem 0.55rem;
   gap: 0.4rem;
 }
+
+/* ---- Dashboards and workspace pages share one dark header and flat panels. ---- */
+.v2 .dashboard-panel {
+  background: #fff;
+  border: 1px solid #e3e7ef;
+  border-radius: 1.25rem;
+  box-shadow: 0 1px 2px rgba(16, 26, 43, 0.04), 0 10px 28px -20px rgba(16, 26, 43, 0.22);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.v2 .dashboard-hero {
+  border: 0;
+  border-radius: 1.6rem;
+  color: #fff;
+  background:
+    radial-gradient(700px 360px at 100% 0%, rgba(47, 109, 246, 0.5), transparent 60%),
+    radial-gradient(500px 300px at 0% 100%, rgba(255, 197, 49, 0.16), transparent 60%),
+    #101a2b;
+  box-shadow: 0 30px 60px -40px rgba(16, 26, 43, 0.6);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.v2 .dashboard-hero::after {
+  background: none;
+}
+
+.v2 .dashboard-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 6px;
+  background: repeating-linear-gradient(90deg, #ce1126 0 28px, #fcd116 28px 56px, #006b3f 56px 84px);
+}
+
+.v2 .dashboard-hero .text-text-main {
+  color: #fff;
+}
+
+.v2 .dashboard-hero .text-text-muted {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.v2 .dashboard-hero .text-text-light {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.v2 .dashboard-hero .text-primary {
+  color: var(--color-gold);
+}
+
+.v2 .dashboard-hero .text-secondary {
+  color: #8db4ff;
+}
+
+/* White cards sitting inside the dark header keep dark text. */
+.v2 .dashboard-hero .dashboard-panel .text-text-main,
+.v2 .dashboard-hero [class*='bg-white'] .text-text-main,
+.v2 .dashboard-hero .dashboard-action-chip .text-text-main {
+  color: var(--color-text-main);
+}
+
+.v2 .dashboard-hero .dashboard-panel .text-text-muted,
+.v2 .dashboard-hero [class*='bg-white'] .text-text-muted {
+  color: var(--color-text-muted);
+}
+
+.v2 .dashboard-hero .dashboard-panel .text-text-light,
+.v2 .dashboard-hero [class*='bg-white'] .text-text-light {
+  color: var(--color-text-light);
+}
+
+.v2 .dashboard-hero .dashboard-panel .text-primary,
+.v2 .dashboard-hero [class*='bg-white'] .text-primary {
+  color: var(--color-primary);
+}
+
+.v2 .dashboard-hero .dashboard-panel .text-secondary,
+.v2 .dashboard-hero [class*='bg-white'] .text-secondary {
+  color: var(--color-secondary);
+}
+
+.v2 .dashboard-kicker,
+.v2 .dashboard-action-chip {
+  font-size: 0.85rem;
+  min-height: 2.5rem;
+}
+
+.v2 .dashboard-hero .dashboard-panel {
+  color: var(--color-text-main);
+}
+
+.v2 .metric-card {
+  background: #fff;
+  border: 1px solid #e3e7ef;
+  border-radius: 1.25rem;
+  box-shadow: 0 1px 2px rgba(16, 26, 43, 0.04), 0 10px 28px -20px rgba(16, 26, 43, 0.22);
+}
+
+.v2 .metric-card--solid {
+  background:
+    radial-gradient(circle at top right, rgba(255, 255, 255, 0.14), transparent 30%),
+    linear-gradient(135deg, #101a2b 0%, #2f6df6 100%);
+  border-color: transparent;
+}
+
+.metric-card--solid .text-text-main {
+  color: #fff;
+}
+
+.metric-card--solid .text-text-light {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.v2 .dashboard-hero .dashboard-action-chip {
+  background: #fff;
+  border-color: transparent;
+  color: var(--color-primary);
+}
+
+.v2 .dashboard-hero .dashboard-action-chip:hover {
+  background: var(--color-gold);
+}
+
+.metric-card--solid .badge {
+  background: #fff;
+}
