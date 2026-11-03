@@ -1,4 +1,4 @@
-import { Search, Filter, ArrowRight, Zap, BriefcaseBusiness, Sparkles } from 'lucide-react'
+import { Search, ArrowRight, BriefcaseBusiness, Sparkles } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
 import { apiCompareMarketplaceFreelancers, apiGetRecommendedServices, apiGetServices } from '../lib/api'
@@ -297,168 +297,112 @@ export default function FreelancerMarketplace() {
   }
 
   return (
-    <div className="container animate-in fade-in pt-32 pb-24 duration-1000 md:pt-32 xl:pt-36">
+    <div className="container pt-32 pb-24 xl:pt-36">
       <SEO 
         title="Hire Skilled Freelancers Across Africa | Tech, Design & More"
         description="Connect with top-rated Ghanaian software engineers, UI/UX designers, and digital marketers. Verified talent for global high-growth projects."
         keywords="hire ghanaian developers, freelance designers accra, top talent ghana, jobwahala marketplace"
       />
-      <header className="dashboard-hero mb-8 px-5 py-6 sm:px-7 sm:py-7 lg:px-8 lg:py-8">
-        <div className="relative z-10 flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-2xl">
-            <div className="dashboard-kicker mb-4">
-              <Zap className="h-3.5 w-3.5" /> Live service marketplace
-            </div>
-            <h1 className="mb-3 text-4xl font-black leading-tight tracking-tighter text-text-main md:text-5xl">
-              Hire Africa&apos;s modern independent operators.
-            </h1>
-            <p className="text-base font-medium tracking-tight text-text-muted md:text-lg">
-              {isPersonalized
-                ? 'Your marketplace is now AI-ranked around your current hiring signals, profile context, and service fit.'
-                : 'Browse services from freelancers, narrow by specialty, then review a profile and get in touch.'}
-            </p>
-            {isPersonalized ? (
-              <div className="dashboard-actions">
-                <div className="dashboard-action-chip border-secondary/20 bg-secondary/10 text-secondary">
-                  <Sparkles className="h-3.5 w-3.5" /> Personalized fit ranking is live
-                </div>
-              </div>
-            ) : null}
-            {categories.length > 0 ? (
-              <div className="dashboard-actions hidden lg:flex">
-                {categories.slice(0, 5).map((category) => (
-                  <button
-                    key={category}
-                    type="button"
-                    onClick={() => toggleCategory(category)}
-                    className={`dashboard-action-chip ${selectedCategories.includes(category) ? 'border-secondary/30 bg-secondary/10 text-secondary' : ''}`}
-                  >
-                    {category}
-                  </button>
-                ))}
-              </div>
-            ) : null}
-          </div>
+      <header
+        className="relative overflow-hidden rounded-[2rem] px-5 py-8 text-white sm:px-9 sm:py-11"
+        style={{
+          background:
+            'radial-gradient(700px 360px at 100% 0%, rgba(47,109,246,0.5), transparent 60%), radial-gradient(500px 300px at 0% 100%, rgba(255,197,49,0.16), transparent 60%), #101a2b',
+        }}
+      >
+        <div className="heritage-strip absolute inset-x-0 top-0" aria-hidden />
+        <p className="page-eyebrow">Hire freelancers</p>
+        <h1 className="mt-3 max-w-3xl text-4xl font-black leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
+          Hire skilled people across Africa. <span className="text-gold">Pay when you approve.</span>
+        </h1>
+        <p className="mt-4 max-w-2xl text-base font-medium text-white/75 sm:text-lg">
+          {isPersonalized
+            ? 'Freelancers are ranked for you, based on your profile and what you have been looking for.'
+            : 'Browse services from freelancers, pick a specialty, then review a profile and get in touch. Payment is held safely until you approve the work.'}
+        </p>
 
-          <div className="dashboard-panel grid min-w-0 grid-cols-3 gap-3 px-5 py-5 sm:min-w-[20rem] sm:px-6">
-            <div className="rounded-2xl bg-white/80 px-3 py-4 text-center shadow-premium-sm">
-              <p className="text-2xl font-black text-text-main">{freelancerCards.length}</p>
-              <p className="mt-1 text-[9px] font-black uppercase tracking-[0.18em] text-text-light">Freelancers</p>
-            </div>
-            <div className="rounded-2xl bg-white/80 px-3 py-4 text-center shadow-premium-sm">
-              <p className="text-2xl font-black text-text-main">{liveServiceCount}</p>
-              <p className="mt-1 text-[9px] font-black uppercase tracking-[0.18em] text-text-light">Services</p>
-            </div>
-            <div className="rounded-2xl bg-white/80 px-3 py-4 text-center shadow-premium-sm">
-              <p className="text-2xl font-black text-text-main">{categories.length}</p>
-              <p className="mt-1 text-[9px] font-black uppercase tracking-[0.18em] text-text-light">
-                {isPersonalized ? 'Top Fits' : 'Tracks'}
-              </p>
-            </div>
-          </div>
+        <div className="relative mt-7 rounded-2xl bg-white p-2 shadow-premium-xl">
+          <Search className="pointer-events-none absolute left-5 top-1/2 h-5 w-5 -translate-y-1/2 text-text-light" />
+          <input
+            type="text"
+            aria-label="Search freelancers"
+            placeholder="Search by skill, service or name"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            className="w-full rounded-xl border-none bg-transparent py-4 pl-12 pr-4 text-base font-semibold text-text-main focus:ring-2 focus:ring-secondary/25"
+          />
         </div>
+
+        {categories.length > 0 ? (
+          <div className="mt-5 flex gap-2 overflow-x-auto pb-1" role="group" aria-label="Specialty">
+            {categories.slice(0, 8).map((category) => (
+              <button
+                key={category}
+                type="button"
+                onClick={() => toggleCategory(category)}
+                aria-pressed={selectedCategories.includes(category)}
+                className={`whitespace-nowrap rounded-full border px-4 py-2 text-sm font-bold transition-colors ${
+                  selectedCategories.includes(category)
+                    ? 'border-gold bg-gold text-primary'
+                    : 'border-white/20 bg-white/10 text-white hover:bg-white/20'
+                }`}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
+        ) : null}
+
+        {!isLoading && !error ? (
+          <p className="mt-5 text-sm font-semibold text-white/70">
+            {freelancerCards.length} {freelancerCards.length === 1 ? 'freelancer' : 'freelancers'} · {liveServiceCount} live{' '}
+            {liveServiceCount === 1 ? 'service' : 'services'}
+          </p>
+        ) : null}
       </header>
 
-      <div className="grid grid-cols-1 gap-12 lg:grid-cols-4">
-        <aside className="hidden lg:block">
-          <div className="dashboard-panel sticky top-28 bg-surface-alt/30 p-5 sm:p-6">
-            <h3 className="font-black text-xs uppercase tracking-widest flex items-center gap-3 mb-8 text-text-main">
-              <Filter className="h-4 w-4 text-secondary" /> Expert Filters
-            </h3>
-            <div className="space-y-10">
-              <div>
-                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-text-light mb-6 block">Specialization</label>
-                <div className="space-y-4">
-                  {categories.map((category) => (
-                    <label key={category} className="flex items-center gap-3 cursor-pointer group">
-                      <div className="h-5 w-5 rounded-lg border border-surface-border group-hover:border-secondary transition-all flex items-center justify-center bg-white shadow-sm">
-                        <div className={`h-2 w-2 rounded-sm bg-secondary transition-opacity ${selectedCategories.includes(category) ? 'opacity-100' : 'opacity-0'}`}></div>
-                      </div>
-                      <input
-                        type="checkbox"
-                        className="hidden"
-                        checked={selectedCategories.includes(category)}
-                        onChange={() => toggleCategory(category)}
-                      />
-                      <span className="text-sm font-bold text-text-muted group-hover:text-text-main transition-colors">{category}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              {locations.length > 0 ? (
-                <div>
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-text-light mb-6 block">City/Location</label>
-                  <div className="space-y-4">
-                    {locations.map((loc) => (
-                      <label key={loc} className="flex items-center gap-3 cursor-pointer group">
-                        <div className="h-5 w-5 rounded-lg border border-surface-border group-hover:border-secondary transition-all flex items-center justify-center bg-white shadow-sm">
-                          <div className={`h-2 w-2 rounded-sm bg-accent transition-opacity ${selectedLocations.includes(loc) ? 'opacity-100' : 'opacity-0'}`}></div>
-                        </div>
-                        <input
-                          type="checkbox"
-                          className="hidden"
-                          checked={selectedLocations.includes(loc)}
-                          onChange={() => {
-                            setSelectedLocations(prev => 
-                              prev.includes(loc) ? prev.filter(v => v !== loc) : [...prev, loc]
-                            )
-                          }}
-                        />
-                        <span className="text-sm font-bold text-text-muted group-hover:text-text-main transition-colors">{loc}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              ) : null}
-            </div>
-          </div>
-        </aside>
-
-        <main className="lg:col-span-3 space-y-8">
-          <section className="dashboard-panel space-y-5 p-4 sm:p-5 lg:hidden">
-            <div className="relative group">
-              <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-text-light transition-colors group-focus-within:text-secondary" />
-              <input
-                type="text"
-                placeholder="Search by expertise, service title, or skill..."
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                className="w-full rounded-2xl border-none bg-surface-alt/50 px-14 py-4 text-base font-bold focus:ring-2 focus:ring-secondary/10 shadow-inner placeholder:text-text-light/50"
-              />
-            </div>
-            {categories.length > 0 ? (
-              <div className="flex gap-3 overflow-x-auto pb-1">
-                {categories.map((category) => (
+      <div className="mt-6">
+        <main className="space-y-6">
+          {locations.length > 0 || selectedCategories.length > 0 || selectedLocations.length > 0 || search.trim() ? (
+            <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-surface-border bg-white p-3 sm:p-4">
+              {locations.length > 0 ? <span className="mr-1 hidden text-sm font-bold text-text-muted sm:inline">City</span> : null}
+              {locations.map((loc) => (
+                <button
+                  key={loc}
+                  type="button"
+                  aria-pressed={selectedLocations.includes(loc)}
+                  onClick={() =>
+                    setSelectedLocations((prev) => (prev.includes(loc) ? prev.filter((value) => value !== loc) : [...prev, loc]))
+                  }
+                  className={`rounded-full border px-4 py-2 text-sm font-bold transition-colors ${
+                    selectedLocations.includes(loc)
+                      ? 'border-secondary bg-secondary/10 text-secondary'
+                      : 'border-surface-border bg-white text-text-muted hover:border-secondary/40'
+                  }`}
+                >
+                  {loc}
+                </button>
+              ))}
+              <div className="ml-auto flex items-center gap-3">
+                <p className="text-sm font-bold text-text-main">
+                  {filteredFreelancers.length} {filteredFreelancers.length === 1 ? 'result' : 'results'}
+                </p>
+                {selectedCategories.length > 0 || selectedLocations.length > 0 || search.trim() ? (
                   <button
-                    key={category}
                     type="button"
-                    onClick={() => toggleCategory(category)}
-                    className={`whitespace-nowrap rounded-full border px-4 py-2 text-[10px] font-black uppercase tracking-[0.18em] transition-all ${
-                      selectedCategories.includes(category)
-                        ? 'border-secondary/20 bg-secondary text-white'
-                        : 'border-surface-border bg-white text-text-muted'
-                    }`}
+                    onClick={() => {
+                      setSearch('')
+                      setSelectedCategories([])
+                      setSelectedLocations([])
+                    }}
+                    className="inline-flex items-center gap-1 rounded-full bg-surface-alt px-3 py-1.5 text-sm font-bold text-text-muted hover:text-text-main"
                   >
-                    {category}
+                    Clear
                   </button>
-                ))}
+                ) : null}
               </div>
-            ) : null}
-          </section>
-
-          <div className="dashboard-panel hidden p-4 sm:p-5 lg:block">
-            <div className="relative group">
-              <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-text-light transition-colors group-focus-within:text-secondary" />
-              <input
-                type="text"
-                placeholder="Search by expertise, service title, or skill..."
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                className="h-16 w-full rounded-3xl border-none bg-surface-alt/50 px-16 text-lg font-bold focus:ring-2 focus:ring-secondary/10 shadow-inner placeholder:text-text-light/50"
-              />
             </div>
-          </div>
+          ) : null}
 
           {isPersonalized && topRecommendations.length > 0 ? (
             <section className="dashboard-panel overflow-hidden p-5 sm:p-6">
@@ -633,115 +577,99 @@ export default function FreelancerMarketplace() {
               <p className="text-text-muted font-medium">Try adjusting your search or filters.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
               {filteredFreelancers.map((freelancer) => (
-                <div key={freelancer.id} className="dashboard-panel group relative overflow-hidden bg-white p-5 transition-all hover:shadow-premium-xl sm:p-8">
-                  <div className="absolute top-0 right-0 h-32 w-32 bg-secondary/5 rounded-full -mr-16 -mt-16 group-hover:bg-secondary/10 transition-colors"></div>
-
-                  <div className="flex items-center justify-between mb-10 relative z-10">
-                    <div className="flex h-16 w-16 items-center justify-center rounded-[1.4rem] bg-gradient-to-br from-secondary to-secondary-dark text-xl font-black text-white shadow-lg transition-transform group-hover:scale-105 sm:h-20 sm:w-20 sm:rounded-3xl sm:text-2xl">
+                <article
+                  key={freelancer.id}
+                  className="group flex flex-col rounded-2xl border border-surface-border bg-white p-5 transition-all hover:-translate-y-0.5 hover:border-secondary/40 hover:shadow-premium-md sm:p-6"
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="flex h-16 w-16 flex-none items-center justify-center rounded-2xl bg-gradient-to-br from-secondary to-secondary-dark text-2xl font-black text-white">
                       {freelancer.avatar}
                     </div>
-                    <div className="text-right">
-                      {isPersonalized && freelancer.topMatchScore !== null ? (
-                        <p className="mb-2 inline-flex rounded-full border border-secondary/15 bg-secondary/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-secondary">
-                          {freelancer.topMatchScore}% fit
-                        </p>
-                      ) : null}
-                      <p className="text-2xl font-black text-text-main tracking-tighter">
-                        {freelancer.rate}
-                        <span className="text-xs text-text-light ml-1">/service</span>
-                      </p>
-                      <p className="text-[10px] font-black text-secondary uppercase tracking-widest">{freelancer.servicesCount} live services</p>
-                    </div>
-                  </div>
-
-                    <div className="mb-8 relative z-10">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-2xl font-black text-text-main tracking-tight group-hover:text-secondary transition-colors">{freelancer.name}</h3>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="text-xl font-extrabold leading-snug tracking-tight text-text-main group-hover:text-secondary">{freelancer.name}</h3>
                         <VerifiedBadge
                           type="freelancer"
                           status={freelancer.isVerified ? 'APPROVED' : 'UNVERIFIED'}
                           hideWhenUnverified
                           showText={false}
                         />
-                        <div className="ml-auto flex items-center gap-1.5">
-                           <div className={`h-2 w-2 rounded-full ${
-                              freelancer.availability === 'AVAILABLE' ? 'bg-success' : 
-                              freelancer.availability === 'BUSY' ? 'bg-accent' : 'bg-text-light'
-                           }`}></div>
-                           <span className="text-[9px] font-black uppercase tracking-widest text-text-light">
-                              {freelancer.availability.replace('_', ' ')}
-                           </span>
-                        </div>
                       </div>
-                    <p className="text-text-muted font-bold text-sm mb-1 uppercase tracking-wider">{freelancer.category}</p>
-                    {freelancer.location && (
-                       <p className="text-[10px] font-black text-text-light uppercase tracking-[0.15em] mb-4">{freelancer.location}, GH</p>
-                    )}
-                    <h4 className="text-base font-black text-text-main tracking-tight mb-2 italic">“{freelancer.tagline || 'Expert Professional'}”</h4>
-                    <p className="text-sm text-text-muted leading-relaxed line-clamp-2">{freelancer.bio}</p>
+                      <p className="mt-0.5 text-sm font-bold text-text-muted">
+                        {freelancer.category}
+                        {freelancer.location ? ` · ${freelancer.location}` : ''}
+                      </p>
+                      <p className="mt-1.5 inline-flex items-center gap-1.5 text-xs font-bold text-text-muted">
+                        <span
+                          className={`h-2 w-2 rounded-full ${
+                            freelancer.availability === 'AVAILABLE' ? 'bg-success' : freelancer.availability === 'BUSY' ? 'bg-accent' : 'bg-text-light'
+                          }`}
+                        />
+                        {freelancer.availability === 'AVAILABLE' ? 'Available now' : freelancer.availability === 'BUSY' ? 'Busy' : 'Away'}
+                      </p>
+                    </div>
+                    {isPersonalized && freelancer.topMatchScore !== null ? (
+                      <span className="rounded-full bg-secondary/10 px-3 py-1 text-xs font-extrabold text-secondary">{freelancer.topMatchScore}% fit</span>
+                    ) : null}
                   </div>
 
-                  <div className="flex flex-wrap gap-2 mb-6 relative z-10">
+                  <p className="mt-4 text-base font-bold italic leading-snug text-text-main">“{freelancer.tagline || 'Expert professional'}”</p>
+                  <p className="mt-2 line-clamp-2 text-sm font-medium leading-relaxed text-text-muted">{freelancer.bio}</p>
+
+                  <div className="mt-4 flex flex-wrap gap-2">
                     {(freelancer.skills.length > 0 ? freelancer.skills : [freelancer.category]).slice(0, 4).map((skill) => (
-                      <span key={skill} className="px-4 py-2 bg-surface-alt rounded-xl text-[10px] font-black text-text-muted uppercase tracking-widest">
+                      <span key={skill} className="rounded-full bg-surface-alt px-3 py-1 text-sm font-bold text-text-muted">
                         {skill}
                       </span>
                     ))}
                   </div>
 
-                  <div className="rounded-2xl bg-surface-alt/30 border border-surface-border p-4 mb-8 relative z-10">
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-text-light mb-2 flex items-center gap-2">
-                      <BriefcaseBusiness className="h-3.5 w-3.5 text-secondary" /> Featured Service
+                  <div className="mt-4 rounded-xl bg-surface-alt/60 p-3.5">
+                    <p className="flex items-center gap-2 text-xs font-bold text-text-muted">
+                      <BriefcaseBusiness className="h-3.5 w-3.5 text-secondary" /> Featured service
                     </p>
-                    <p className="text-sm font-black text-text-main">{freelancer.featuredService}</p>
+                    <p className="mt-1 text-sm font-extrabold text-text-main">{freelancer.featuredService}</p>
                   </div>
 
                   {isPersonalized && freelancer.topMatchReasons.length > 0 ? (
-                    <div className="rounded-2xl border border-secondary/10 bg-secondary/5 p-4 mb-8 relative z-10">
-                      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-secondary mb-3 flex items-center gap-2">
-                        <Sparkles className="h-3.5 w-3.5" /> Match Signals
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        {freelancer.topMatchReasons.map((reason) => (
-                          <span
-                            key={`${freelancer.id}-${reason}`}
-                            className="rounded-full border border-secondary/10 bg-white px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-text-muted"
-                          >
-                            {reason}
-                          </span>
-                        ))}
-                      </div>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {freelancer.topMatchReasons.slice(0, 3).map((reason) => (
+                        <span key={`${freelancer.id}-${reason}`} className="rounded-full border border-secondary/20 bg-secondary/5 px-3 py-1 text-xs font-bold text-secondary">
+                          {reason}
+                        </span>
+                      ))}
                     </div>
                   ) : null}
 
-                  <div className="flex items-center justify-between gap-3 pt-8 border-t border-surface-border relative z-10">
-                    {canCompareMarketplace ? (
-                      <button
-                        type="button"
-                        aria-label={`Compare ${freelancer.name}`}
-                        onClick={() => toggleComparisonSelection(freelancer.id)}
-                        disabled={!selectedFreelancerIds.includes(freelancer.id) && selectedFreelancerIds.length >= 3}
-                        className={`btn btn-sm px-5 text-[10px] font-black uppercase tracking-[0.18em] ${
-                          selectedFreelancerIds.includes(freelancer.id)
-                            ? 'border-secondary/20 bg-secondary text-white hover:bg-secondary-dark'
-                            : 'btn-outline border-surface-border text-text-main'
-                        } disabled:cursor-not-allowed disabled:opacity-40`}
-                      >
-                        {selectedFreelancerIds.includes(freelancer.id) ? 'Selected' : 'Compare'}
-                      </button>
-                    ) : (
-                      <span />
-                    )}
-                    <Link
-                      to={`/freelancers/${freelancer.id}`}
-                      className="btn btn-outline btn-sm border-secondary text-secondary font-black uppercase tracking-widest text-[10px] px-6 flex items-center gap-2 group/link"
-                    >
-                      View Profile <ArrowRight className="h-3.5 w-3.5 group-hover/link:translate-x-1 transition-transform" />
-                    </Link>
+                  <div className="mt-auto flex items-center justify-between gap-3 border-t border-surface-border pt-4">
+                    <div>
+                      <p className="text-xs font-semibold text-text-light">Services from</p>
+                      <p className="text-lg font-black tracking-tight text-text-main">{freelancer.rate}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {canCompareMarketplace ? (
+                        <button
+                          type="button"
+                          aria-label={`Compare ${freelancer.name}`}
+                          onClick={() => toggleComparisonSelection(freelancer.id)}
+                          disabled={!selectedFreelancerIds.includes(freelancer.id) && selectedFreelancerIds.length >= 3}
+                          className={`btn btn-sm px-4 ${
+                            selectedFreelancerIds.includes(freelancer.id)
+                              ? 'border-secondary/20 bg-secondary text-white hover:bg-secondary-dark'
+                              : 'btn-outline border-surface-border text-text-main'
+                          } disabled:cursor-not-allowed disabled:opacity-40`}
+                        >
+                          {selectedFreelancerIds.includes(freelancer.id) ? 'Selected' : 'Compare'}
+                        </button>
+                      ) : null}
+                      <Link to={`/freelancers/${freelancer.id}`} className="btn btn-primary btn-sm px-4">
+                        View profile <ArrowRight className="h-4 w-4" />
+                      </Link>
+                    </div>
                   </div>
-                </div>
+                </article>
               ))}
             </div>
           )}
