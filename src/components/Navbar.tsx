@@ -264,7 +264,7 @@ export default function Navbar() {
 
   return (
     <>
-      <div className="fixed inset-x-0 top-0 z-[60]">
+      <div className="site-nav fixed inset-x-0 top-0 z-[60]">
         <div className="bg-primary px-4 py-2 text-center text-[10px] font-black uppercase tracking-[0.1em] text-white sm:tracking-[0.25em]">
           <span className="opacity-70">
             Escrow-protected payments<span className="hidden sm:inline"> · Mobile money payouts</span>.
@@ -272,7 +272,7 @@ export default function Navbar() {
           <Link to="/onboarding?role=seeker" className="ml-2 underline hover:text-white/80 transition-colors">Join free</Link>
         </div>
       </div>
-      <nav className="fixed inset-x-0 top-10 z-50 px-3 pt-[max(0.75rem,env(safe-area-inset-top))] md:px-5 xl:px-8">
+      <nav className="site-nav fixed inset-x-0 top-10 z-50 px-3 pt-[max(0.75rem,env(safe-area-inset-top))] md:px-5 xl:px-8">
         <div className="container">
           <div className="glass rounded-[1.9rem] border border-white/50 shadow-premium px-4 py-3 md:px-5">
             <div className="flex items-center justify-between gap-3">
@@ -488,7 +488,7 @@ export default function Navbar() {
         </div>
       ) : null}
 
-      <div className="fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+0.65rem)] z-40 xl:hidden">
+      <div className="site-nav fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+0.65rem)] z-40 xl:hidden">
         <div className="mx-auto w-[min(calc(100%-1rem),36rem)]">
           <div className="glass rounded-[1.8rem] border border-white/60 px-2 py-2 shadow-premium-lg">
             <div

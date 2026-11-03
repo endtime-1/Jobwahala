@@ -195,7 +195,7 @@ describe('Auth onboarding flow', () => {
         target: { value: 'React, TypeScript, Testing' },
       },
     )
-    fireEvent.click(screen.getByRole('button', { name: /access workspace/i }))
+    fireEvent.click(screen.getByRole('button', { name: /continue to my dashboard/i }))
 
     expect(await screen.findByText('Dashboard Workspace')).toBeInTheDocument()
 

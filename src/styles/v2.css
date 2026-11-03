@@ -9,18 +9,22 @@
 }
 
 /* Readable labels: the old design shouted in tiny, wide-spaced capitals. */
-.v2 .uppercase {
+.v2 .uppercase,
+.site-nav .uppercase {
   text-transform: none;
 }
 
 .v2 [class*='tracking-['],
 .v2 .tracking-widest,
-.v2 .tracking-wider {
+.v2 .tracking-wider,
+.site-nav [class*='tracking-['],
+.site-nav .tracking-widest {
   letter-spacing: 0.005em;
 }
 
 /* Buttons read like actions, not warnings. */
-.v2 .btn {
+.v2 .btn,
+.site-nav .btn {
   text-transform: none;
   letter-spacing: 0;
   font-size: 0.95rem;
@@ -28,7 +32,8 @@
   border-radius: 0.9rem;
 }
 
-.v2 .btn-sm {
+.v2 .btn-sm,
+.site-nav .btn-sm {
   font-size: 0.85rem;
   min-height: 2.6rem;
 }
