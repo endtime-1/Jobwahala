@@ -10,6 +10,8 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      PRODUCTION_URL: ${{ secrets.PRODUCTION_URL }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -52,5 +54,5 @@ jobs:
           "
 
       - name: Verify deployed domain
-        if: ${{ secrets.PRODUCTION_URL != '' }}
-        run: node scripts/postDeployCheck.mjs "${{ secrets.PRODUCTION_URL }}"
+        if: ${{ env.PRODUCTION_URL != '' }}
+        run: node scripts/postDeployCheck.mjs "$PRODUCTION_URL"
