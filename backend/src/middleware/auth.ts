@@ -71,7 +71,7 @@ const authenticateRequest = async (
 
     req.user = { id: user.id, role: user.role };
     next();
-  } catch (err) {
+  } catch {
     res.status(401).json({ success: false, message: 'Token is not valid' });
   }
 };

@@ -127,6 +127,7 @@ export default function FreelancerProfile() {
 
   useEffect(() => {
     if (!id) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional: state reset or fetch kicked off when inputs change
       setError('Freelancer id is missing.')
       setIsLoading(false)
       return
@@ -150,6 +151,7 @@ export default function FreelancerProfile() {
 
   useEffect(() => {
     if (!id || !user || !['SEEKER', 'EMPLOYER'].includes(user.role) || user.id === id) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional: state reset or fetch kicked off when inputs change
       setComparison(null)
       setComparisonError('')
       setIsComparisonLoading(false)

@@ -532,8 +532,6 @@ const buildSmartFallbackCV = (prompt: string): string => {
   return parts.join('\n')
 }
 
-const fallbackCV = buildSmartFallbackCV
-
 const extractOutputText = (payload: any): string => {
   if (typeof payload?.output_text === 'string' && payload.output_text.trim()) {
     return payload.output_text.trim()

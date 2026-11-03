@@ -811,7 +811,7 @@ export default function CVGenerator() {
     skills: '',
   })
   const [isGenerating, setIsGenerating] = useState(false)
-  const [generatedData, setGeneratedData] = useState<GeneratedData | null>(null)
+  const [, setGeneratedData] = useState<GeneratedData | null>(null)
   const [generatedContent, setGeneratedContent] = useState('')
   const [saveStatus, setSaveStatus] = useState('')
   const [history, setHistory] = useState<CvHistoryRecord[]>([])

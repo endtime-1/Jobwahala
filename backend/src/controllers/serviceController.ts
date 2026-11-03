@@ -472,12 +472,6 @@ export const compareMarketplaceFreelancers = async (req: AuthRequest, res: Respo
           return null;
         }
 
-        const freelancerName =
-          [freelancerProfile.freelancerProfile?.firstName, freelancerProfile.freelancerProfile?.lastName]
-            .filter(Boolean)
-            .join(' ')
-            .trim() || freelancerProfile.email;
-
         const matchedServices = freelancerProfile.freelanceServices
           .map((service) => scoreServiceForMarketplace(clientSignals, service))
           .sort((left, right) => {
@@ -747,7 +741,7 @@ export const getFreelancerDetails = async (req: Request, res: Response) => {
           )
         : 0;
 
-    const { verificationRequests, ...safeProfile } = profile as any;
+    const { verificationRequests: _verificationRequests, ...safeProfile } = profile as any;
 
     res.json({
       success: true,

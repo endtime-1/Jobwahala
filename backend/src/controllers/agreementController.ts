@@ -1864,7 +1864,7 @@ export const verifyAgreementPayment = async (req: AuthRequest, res: Response) =>
         });
       }
 
-    const failedPayment = await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx) => {
       const nextPayment = await tx.payment.update({
         where: { id: payment.id },
         data: {

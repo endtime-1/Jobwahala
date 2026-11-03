@@ -7,7 +7,7 @@ type Props = {
   pendingPaymentActions: number
 }
 
-export default function EmployerStatsCards({ jobCount, totalApplicants, unreadMessages, pendingPaymentActions }: Props) {
+export default function EmployerStatsCards({ jobCount, totalApplicants, unreadMessages }: Props) {
   return (
     <div className="metric-rail mb-10 md:mb-14">
       <div className="metric-card metric-card--solid">

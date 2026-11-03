@@ -19,7 +19,7 @@ type VerificationRecord = {
 };
 
 const toPublicVerificationRecord = (request: VerificationRecord) => {
-  const { internalNote, ...publicRequest } = request;
+  const { internalNote: _internalNote, ...publicRequest } = request;
   return publicRequest;
 };
 

@@ -9,13 +9,11 @@ import {
   ChevronRight,
   ArrowLeft
 } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { getErrorMessage } from '../lib/errors'
 
 const IdentityVerification = () => {
-  const { user } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

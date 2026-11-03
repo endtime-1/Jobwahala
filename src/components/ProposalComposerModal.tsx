@@ -53,6 +53,7 @@ export default function ProposalComposerModal({
 
   useEffect(() => {
     if (!isOpen) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional: state reset or fetch kicked off when inputs change
     setAssistantError('')
     setDraft({
       ...initialDraft,

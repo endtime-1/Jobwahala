@@ -115,6 +115,7 @@ export default function Navbar() {
   }, [])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional: state reset or fetch kicked off when inputs change
     setIsOpen(false)
     setShowAccountMenu(false)
   }, [location.pathname])
@@ -138,6 +139,7 @@ export default function Navbar() {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional: state reset or fetch kicked off when inputs change
     void loadWorkspaceSignals()
   }, [user?.id, isOnboarded, role])
 

@@ -4,7 +4,7 @@ import prisma from '../config/prisma';
 import env from '../config/env';
 import { AuthRequest } from '../middleware/auth';
 import { paystackService } from '../services/paystackService';
-import { completeMilestonePayment, processPayout, TransactionClientLike } from './agreementController';
+import { completeMilestonePayment, processPayout } from './agreementController';
 import logger from '../config/logger';
 import { getErrorMessage } from '../utils/errors';
 
@@ -138,7 +138,7 @@ export const handlePaystackWebhook = async (req: Request, res: Response) => {
       return res.status(200).json({ success: true, message: 'Event ignored' });
     }
 
-    const { reference, amount, currency, paid_at } = event.data;
+    const { reference, amount, paid_at } = event.data;
 
     const payment = await prisma.payment.findUnique({
       where: { reference },

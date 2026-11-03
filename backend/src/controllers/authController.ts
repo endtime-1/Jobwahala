@@ -146,7 +146,7 @@ export const me = async (req: AuthRequest, res: Response) => {
     }
 
     const latestVerificationRequest = user.verificationRequests[0] || null;
-    const { verificationRequests, ...safeUser } = user;
+    const { verificationRequests: _verificationRequests, ...safeUser } = user;
 
     res.json({
       success: true,

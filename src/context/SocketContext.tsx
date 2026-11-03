@@ -10,6 +10,7 @@ interface SocketContextType {
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
 
+// eslint-disable-next-line react-refresh/only-export-components -- hook is co-located with its provider; tests mock this module path
 export const useSocket = () => {
   const context = useContext(SocketContext);
   if (!context) {
@@ -31,6 +32,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     if (!user) {
       if (socket) {
         socket.disconnect();
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional: state reset or fetch kicked off when inputs change
         setSocket(null);
         setIsConnected(false);
       }

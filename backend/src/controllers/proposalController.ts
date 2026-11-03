@@ -16,7 +16,7 @@ import { getErrorMessage } from '../utils/errors';
 
 const activeProposalStatuses = ['PENDING', 'COUNTERED'] as const;
 const allowedJobProposalApplicationStatuses = ['SUBMITTED', 'SHORTLISTED', 'INTERVIEW'] as const;
-const allowedStatusActions = ['ACCEPTED', 'REJECTED', 'CANCELLED'] as const;
+type AllowedStatusAction = 'ACCEPTED' | 'REJECTED' | 'CANCELLED';
 
 const userSelect = {
   id: true,
@@ -970,7 +970,7 @@ export const updateProposalStatus = async (req: AuthRequest, res: Response) => {
     await expireStaleProposals();
 
     const proposalId = singleValue(req.params.id);
-    const { status } = req.body as { status: (typeof allowedStatusActions)[number] };
+    const { status } = req.body as { status: AllowedStatusAction };
 
     if (!proposalId) {
       return res.status(400).json({ success: false, message: 'Proposal id is required' });

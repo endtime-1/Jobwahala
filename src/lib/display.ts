@@ -71,7 +71,7 @@ export const formatMoney = (value?: number | string | null, currency: string = '
       currency: currency.toUpperCase(),
       maximumFractionDigits: 0,
     }).format(num);
-  } catch (e) {
+  } catch {
     // Fallback if currency code is invalid
     return `${currency.toUpperCase()} ${num.toLocaleString()}`;
   }

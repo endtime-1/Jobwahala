@@ -117,6 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!token) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional: state reset or fetch kicked off when inputs change
       setIsLoading(false);
       return;
     }
@@ -193,6 +194,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components -- hook is co-located with its provider; tests mock this module path
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {

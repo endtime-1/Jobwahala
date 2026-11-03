@@ -54,7 +54,13 @@ jobs:
           cache: npm
 
       - name: Install frontend dependencies
-        run: npm ci
+        run: npm ci --legacy-peer-deps
+
+      - name: Typecheck frontend
+        run: npx tsc -b
+
+      - name: Lint
+        run: npm run lint
 
       - name: Run frontend smoke test
         run: npm run test:smoke
@@ -69,6 +75,23 @@ jobs:
     defaults:
       run:
         working-directory: backend
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: jobwahala
+          POSTGRES_USER: jobwahala
+          POSTGRES_PASSWORD: ci-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U jobwahala -d jobwahala"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://jobwahala:ci-password@localhost:5432/jobwahala?schema=public
+      SMOKE_DATABASE_URL: postgresql://jobwahala:ci-password@localhost:5432/jobwahala?schema=public
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -83,8 +106,16 @@ jobs:
       - name: Install backend dependencies
         run: npm ci
 
+      - name: Generate Prisma client and push schema
+        run: |
+          npx prisma generate --config prisma.postgresql.config.ts
+          npx prisma db push --config prisma.postgresql.config.ts --accept-data-loss
+
       - name: Typecheck backend
         run: npm run typecheck
+
+      - name: Run backend unit tests
+        run: npm test
 
       - name: Run backend smoke test
         run: npm run smoke:test

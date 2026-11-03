@@ -16,7 +16,6 @@ import { getErrorMessage } from '../../lib/errors'
 const moderationStatuses = ['ACTIVE', 'FLAGGED', 'SUSPENDED']
 const reportStatuses = ['PENDING', 'RESOLVED', 'DISMISSED']
 const verificationStatuses = ['APPROVED', 'NEEDS_INFO', 'REJECTED']
-const disputeStatuses = ['UNDER_REVIEW', 'RESOLVED', 'DISMISSED']
 const initialAdminJobForm = { employerId: '', title: '', description: '', location: '', type: 'Full-time', salary: '', category: '' }
 
 const EMPTY: never[] = []
