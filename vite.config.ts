@@ -10,7 +10,13 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'favicon-32.png', 'apple-touch-icon.png'],
+      includeAssets: [
+        'favicon.svg',
+        'favicon-32.png',
+        'apple-touch-icon.png',
+        'fonts/manrope-latin-wght-normal.woff2',
+        'fonts/space-grotesk-latin-wght-normal.woff2',
+      ],
       manifest: {
         name: 'JobWahala | Elite African Talent',
         short_name: 'JobWahala',
@@ -26,8 +32,21 @@ export default defineConfig({
         ],
       },
       workbox: {
+        // Keep the first-visit background download small for people on limited data: the CV builder,
+        // admin screens and the realtime socket library are cached the first time they are used.
+        globIgnores: ['**/CVGenerator-*.js', '**/AdminDashboard-*.js', '**/esm-*.js'],
         navigateFallbackDenylist: [new RegExp('^/api/'), new RegExp('^/health'), new RegExp('^/ready')],
         runtimeCaching: [
+          {
+            // Hashed build files never change, so cache them on first use.
+            urlPattern: ({ url }: { url: URL }) => url.pathname.startsWith('/assets/') || url.pathname.startsWith('/fonts/'),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'app-files',
+              expiration: { maxEntries: 80, maxAgeSeconds: 60 * 60 * 24 * 30 },
+              cacheableResponse: { statuses: [200] },
+            },
+          },
           {
             // Public listings only: requests without credentials, so personalised responses are never shared.
             urlPattern: ({ url, request }: { url: URL; request: Request }) =>

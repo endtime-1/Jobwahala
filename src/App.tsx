@@ -2,9 +2,9 @@ import { Suspense, lazy, type ReactElement } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import ApiStatusBanner from './components/ApiStatusBanner'
 import Layout from './components/Layout'
+import Landing from './pages/Landing'
 import { useAuth } from './context/AuthContext'
 
-const Landing = lazy(() => import('./pages/Landing'))
 const JobListings = lazy(() => import('./pages/JobListings'))
 const JobDetails = lazy(() => import('./pages/JobDetails'))
 const CVGenerator = lazy(() => import('./pages/CVGenerator'))

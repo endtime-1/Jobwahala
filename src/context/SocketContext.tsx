@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import { io, Socket } from 'socket.io-client';
+import type { Socket } from 'socket.io-client';
 import { useAuth } from './AuthContext';
 import { dispatchRealtimeEvent } from '../lib/realtime';
 
@@ -45,38 +45,49 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     
     const socketUrl = BASE_URL.replace(/\/api$/, '') || window.location.origin;
 
-    const newSocket = io(socketUrl, {
-      auth: { token },
-      transports: ['websocket'],
-    });
+    // The socket library is only needed once someone is signed in, so it stays out of the
+    // startup bundle that logged-out visitors download.
+    let cancelled = false;
+    let activeSocket: Socket | null = null;
 
-    newSocket.on('connect', () => {
-      setIsConnected(true);
-      dispatchRealtimeEvent('connected', {});
-    });
+    void import('socket.io-client').then(({ io }) => {
+      if (cancelled) return;
 
-    newSocket.on('disconnect', () => {
-      setIsConnected(false);
-    });
-
-    // Listen for all refresh events and dispatch them to the centralized system
-    const events = [
-      'notifications.refresh',
-      'messages.refresh',
-      'proposals.refresh',
-      'agreements.refresh'
-    ];
-
-    events.forEach(event => {
-      newSocket.on(event, (data) => {
-        dispatchRealtimeEvent(event, data);
+      const newSocket = io(socketUrl, {
+        auth: { token },
+        transports: ['websocket'],
       });
-    });
+      activeSocket = newSocket;
 
-    setSocket(newSocket);
+      newSocket.on('connect', () => {
+        setIsConnected(true);
+        dispatchRealtimeEvent('connected', {});
+      });
+
+      newSocket.on('disconnect', () => {
+        setIsConnected(false);
+      });
+
+      // Listen for all refresh events and dispatch them to the centralized system
+      const events = [
+        'notifications.refresh',
+        'messages.refresh',
+        'proposals.refresh',
+        'agreements.refresh'
+      ];
+
+      events.forEach(event => {
+        newSocket.on(event, (data) => {
+          dispatchRealtimeEvent(event, data);
+        });
+      });
+
+      setSocket(newSocket);
+    });
 
     return () => {
-      newSocket.disconnect();
+      cancelled = true;
+      activeSocket?.disconnect();
     };
   }, [user]);
 

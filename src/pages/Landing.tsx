@@ -15,7 +15,7 @@ import { apiGetJobs, apiGetPlatformStats } from '../lib/api'
 
 function Section({ eyebrow, title, intro, children }: { eyebrow: string; title: string; intro?: string; children: ReactNode }) {
   return (
-    <section className="py-14 sm:py-20">
+    <section className="py-14 [contain-intrinsic-size:auto_640px] [content-visibility:auto] sm:py-20">
       <div className="container">
         <Reveal className="mb-8 max-w-2xl sm:mb-12">
           <p className="text-[11px] font-black uppercase tracking-[0.2em] text-secondary">{eyebrow}</p>

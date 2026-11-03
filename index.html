@@ -7,9 +7,8 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="theme-color" content="#2f6df6" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="preload" href="/fonts/manrope-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/space-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
     <title>JobWahala — Africa's Elite Talent Platform</title>
     <meta name="description" content="JobWahala connects talent and employers across Africa. Find jobs, hire freelancers and get paid safely with escrow-protected payments." />
     <meta property="og:title" content="JobWahala — Africa's Elite Talent Platform" />
@@ -17,9 +16,34 @@
     <meta property="og:image" content="https://jobwahala.com/og-image.jpg" />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
+    <script>
+      // The static shell below is only for the home page; hide it everywhere else.
+      if (location.pathname !== '/') document.documentElement.className += ' no-shell'
+    </script>
+    <style>
+      /* Paints before any JavaScript runs, so the home page is never blank on slow phones. */
+      body { margin: 0; background: #f4f7fb; }
+      #app-shell { max-width: 1240px; margin: 0 auto; padding: 150px 16px 0; font-family: 'Manrope', system-ui, sans-serif; color: #111c2d; }
+      #app-shell .brand { display: flex; align-items: center; gap: 10px; position: absolute; top: 56px; left: 32px; font: 800 20px 'Space Grotesk', system-ui, sans-serif; letter-spacing: -0.03em; }
+      #app-shell .brand b { color: #2f6df6; }
+      #app-shell h1 { margin: 0; max-width: 42rem; font: 800 41px/1.04 'Space Grotesk', system-ui, sans-serif; letter-spacing: -0.03em; }
+      #app-shell h1 em { color: #2f6df6; font-style: italic; }
+      #app-shell p { margin: 20px 0 0; max-width: 34rem; font-size: 16px; line-height: 1.6; font-weight: 500; color: #536275; }
+      @media (min-width: 640px) { #app-shell h1 { font-size: 60px; } #app-shell p { font-size: 18px; } }
+      .no-shell #app-shell { display: none; }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div id="app-shell" aria-hidden="true">
+        <div class="brand">
+          <svg width="36" height="36" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="shell-g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#14306b"/><stop offset="1" stop-color="#2f6df6"/></linearGradient></defs><rect width="64" height="64" rx="16" fill="url(#shell-g)"/><g transform="translate(-1 -1)"><circle cx="40" cy="15.5" r="6.6" fill="#ffc531"/><circle cx="40" cy="15.5" r="3.2" fill="none" stroke="#c98a00" stroke-width="1.6"/><path d="M40 28V42c0 6-4.4 10-10.6 10-4.6 0-8-2.4-9.4-6.2" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/></g></svg>
+          <span>Job<b>Wahala</b></span>
+        </div>
+        <h1>Work without the <em>wahala.</em></h1>
+        <p>Find jobs and freelance gigs across Africa. Every paid project is held in escrow before you start, then paid out to your mobile money or bank.</p>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

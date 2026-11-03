@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap');
+@import "./fonts.css";
 @import "tailwindcss";
 
 @theme {
@@ -564,17 +564,31 @@ button {
   background-image: linear-gradient(transparent 62%, rgba(252, 209, 22, 0.55) 62% 92%, transparent 92%);
 }
 
+/* Animates transform and opacity only, so it runs on the compositor with no repaints
+   (a box-shadow animation repainted every frame, which drains cheap phones). */
 @keyframes pulseRing {
   0% {
-    box-shadow: 0 0 0 0 rgba(24, 184, 122, 0.45);
+    transform: scale(1);
+    opacity: 0.55;
   }
   100% {
-    box-shadow: 0 0 0 12px rgba(24, 184, 122, 0);
+    transform: scale(3);
+    opacity: 0;
   }
 }
 
 .pulse-dot {
+  position: relative;
+}
+
+.pulse-dot::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: rgba(24, 184, 122, 0.6);
   animation: pulseRing 1.8s ease-out infinite;
+  pointer-events: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -584,7 +598,7 @@ button {
     transition: none;
   }
 
-  .pulse-dot {
+  .pulse-dot::after {
     animation: none;
   }
 }
