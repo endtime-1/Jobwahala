@@ -31,9 +31,24 @@ PORT=5000
 JWT_SECRET=replace-with-a-strong-secret
 JWT_EXPIRES_IN=7d
 CORS_ALLOWED_ORIGINS=https://your-web-domain.up.railway.app
+FRONTEND_BASE_URL=https://your-web-domain.up.railway.app
 DATABASE_URL=${{Postgres.DATABASE_URL}}
 EVIDENCE_STORAGE_PROVIDER=LOCAL
 ```
+
+`FRONTEND_BASE_URL` is required in production. Email verification links, password-reset links and the Paystack payment return URL are all built from it, and it defaults to `http://localhost:5173` when unset.
+
+Email needs SMTP, otherwise new users cannot verify their account and login returns 403:
+
+```env
+SMTP_HOST=
+SMTP_PORT=587
+SMTP_USER=
+SMTP_PASS=
+SMTP_FROM=noreply@your-domain
+```
+
+For live payments set `PAYMENT_PROVIDER=PAYSTACK`, the Paystack keys, and point the Paystack dashboard webhook at `https://your-web-domain/api/payments/webhooks/paystack`. Ghana cedi checkouts offer mobile money first, so enable mobile money on the Paystack account.
 
 Also set any feature-specific secrets you are using:
 
