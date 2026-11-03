@@ -125,5 +125,10 @@ describe('FreelancerProfile AI comparison flow', () => {
     expect(screen.getByText('Mobile UI Sprint')).toBeInTheDocument()
     expect(screen.getByText('Esi Owusu')).toBeInTheDocument()
     expect(apiGetFreelancerComparisonMock).toHaveBeenCalledWith('freelancer-1')
+
+    const whatsapp = screen.getByRole('link', { name: /share this profile on whatsapp/i })
+    const shared = new URL(whatsapp.getAttribute('href') || '')
+    expect(shared.origin).toBe('https://wa.me')
+    expect(shared.searchParams.get('text')).toContain('/freelancers/freelancer-1')
   })
 })

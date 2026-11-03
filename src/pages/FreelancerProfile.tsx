@@ -1,12 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { Calendar, Globe, Share2, ChevronLeft, Zap, BriefcaseBusiness, Mail, AlertTriangle, Star, Sparkles, ArrowRight } from 'lucide-react'
+import { Calendar, Globe, Share2, ChevronLeft, Zap, BriefcaseBusiness, Mail, AlertTriangle, Star, Sparkles, ArrowRight, MessageCircle } from 'lucide-react'
+import { Helmet } from 'react-helmet-async'
 import { apiGetFreelancerComparison, apiGetFreelancerProfile } from '../lib/api'
 import { formatMoney, getDisplayName, getInitials } from '../lib/display'
 import ReportModal from '../components/ReportModal'
 import ServiceRequestModal from '../components/ServiceRequestModal'
 import { useAuth } from '../context/AuthContext'
 import VerifiedBadge from '../components/VerifiedBadge'
+import SEO from '../components/SEO'
+import { buildProfileShare, profileWhatsAppMessage, whatsAppShareUrl } from '../lib/shareProfile'
 
 type Service = {
   id: string
@@ -197,6 +200,21 @@ export default function FreelancerProfile() {
       .filter(Boolean)
   }, [profile])
 
+  const share = useMemo(
+    () =>
+      profile
+        ? buildProfileShare({
+            id: profile.id,
+            name,
+            tagline: profile.freelancerProfile?.tagline,
+            bio: profile.freelancerProfile?.bio,
+            skills,
+            origin: window.location.origin,
+          })
+        : null,
+    [profile, name, skills],
+  )
+
   const reviews = profile?.reviewsReceived || []
   const serviceMatchMap = useMemo(
     () =>
@@ -235,6 +253,14 @@ export default function FreelancerProfile() {
 
   return (
     <div className="container animate-in fade-in slide-in-from-bottom-4 pt-32 pb-24 duration-1000 md:pt-32 xl:pt-36">
+      {share ? (
+        <>
+          <SEO title={share.title} description={share.description} canonical={share.url} ogType="profile" />
+          <Helmet>
+            <script type="application/ld+json">{JSON.stringify(share.jsonLd)}</script>
+          </Helmet>
+        </>
+      ) : null}
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <Link to="/freelancers" className="group flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-text-muted transition-all hover:text-secondary">
           <ChevronLeft className="h-4 w-4 transform group-hover:-translate-x-1 transition-transform" /> Marketplace
@@ -249,7 +275,18 @@ export default function FreelancerProfile() {
               <AlertTriangle className="h-4 w-4" /> Report
             </button>
           ) : null}
-          <button onClick={handleCopy} className="h-10 w-10 flex items-center justify-center rounded-xl bg-surface border border-surface-border text-text-muted hover:text-secondary hover:border-secondary transition-all shadow-sm">
+          {share ? (
+            <a
+              href={whatsAppShareUrl(profileWhatsAppMessage(name, share.url))}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Share this profile on WhatsApp"
+              className="h-10 px-4 flex items-center justify-center gap-2 rounded-xl bg-surface border border-surface-border text-[10px] font-black uppercase tracking-widest text-text-muted hover:text-success hover:border-success transition-all shadow-sm"
+            >
+              <MessageCircle className="h-4 w-4" /> WhatsApp
+            </a>
+          ) : null}
+          <button onClick={handleCopy} aria-label="Copy profile link" className="h-10 w-10 flex items-center justify-center rounded-xl bg-surface border border-surface-border text-text-muted hover:text-secondary hover:border-secondary transition-all shadow-sm">
             <Share2 className="h-5 w-5" />
           </button>
         </div>
