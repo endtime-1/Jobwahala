@@ -123,3 +123,29 @@ describe('landing helpers', () => {
     expect(recentAge(undefined)).toBe('')
   })
 })
+
+describe('Landing page quick wins', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    apiGetJobsMock.mockResolvedValue({ jobs: [] })
+    apiGetPlatformStatsMock.mockResolvedValue({ success: true, stats: { counts: {} } })
+  })
+
+  it('offers a plain keyword and town search to people looking for work, but not to employers', () => {
+    renderLanding()
+
+    expect(screen.getByRole('search', { name: /search jobs/i })).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('tab', { name: /i want to hire/i }))
+
+    expect(screen.queryByRole('search', { name: /search jobs/i })).not.toBeInTheDocument()
+  })
+
+  it('gives the CV builder its own section that links to the tool', () => {
+    renderLanding()
+
+    expect(screen.getByRole('heading', { name: /no cv yet/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /build my cv/i })).toHaveAttribute('href', '/cv-generator')
+    expect(screen.getByText(/example only/i)).toBeInTheDocument()
+  })
+})

@@ -39,3 +39,17 @@ describe('alertCriteriaFromFilters', () => {
     expect(describeAlert(criteria)).toBe('excel · Remote · Full-time')
   })
 })
+
+describe('alerts and towns', () => {
+  it('uses a typed town as the alert location', () => {
+    expect(alertCriteriaFromFilters({ ...base, town: ' Kumasi ' })).toEqual({ location: 'Kumasi' })
+  })
+
+  it('prefers the typed town over the remote-only setting', () => {
+    expect(alertCriteriaFromFilters({ ...base, selectedLocation: 'Remote Only', town: 'Accra' })).toEqual({ location: 'Accra' })
+  })
+
+  it('ignores a blank town', () => {
+    expect(alertCriteriaFromFilters({ ...base, town: '   ' })).toEqual({})
+  })
+})

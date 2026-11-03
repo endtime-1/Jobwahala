@@ -588,3 +588,20 @@ button {
     animation: none;
   }
 }
+
+/*
+ * Legibility floor. Hundreds of labels use 9-11px text, which is hard to read on small, low-end
+ * phones. These unlayered rules beat the Tailwind utilities, so the whole app gains a readable
+ * minimum without editing every component. Remove this block to return to the original sizes.
+ */
+.text-\[9px\] {
+  font-size: 0.6875rem;
+}
+
+.text-\[10px\] {
+  font-size: 0.71875rem;
+}
+
+.text-\[11px\] {
+  font-size: 0.75rem;
+}

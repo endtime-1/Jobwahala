@@ -47,4 +47,20 @@ describe('JobListings ?search= prefill (used by the homepage)', () => {
     expect(await screen.findByText('Hotel Receptionist')).toBeInTheDocument()
     expect(screen.queryByText('Financial Consultant')).not.toBeInTheDocument()
   })
+
+  it('narrows by the town from the homepage search', async () => {
+    apiGetJobsMock.mockResolvedValue({
+      jobs: [{ ...job('1', 'Hotel Receptionist'), location: 'Kumasi' }, { ...job('2', 'Cashier'), location: 'Accra' }],
+    })
+
+    render(
+      <MemoryRouter initialEntries={['/jobs?location=kumasi']}>
+        <JobListings />
+      </MemoryRouter>,
+    )
+
+    expect(await screen.findByText('Hotel Receptionist')).toBeInTheDocument()
+    expect(screen.queryByText('Cashier')).not.toBeInTheDocument()
+    expect((await screen.findAllByDisplayValue('kumasi')).length).toBeGreaterThan(0)
+  })
 })

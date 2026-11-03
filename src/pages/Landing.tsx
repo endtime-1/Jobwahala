@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import SEO from '../components/SEO'
+import CvBuilderSection from '../components/landing/CvBuilderSection'
 import EmployerCard from '../components/landing/EmployerCard'
 import Faq from '../components/landing/Faq'
 import FinalCta, { LegalLinks } from '../components/landing/FinalCta'
@@ -91,6 +92,14 @@ export default function Landing() {
         intro="Escrow, verification and a dispute desk are not extras here. They are how the platform works."
       >
         <TrustGrid />
+      </Section>
+
+      <Section
+        eyebrow="Free CV builder"
+        title="No CV yet? Start with a few notes."
+        intro="Most applications fail at the first step: a missing or messy CV. Our builder turns your rough notes into a clean, professional one."
+      >
+        <CvBuilderSection />
       </Section>
 
       <Section eyebrow="On the board" title="Open roles.">

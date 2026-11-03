@@ -315,7 +315,7 @@ export default function FreelancerMarketplace() {
             <p className="text-base font-medium tracking-tight text-text-muted md:text-lg">
               {isPersonalized
                 ? 'Your marketplace is now AI-ranked around your current hiring signals, profile context, and service fit.'
-                : 'Browse live backend services, narrow by specialization, and move directly from discovery into profile review and outreach.'}
+                : 'Browse services from freelancers, narrow by specialty, then review a profile and get in touch.'}
             </p>
             {isPersonalized ? (
               <div className="dashboard-actions">

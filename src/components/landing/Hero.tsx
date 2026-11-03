@@ -1,5 +1,6 @@
 import { ArrowRight, Check, Smartphone } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import HeroSearch from './HeroSearch'
 import type { Audience } from './types'
 
 const COPY: Record<
@@ -82,9 +83,14 @@ export default function Hero({ audience, onAudienceChange }: HeroProps) {
         {copy.sub}
       </p>
 
+      {audience === 'talent' ? <HeroSearch /> : null}
+
       <ul className="mt-6 space-y-2.5">
-        {copy.points.map((point) => (
-          <li key={point} className="flex items-start gap-3 text-sm font-semibold text-text-main sm:text-[15px]">
+        {copy.points.map((point, index) => (
+          <li
+            key={point}
+            className={`items-start gap-3 text-sm font-semibold text-text-main sm:text-[15px] ${index === 2 ? 'hidden sm:flex' : 'flex'}`}
+          >
             <span className="mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full bg-success/15 text-success">
               <Check className="h-3 w-3" strokeWidth={3} />
             </span>

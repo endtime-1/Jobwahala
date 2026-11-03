@@ -211,7 +211,7 @@ export default function FreelancerDashboard() {
               <form onSubmit={isEditing ? handleUpdateService : handleCreateService} className="dashboard-panel space-y-6">
                 <div className="flex justify-between items-center pb-6 border-b border-surface-border/50">
                   <h2 className="font-black text-xs uppercase tracking-[0.2em] text-text-main">{isEditing ? 'Edit Service' : 'Create Service'}</h2>
-                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Live API</span>
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Goes live instantly</span>
                 </div>
                 <div className="rounded-[28px] border border-primary/15 bg-primary/5 p-5 sm:p-6">
                   <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">

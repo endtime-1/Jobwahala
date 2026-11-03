@@ -57,6 +57,7 @@ export default function JobListings() {
   const [reportTarget, setReportTarget] = useState<{ id: string; name: string } | null>(null)
   const [searchParams] = useSearchParams()
   const [search, setSearch] = useState(() => searchParams.get('search') ?? '')
+  const [town, setTown] = useState(() => searchParams.get('location') ?? '')
   const [selectedTypes, setSelectedTypes] = useState<string[]>(jobTypes)
   const [selectedLocation, setSelectedLocation] = useState('All of Africa')
   const [selectedJobIds, setSelectedJobIds] = useState<string[]>([])
@@ -111,6 +112,8 @@ export default function JobListings() {
         workMode.toLowerCase().includes(q) ||
         (job.category || '').toLowerCase().includes(q)
 
+      const matchesTown = !town.trim() || location.toLowerCase().includes(town.trim().toLowerCase())
+
       const matchesType = selectedTypes.length === 0 || selectedTypes.includes(job.type)
 
       const matchesLocation =
@@ -118,9 +121,9 @@ export default function JobListings() {
         (selectedLocation === 'Remote Only' && isRemoteJob(job.location)) ||
         location.toLowerCase().includes(selectedLocation.toLowerCase())
 
-      return matchesSearch && matchesType && matchesLocation
+      return matchesSearch && matchesType && matchesLocation && matchesTown
     })
-  }, [jobs, search, selectedLocation, selectedTypes])
+  }, [jobs, search, selectedLocation, selectedTypes, town])
 
   const remoteCount = useMemo(
     () => jobs.filter((job) => isRemoteJob(job.location)).length,
@@ -197,7 +200,7 @@ export default function JobListings() {
               Find work that feels like momentum.
             </h1>
             <p className="text-base font-medium tracking-tight text-text-muted md:text-lg">
-              Search live backend roles, narrow by location or work type, and move from discovery to application without leaving the app shell.
+              Search open roles, narrow them down by town or work type, and apply in a few taps.
             </p>
             <div className="dashboard-actions hidden lg:flex">
               {jobTypes.map((type) => (
@@ -268,13 +271,25 @@ export default function JobListings() {
                   </select>
                 </div>
               </div>
+
+              <div>
+                <label htmlFor="town-filter" className="text-[10px] font-black uppercase tracking-[0.2em] text-text-light mb-5 block">Town or city</label>
+                <input
+                  id="town-filter"
+                  type="text"
+                  value={town}
+                  onChange={(event) => setTown(event.target.value)}
+                  placeholder="e.g. Kumasi, Lagos, Nairobi"
+                  className="font-bold"
+                />
+              </div>
             </div>
           </div>
         </aside>
 
         <main className="lg:col-span-3 space-y-6">
           <JobAlerts
-            criteria={alertCriteriaFromFilters({ search, selectedTypes, allTypes: jobTypes, selectedLocation })}
+            criteria={alertCriteriaFromFilters({ search, selectedTypes, allTypes: jobTypes, selectedLocation, town })}
             isSignedIn={Boolean(user)}
             isSeeker={user?.role === 'SEEKER'}
           />
@@ -289,6 +304,14 @@ export default function JobListings() {
                 className="w-full rounded-2xl border-none bg-surface py-4 pl-12 pr-4 text-base font-medium focus:ring-2 focus:ring-primary/20 shadow-inner"
               />
             </div>
+            <input
+              type="text"
+              aria-label="Town or city"
+              placeholder="Town or city (optional)"
+              value={town}
+              onChange={(event) => setTown(event.target.value)}
+              className="w-full rounded-2xl border-none bg-surface px-4 py-4 text-base font-medium focus:ring-2 focus:ring-primary/20 shadow-inner"
+            />
             <div className="flex gap-3 overflow-x-auto pb-1">
               {jobTypes.map((type) => (
                 <button

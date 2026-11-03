@@ -265,8 +265,10 @@ export default function Navbar() {
   return (
     <>
       <div className="fixed inset-x-0 top-0 z-[60]">
-        <div className="bg-primary px-4 py-2 text-center text-[10px] font-black uppercase tracking-[0.25em] text-white">
-          <span className="opacity-70">Escrow-protected payments · Mobile money payouts.</span>{' '}
+        <div className="bg-primary px-4 py-2 text-center text-[10px] font-black uppercase tracking-[0.1em] text-white sm:tracking-[0.25em]">
+          <span className="opacity-70">
+            Escrow-protected payments<span className="hidden sm:inline"> · Mobile money payouts</span>.
+          </span>{' '}
           <Link to="/onboarding?role=seeker" className="ml-2 underline hover:text-white/80 transition-colors">Join free</Link>
         </div>
       </div>
@@ -305,6 +307,9 @@ export default function Navbar() {
 
                 {!user ? (
                   <div className="flex items-center gap-2">
+                    <Link to="/onboarding?role=employer" className="btn btn-ghost btn-sm font-black">
+                      Post a job
+                    </Link>
                     <Link to="/login" className="btn btn-outline btn-sm">
                       Log In
                     </Link>
@@ -457,6 +462,9 @@ export default function Navbar() {
 
             {!user ? (
               <div className="grid grid-cols-2 gap-3">
+                <Link to="/onboarding?role=employer" className="btn btn-outline col-span-2 w-full">
+                  Post a job
+                </Link>
                 <Link to="/login" className="btn btn-outline w-full">
                   Log In
                 </Link>
