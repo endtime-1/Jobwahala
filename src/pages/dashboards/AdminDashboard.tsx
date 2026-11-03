@@ -11,12 +11,20 @@ import {
 } from '../../lib/api'
 import { emailHandle, formatMoney, formatRelativeTime, getDisplayName } from '../../lib/display'
 import { useAdminDashboard } from './admin/hooks'
+import { getErrorMessage } from '../../lib/errors'
 
 const moderationStatuses = ['ACTIVE', 'FLAGGED', 'SUSPENDED']
 const reportStatuses = ['PENDING', 'RESOLVED', 'DISMISSED']
 const verificationStatuses = ['APPROVED', 'NEEDS_INFO', 'REJECTED']
 const disputeStatuses = ['UNDER_REVIEW', 'RESOLVED', 'DISMISSED']
 const initialAdminJobForm = { employerId: '', title: '', description: '', location: '', type: 'Full-time', salary: '', category: '' }
+
+const EMPTY: never[] = []
+
+const pruneSelection = (selected: string[], items: { id: string }[]) => {
+  const next = selected.filter((id) => items.some((item) => item.id === id))
+  return next.length === selected.length ? selected : next
+}
 
 export default function AdminDashboard() {
   const queryClient = useQueryClient()
@@ -36,18 +44,18 @@ export default function AdminDashboard() {
   const [selectedJobIds, setSelectedJobIds] = useState<string[]>([])
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([])
 
-  const reports = data?.reports ?? []
-  const users = data?.users ?? []
-  const jobs = data?.jobs ?? []
-  const services = data?.services ?? []
-  const verifications = data?.verifications ?? []
-  const disputes = data?.disputes ?? []
+  const reports = data?.reports ?? EMPTY
+  const users = data?.users ?? EMPTY
+  const jobs = data?.jobs ?? EMPTY
+  const services = data?.services ?? EMPTY
+  const verifications = data?.verifications ?? EMPTY
+  const disputes = data?.disputes ?? EMPTY
 
   const refreshAll = () => void queryClient.invalidateQueries({ queryKey: ['admin'] })
 
   const handleAction = async (action: () => Promise<unknown>) => {
     setError(''); setIsActing(true)
-    try { await action(); refreshAll() } catch (err: any) { setError(err.message || 'Admin action failed.') } finally { setIsActing(false) }
+    try { await action(); refreshAll() } catch (err) { setError(getErrorMessage(err, 'Admin action failed.')) } finally { setIsActing(false) }
   }
 
   const summary = useMemo(() => ({
@@ -73,10 +81,10 @@ export default function AdminDashboard() {
     })
   }, [jobCompanyFilter, jobOriginFilter, jobSearch, jobs])
 
-  useEffect(() => { setSelectedReportIds((c) => c.filter((id) => reports.some((r) => r.id === id))) }, [reports])
-  useEffect(() => { setSelectedUserIds((c) => c.filter((id) => users.some((u) => u.id === id))) }, [users])
-  useEffect(() => { setSelectedJobIds((c) => c.filter((id) => jobs.some((j) => j.id === id))) }, [jobs])
-  useEffect(() => { setSelectedServiceIds((c) => c.filter((id) => services.some((s) => s.id === id))) }, [services])
+  useEffect(() => { setSelectedReportIds((c) => pruneSelection(c, reports)) }, [reports])
+  useEffect(() => { setSelectedUserIds((c) => pruneSelection(c, users)) }, [users])
+  useEffect(() => { setSelectedJobIds((c) => pruneSelection(c, jobs)) }, [jobs])
+  useEffect(() => { setSelectedServiceIds((c) => pruneSelection(c, services)) }, [services])
 
   const updateVerificationDraft = (id: string, field: 'reviewNote' | 'internalNote', value: string) => {
     setVerificationDrafts((c) => ({ ...c, [id]: { reviewNote: c[id]?.reviewNote || '', internalNote: c[id]?.internalNote || '', [field]: value } }))

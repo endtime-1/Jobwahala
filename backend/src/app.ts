@@ -155,6 +155,7 @@ app.use('/api/cv', strictAiRateLimit, cvRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/agreements', agreementRoutes);
+app.use('/api/disputes', disputeRoutes);
 app.use('/api/proposals', proposalRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/payments', paymentRoutes);
