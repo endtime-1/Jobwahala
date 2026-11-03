@@ -29,7 +29,7 @@ export type RecommendedJob = {
   skillGaps?: string[]
   employer: {
     email: string
-    employerProfile?: { companyName?: string | null } | null
+    employerProfile?: { companyName?: string | null; logoUrl?: string | null } | null
   }
 }
 

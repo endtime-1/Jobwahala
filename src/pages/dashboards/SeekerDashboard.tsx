@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Briefcase, MessageSquare, CheckCircle, ShieldCheck, Lock, FileText, Handshake, Sparkles } from 'lucide-react'
 import VerifiedBadge from '../../components/VerifiedBadge'
+import CompanyLogo from '../../components/CompanyLogo'
 import VerificationPanel from '../../components/VerificationPanel'
 import { Link } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
@@ -265,7 +266,7 @@ export default function SeekerDashboard() {
 
             {/* Recommended jobs */}
             <section className="space-y-5">
-              <h2 className="font-black text-xs uppercase tracking-[0.2em] text-text-light mb-8">Recommended Live Roles</h2>
+              <h2 className="mb-6 text-2xl font-black tracking-tight text-text-main">Jobs picked for you</h2>
               {recommendedJobs.length === 0 ? (
                 <div className="dashboard-panel p-6 sm:p-8"><p className="text-sm font-semibold text-text-light">No recommendations available yet.</p></div>
               ) : (
@@ -276,7 +277,7 @@ export default function SeekerDashboard() {
                     return (
                       <div key={job.id} className="dashboard-panel group p-5 sm:p-6 transition-all hover:-translate-y-1">
                         <div className="mb-6 flex justify-between items-start">
-                          <div className="h-12 w-12 bg-surface-alt rounded-2xl flex items-center justify-center font-black text-[10px] text-text-light group-hover:bg-primary/5 transition-colors">JOB</div>
+                          <CompanyLogo name={company} logoUrl={job.employer.employerProfile?.logoUrl} className="h-12 w-12 rounded-2xl text-base" />
                           <div className="flex flex-col items-end gap-2">
                             <span className="badge bg-secondary text-white border-none text-[9px]">Live</span>
                             {job.matchScore ? <span className={`badge border-none text-[9px] uppercase tracking-widest ${getMatchScoreBadgeClass(job.matchScore)}`}>{job.matchScore}% match</span> : null}

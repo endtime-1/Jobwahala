@@ -182,70 +182,60 @@ export default function EmployerJobsPanel({
         {jobs.length === 0 ? (
           <p className="text-sm font-semibold text-text-light">No jobs posted yet.</p>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-4">
             {jobs.map((job) => (
               <div
                 key={job.id}
-                className="rounded-[1.75rem] border border-transparent bg-surface-alt/20 p-5 transition-all hover:border-surface-border hover:bg-white sm:p-8"
+                className="rounded-2xl border border-surface-border bg-white p-5 transition-all hover:border-secondary/40 sm:p-6"
               >
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
-                  <div className="flex gap-6 items-center">
-                    <div className="h-16 w-16 bg-white border border-surface-border/50 rounded-2xl flex items-center justify-center text-text-main font-black text-sm shadow-sm">
-                      JOB
-                    </div>
-                    <div>
-                      <h3 className="font-black text-xl text-text-main tracking-tighter mb-2 leading-none">{job.title}</h3>
-                      <div className="flex items-center gap-4">
-                        <span className="badge bg-primary text-white text-[9px] uppercase tracking-widest">{job.status}</span>
-                        {job.postedByAdmin ? (
-                          <span className="badge bg-secondary text-white text-[9px] uppercase tracking-widest">
-                            Admin Assisted
-                          </span>
-                        ) : null}
-                        <span className="text-[10px] font-black text-text-light uppercase tracking-widest flex items-center gap-2">
-                          <Clock className="h-3.5 w-3.5" /> {formatRelativeTime(job.createdAt)}
-                        </span>
-                      </div>
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-xl font-extrabold leading-snug tracking-tight text-text-main">{job.title}</h3>
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-extrabold ${
+                          job.status === 'ACTIVE' ? 'bg-success/15 text-success' : 'bg-surface-alt text-text-muted'
+                        }`}
+                      >
+                        {job.status}
+                      </span>
                       {job.postedByAdmin ? (
-                        <p className="mt-3 text-[10px] font-black uppercase tracking-[0.2em] text-text-light">
-                          Posted by JobWahala admin / {emailHandle(job.postedByAdmin.email)}
-                        </p>
+                        <span className="rounded-full bg-secondary/10 px-3 py-1 text-xs font-extrabold text-secondary">Admin assisted</span>
                       ) : null}
+                      <span className="flex items-center gap-1.5 text-sm font-semibold text-text-muted">
+                        <Clock className="h-3.5 w-3.5" /> {formatRelativeTime(job.createdAt)}
+                      </span>
                     </div>
+                    {job.postedByAdmin ? (
+                      <p className="mt-2 text-sm font-semibold text-text-muted">
+                        Posted by JobWahala admin / {emailHandle(job.postedByAdmin.email)}
+                      </p>
+                    ) : null}
                   </div>
-                  <div className="flex flex-col md:flex-row items-stretch md:items-center gap-4">
-                    <div className="flex items-center gap-10 px-8 py-4 bg-white rounded-2xl shadow-sm border border-surface-border/50">
-                      <div className="text-center">
-                        <p className="text-lg font-black text-text-main leading-none mb-1">{job._count.applications}</p>
-                        <p className="text-[9px] font-black text-text-light uppercase tracking-widest">Applicants</p>
-                      </div>
-                      <div className="h-10 w-px bg-surface-border"></div>
-                      <div className="text-center">
-                        <p className="text-lg font-black text-success leading-none mb-1">{job.status}</p>
-                        <p className="text-[9px] font-black text-text-light uppercase tracking-widest">Status</p>
-                      </div>
-                    </div>
-                    <div className="flex gap-3">
-                      <button
-                        type="button"
-                        disabled={isUpdatingJobStatus}
-                        onClick={() => void handleJobStatusUpdate(job.id, job.status === 'ACTIVE' ? 'CLOSED' : 'ACTIVE')}
-                        className="btn btn-outline btn-sm bg-white font-black uppercase tracking-widest text-[10px] disabled:opacity-60"
-                      >
-                        {job.status === 'ACTIVE' ? 'Close Role' : 'Reopen Role'}
-                      </button>
-                      <Link to={`/jobs/${job.id}`} className="btn btn-outline btn-sm bg-white font-black uppercase tracking-widest text-[10px]">
-                        View Role
-                      </Link>
-                      <button
-                        type="button"
-                        onClick={() => onReviewApplicants(job.id, job.title)}
-                        className="btn btn-primary btn-sm font-black uppercase tracking-widest text-[10px]"
-                      >
-                        Review Applicants
-                      </button>
-                    </div>
+                  <div className="rounded-xl bg-surface-alt/70 px-6 py-3 text-center">
+                    <p className="text-2xl font-black leading-none text-text-main">{job._count.applications}</p>
+                    <p className="mt-1 text-xs font-bold text-text-muted">Applicants</p>
                   </div>
+                </div>
+                <div className="mt-4 flex flex-wrap gap-2 border-t border-surface-border pt-4">
+                  <button
+                    type="button"
+                    onClick={() => onReviewApplicants(job.id, job.title)}
+                    className="btn btn-primary btn-sm"
+                  >
+                    Review Applicants
+                  </button>
+                  <Link to={`/jobs/${job.id}`} className="btn btn-outline btn-sm bg-white">
+                    View Role
+                  </Link>
+                  <button
+                    type="button"
+                    disabled={isUpdatingJobStatus}
+                    onClick={() => void handleJobStatusUpdate(job.id, job.status === 'ACTIVE' ? 'CLOSED' : 'ACTIVE')}
+                    className="btn btn-outline btn-sm bg-white disabled:opacity-60"
+                  >
+                    {job.status === 'ACTIVE' ? 'Close Role' : 'Reopen Role'}
+                  </button>
                 </div>
               </div>
             ))}

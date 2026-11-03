@@ -255,3 +255,13 @@
 .metric-card--solid .badge {
   background: #fff;
 }
+
+/* Small panel headings (they were tiny capitals) read as real headings. */
+.v2 h2.text-xs,
+.v2 h3.text-xs,
+.v2 h2.text-sm.font-black,
+.v2 h3.text-sm.font-black {
+  font-size: 1.125rem;
+  line-height: 1.3;
+  letter-spacing: 0;
+}
