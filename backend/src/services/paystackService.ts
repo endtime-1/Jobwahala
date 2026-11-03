@@ -54,6 +54,7 @@ class PaystackService {
     currency?: string; // e.g. GHS, USD
     reference: string;
     callback_url?: string;
+    channels?: string[];
     metadata?: any;
   }) {
     try {

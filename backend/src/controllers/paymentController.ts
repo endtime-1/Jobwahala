@@ -5,6 +5,7 @@ import env from '../config/env';
 import { AuthRequest } from '../middleware/auth';
 import { paystackService } from '../services/paystackService';
 import { completeMilestonePayment, processPayout } from './agreementController';
+import { buildPaystackCallbackUrl, getPaystackChannels } from '../services/paymentProvider';
 import logger from '../config/logger';
 import { getErrorMessage } from '../utils/errors';
 
@@ -98,7 +99,12 @@ export const initializeMilestonePayment = async (req: AuthRequest, res: Response
       amount: amountInMinorUnits,
       currency: currency,
       reference: reference,
-      callback_url: `${env.frontendBaseUrl}/agreements/${milestone.agreementId}`,
+      callback_url: buildPaystackCallbackUrl(env.frontendBaseUrl, {
+        agreementId: milestone.agreementId,
+        paymentId: payment.id,
+        milestoneId: milestone.id,
+      }),
+      channels: getPaystackChannels(currency),
       metadata: {
         paymentId: payment.id,
         milestoneId: milestone.id,

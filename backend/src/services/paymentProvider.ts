@@ -55,6 +55,22 @@ export const parseProviderAmount = (rawAmount: string): ParsedProviderAmount | n
   return { currency, providerAmount };
 };
 
+export const buildPaystackCallbackUrl = (
+  baseUrl: string,
+  { agreementId, paymentId, milestoneId }: { agreementId: string; paymentId: string; milestoneId: string },
+) => {
+  const callbackUrl = new URL('/agreements', baseUrl);
+  callbackUrl.searchParams.set('agreementId', agreementId);
+  callbackUrl.searchParams.set('paymentId', paymentId);
+  callbackUrl.searchParams.set('milestoneId', milestoneId);
+  callbackUrl.searchParams.set('provider', 'PAYSTACK');
+  return callbackUrl.toString();
+};
+
+// Ghana: offer mobile money (MTN MoMo, Telecel Cash, AirtelTigo) first; other currencies use Paystack's defaults.
+export const getPaystackChannels = (currency: string) =>
+  currency.toUpperCase() === 'GHS' ? ['mobile_money', 'card', 'bank_transfer'] : undefined;
+
 export const initializePaymentSession = async ({
   paymentId,
   reference,
@@ -80,11 +96,7 @@ export const initializePaymentSession = async ({
     };
   }
 
-  const callbackUrl = new URL('/agreements', env.frontendBaseUrl);
-  callbackUrl.searchParams.set('agreementId', agreementId);
-  callbackUrl.searchParams.set('paymentId', paymentId);
-  callbackUrl.searchParams.set('milestoneId', milestoneId);
-  callbackUrl.searchParams.set('provider', 'PAYSTACK');
+  const callbackUrl = buildPaystackCallbackUrl(env.frontendBaseUrl, { agreementId, paymentId, milestoneId });
 
   const response = await fetch('https://api.paystack.co/transaction/initialize', {
     method: 'POST',
@@ -97,7 +109,8 @@ export const initializePaymentSession = async ({
       amount: String(parsedAmount.providerAmount),
       currency: parsedAmount.currency,
       reference,
-      callback_url: callbackUrl.toString(),
+      callback_url: callbackUrl,
+      channels: getPaystackChannels(parsedAmount.currency),
       metadata: {
         source: 'jobwahala',
         agreementId,
