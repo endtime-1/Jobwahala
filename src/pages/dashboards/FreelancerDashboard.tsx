@@ -208,44 +208,70 @@ export default function FreelancerDashboard() {
           <div className="space-y-8">
             {/* Service create/edit form */}
             {(showCreateForm || isEditing) ? (
-              <form onSubmit={isEditing ? handleUpdateService : handleCreateService} className="dashboard-panel space-y-6">
-                <div className="flex justify-between items-center pb-6 border-b border-surface-border/50">
-                  <h2 className="font-black text-xs uppercase tracking-[0.2em] text-text-main">{isEditing ? 'Edit Service' : 'Create Service'}</h2>
-                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Goes live instantly</span>
-                </div>
-                <div className="rounded-[28px] border border-primary/15 bg-primary/5 p-5 sm:p-6">
-                  <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                    <div>
-                      <p className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.24em] text-primary"><Sparkles className="h-4 w-4" /> Service Copilot</p>
-                      <h3 className="mt-3 text-lg font-black text-text-main">Optimize your listing with AI.</h3>
-                    </div>
-                    <button type="button" onClick={handleGenerateServiceDraft} disabled={isGeneratingServiceDraft} className="btn btn-secondary btn-sm rounded-2xl px-5 text-[10px] font-black uppercase tracking-widest disabled:opacity-60">
-                      {isGeneratingServiceDraft ? 'Generating...' : 'Generate AI Draft'}
-                    </button>
+              <form onSubmit={isEditing ? handleUpdateService : handleCreateService} className="space-y-6 rounded-2xl border border-secondary/30 bg-white p-5 sm:p-8">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-surface-border pb-5">
+                  <div>
+                    <h2 className="text-2xl font-black tracking-tight text-text-main">{isEditing ? 'Edit Service' : 'Create Service'}</h2>
+                    <p className="mt-1 text-sm font-medium text-text-muted">Describe one thing you can do, for a clear price.</p>
                   </div>
-                  {serviceCopilotDraft ? (
-                    <div className="mt-5 grid gap-3 md:grid-cols-2">
-                      <div className="rounded-2xl border border-surface-border bg-white/80 p-4">
-                        <p className="text-[10px] font-black uppercase tracking-[0.22em] text-text-light">Positioning</p>
-                        <p className="mt-2 text-sm font-semibold leading-relaxed text-text-main">{serviceCopilotDraft.positioning || 'No positioning yet.'}</p>
-                      </div>
-                      <div className="rounded-2xl border border-surface-border bg-white/80 p-4">
-                        <p className="text-[10px] font-black uppercase tracking-[0.22em] text-text-light">Pricing note</p>
-                        <p className="mt-2 text-sm font-semibold leading-relaxed text-text-main">{serviceCopilotDraft.pricingNote || 'No pricing note yet.'}</p>
-                      </div>
+                  <span className="rounded-full bg-success/15 px-3 py-1 text-sm font-extrabold text-success">Goes live instantly</span>
+                </div>
+
+                <div className="flex flex-col gap-4 rounded-xl bg-secondary/5 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+                  <div className="flex items-start gap-3">
+                    <span className="flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-secondary/10 text-secondary"><Sparkles className="h-5 w-5" /></span>
+                    <div>
+                      <p className="font-extrabold text-text-main">Service Copilot</p>
+                      <p className="text-sm font-medium text-text-muted">Optimize your listing with AI. You can edit everything it writes.</p>
                     </div>
-                  ) : null}
+                  </div>
+                  <button type="button" onClick={handleGenerateServiceDraft} disabled={isGeneratingServiceDraft} className="btn btn-secondary btn-sm flex-none px-5 disabled:opacity-60">
+                    {isGeneratingServiceDraft ? 'Generating...' : 'Generate AI Draft'}
+                  </button>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <input type="text" placeholder="Service title" value={serviceForm.title} onChange={(e) => setServiceForm((c) => ({ ...c, title: e.target.value }))} className="h-14 font-bold" required />
-                  <input type="text" placeholder="Price" value={serviceForm.price} onChange={(e) => setServiceForm((c) => ({ ...c, price: e.target.value }))} className="h-14 font-bold" required />
-                  <input type="text" placeholder="Delivery time" value={serviceForm.deliveryTime} onChange={(e) => setServiceForm((c) => ({ ...c, deliveryTime: e.target.value }))} className="h-14 font-bold" />
-                  <input type="text" placeholder="Category" value={serviceForm.category} onChange={(e) => setServiceForm((c) => ({ ...c, category: e.target.value }))} className="h-14 font-bold" />
+                {serviceCopilotDraft ? (
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <div className="rounded-xl border border-surface-border bg-surface-alt/40 p-4">
+                      <p className="text-sm font-bold text-text-muted">Positioning</p>
+                      <p className="mt-1 text-sm font-semibold leading-relaxed text-text-main">{serviceCopilotDraft.positioning || 'No positioning yet.'}</p>
+                    </div>
+                    <div className="rounded-xl border border-surface-border bg-surface-alt/40 p-4">
+                      <p className="text-sm font-bold text-text-muted">Pricing note</p>
+                      <p className="mt-1 text-sm font-semibold leading-relaxed text-text-main">{serviceCopilotDraft.pricingNote || 'No pricing note yet.'}</p>
+                    </div>
+                  </div>
+                ) : null}
+
+                <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <label htmlFor="service-title" className="block text-base font-bold text-text-main">What do you offer?</label>
+                    <input id="service-title" type="text" placeholder="Service title" value={serviceForm.title} onChange={(e) => setServiceForm((c) => ({ ...c, title: e.target.value }))} className="h-14 text-base font-semibold" required />
+                    <p className="text-sm text-text-muted">For example: Logo design for small businesses</p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label htmlFor="service-price" className="block text-base font-bold text-text-main">Price</label>
+                    <input id="service-price" type="text" placeholder="Price" value={serviceForm.price} onChange={(e) => setServiceForm((c) => ({ ...c, price: e.target.value }))} className="h-14 text-base font-semibold" required />
+                    <p className="text-sm text-text-muted">The full price for this service, as a number.</p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label htmlFor="service-delivery" className="block text-base font-bold text-text-main">How long does it take?</label>
+                    <input id="service-delivery" type="text" placeholder="Delivery time" value={serviceForm.deliveryTime} onChange={(e) => setServiceForm((c) => ({ ...c, deliveryTime: e.target.value }))} className="h-14 text-base font-semibold" />
+                    <p className="text-sm text-text-muted">For example: 3 days or 2 weeks</p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label htmlFor="service-category" className="block text-base font-bold text-text-main">Field</label>
+                    <input id="service-category" type="text" placeholder="Category" value={serviceForm.category} onChange={(e) => setServiceForm((c) => ({ ...c, category: e.target.value }))} className="h-14 text-base font-semibold" />
+                    <p className="text-sm text-text-muted">For example: Design, Writing or Accounting</p>
+                  </div>
                 </div>
-                <textarea placeholder="Describe your service..." value={serviceForm.description} onChange={(e) => setServiceForm((c) => ({ ...c, description: e.target.value }))} className="min-h-[180px] font-bold py-4" required />
-                <div className="flex gap-3 justify-end">
-                  <button type="button" onClick={resetForm} className="btn btn-outline btn-lg px-6 rounded-2xl font-black uppercase tracking-widest">Cancel</button>
-                  <button type="submit" disabled={isSubmitting} className="btn btn-primary btn-lg px-8 rounded-2xl font-black uppercase tracking-widest disabled:opacity-60">
+                <div className="space-y-1.5">
+                  <label htmlFor="service-description" className="block text-base font-bold text-text-main">What is included?</label>
+                  <textarea id="service-description" placeholder="Describe your service..." value={serviceForm.description} onChange={(e) => setServiceForm((c) => ({ ...c, description: e.target.value }))} className="min-h-[180px] py-4 text-base font-semibold" required />
+                  <p className="text-sm text-text-muted">Say what the client gets, how many revisions, and what you need from them.</p>
+                </div>
+                <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                  <button type="button" onClick={resetForm} className="btn btn-outline btn-lg px-6">Cancel</button>
+                  <button type="submit" disabled={isSubmitting} className="btn btn-gold btn-lg px-8 disabled:opacity-60">
                     {isSubmitting ? 'Publishing...' : isEditing ? 'Update Service' : 'Publish Service'}
                   </button>
                 </div>
@@ -259,7 +285,13 @@ export default function FreelancerDashboard() {
                 <Link to="/freelancers" className="text-[10px] font-black text-primary uppercase tracking-widest hover:underline flex items-center gap-2">View Marketplace <ChevronRight className="h-4 w-4" /></Link>
               </div>
               {services.length === 0 ? (
-                <p className="text-sm font-semibold text-text-light">No services published yet.</p>
+                <div className="rounded-xl border border-dashed border-surface-border p-8 text-center">
+                  <p className="text-lg font-extrabold text-text-main">No services published yet.</p>
+                  <p className="mx-auto mt-1 max-w-md text-sm font-medium text-text-muted">Add your first service so clients can find and hire you.</p>
+                  {showCreateForm || isEditing ? null : (
+                    <button type="button" onClick={() => setShowCreateForm(true)} className="btn btn-gold mt-5 px-6">Add your first service</button>
+                  )}
+                </div>
               ) : (
                 <div className="space-y-4">
                   {services.map((s) => (
