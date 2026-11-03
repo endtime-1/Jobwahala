@@ -91,3 +91,22 @@
   border-radius: 999px;
   background: var(--color-gold);
 }
+
+/* The navbar is shared with the home page, so its links are sentence-case everywhere. */
+.nav-link {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.v2 .badge,
+.v2 .dashboard-kicker,
+.v2 .dashboard-action-chip {
+  text-transform: none;
+  letter-spacing: 0.005em;
+}
+
+.v2 .badge {
+  font-size: 0.8rem;
+}

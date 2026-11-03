@@ -1,4 +1,4 @@
-import { Search, MapPin, Clock, Filter, ChevronRight, Flag, Sparkles } from 'lucide-react'
+import { Search, MapPin, Clock, ChevronRight, Flag, Sparkles, Briefcase, X } from 'lucide-react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
 import ReportModal from '../components/ReportModal'
@@ -185,198 +185,161 @@ export default function JobListings() {
     }
   }
 
+  const hasActiveFilters =
+    Boolean(search.trim()) ||
+    Boolean(town.trim()) ||
+    selectedLocation !== 'All of Africa' ||
+    selectedTypes.length !== jobTypes.length
+
+  const clearFilters = () => {
+    setSearch('')
+    setTown('')
+    setSelectedLocation('All of Africa')
+    setSelectedTypes(jobTypes)
+  }
+
   return (
-    <div className="container animate-in fade-in pt-32 pb-24 duration-700 md:pt-32 xl:pt-36">
-      <SEO 
+    <div className="pb-24 pt-28 md:pt-32 xl:pt-36">
+      <SEO
         title="Find Jobs and Freelance Work Across Africa"
-        description="Filter and apply for elite full-time, contract, and freelance roles in Accra and across Ghana. Updated daily with high-growth global opportunities."
+        description="Filter and apply for full-time, contract, and freelance roles in Accra and across Africa. Updated daily."
         keywords="jobs in ghana, accra tech careers, remote jobs africa, software engineering ghana"
       />
-      <header className="dashboard-hero mb-8 px-5 py-6 sm:px-7 sm:py-7 lg:px-8 lg:py-8">
-        <div className="relative z-10 flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-2xl">
-            <div className="dashboard-kicker mb-4">
-              <Filter className="h-3.5 w-3.5" /> Role discovery
-            </div>
-            <h1 className="mb-3 text-4xl font-black tracking-tighter text-text-main md:text-5xl">
-              Find work that feels like momentum.
-            </h1>
-            <p className="text-base font-medium tracking-tight text-text-muted md:text-lg">
-              Search open roles, narrow them down by town or work type, and apply in a few taps.
-            </p>
-            <div className="dashboard-actions hidden lg:flex">
-              {jobTypes.map((type) => (
-                <button
-                  key={type}
-                  type="button"
-                  onClick={() => toggleType(type)}
-                  className={`dashboard-action-chip ${selectedTypes.includes(type) ? 'border-primary/30 bg-primary/10 text-primary' : ''}`}
-                >
-                  {type}
-                </button>
-              ))}
-            </div>
-          </div>
 
-          <div className="dashboard-panel grid min-w-0 grid-cols-3 gap-3 px-5 py-5 sm:min-w-[20rem] sm:px-6">
-            <div className="rounded-2xl bg-white/80 px-3 py-4 text-center shadow-premium-sm">
-              <p className="text-2xl font-black text-text-main">{jobs.length}</p>
-              <p className="mt-1 text-[9px] font-black uppercase tracking-[0.18em] text-text-light">Open</p>
-            </div>
-            <div className="rounded-2xl bg-white/80 px-3 py-4 text-center shadow-premium-sm">
-              <p className="text-2xl font-black text-text-main">{freshCount}</p>
-              <p className="mt-1 text-[9px] font-black uppercase tracking-[0.18em] text-text-light">Fresh</p>
-            </div>
-            <div className="rounded-2xl bg-white/80 px-3 py-4 text-center shadow-premium-sm">
-              <p className="text-2xl font-black text-text-main">{remoteCount}</p>
-              <p className="mt-1 text-[9px] font-black uppercase tracking-[0.18em] text-text-light">Remote</p>
-            </div>
-          </div>
-        </div>
-      </header>
+      <div className="container">
+        <header
+          className="relative overflow-hidden rounded-[2rem] px-5 py-8 text-white sm:px-9 sm:py-11"
+          style={{
+            background:
+              'radial-gradient(700px 360px at 100% 0%, rgba(47,109,246,0.5), transparent 60%), radial-gradient(500px 300px at 0% 100%, rgba(255,197,49,0.16), transparent 60%), #101a2b',
+          }}
+        >
+          <div className="heritage-strip absolute inset-x-0 top-0" aria-hidden />
+          <p className="page-eyebrow">Find your next job</p>
+          <h1 className="mt-3 max-w-3xl text-4xl font-black leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
+            Real jobs across Africa. <span className="text-gold">Apply in minutes.</span>
+          </h1>
 
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
-        <aside className="hidden lg:block">
-          <div className="dashboard-panel sticky top-28 bg-surface-alt/30 p-5 sm:p-6">
-            <h3 className="font-black text-xs uppercase tracking-widest flex items-center gap-3 mb-8 text-text-main">
-              <Filter className="h-4 w-4 text-primary" /> Refine Search
-            </h3>
-            <div className="space-y-10">
-              <div>
-                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-text-light mb-5 block">Employment Type</label>
-                <div className="space-y-4">
-                  {jobTypes.map((type) => (
-                    <label key={type} className="flex items-center gap-3 cursor-pointer group">
-                      <div className="h-5 w-5 rounded-lg border border-surface-border group-hover:border-primary transition-all flex items-center justify-center bg-white shadow-sm">
-                        <div className={`h-2 w-2 rounded-sm bg-primary transition-opacity ${selectedTypes.includes(type) ? 'opacity-100' : 'opacity-0'}`}></div>
-                      </div>
-                      <input
-                        type="checkbox"
-                        className="hidden"
-                        checked={selectedTypes.includes(type)}
-                        onChange={() => toggleType(type)}
-                      />
-                      <span className="text-sm font-semibold text-text-muted group-hover:text-text-main transition-colors">{type}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-text-light mb-5 block">Location Focus</label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-light" />
-                  <select className="appearance-none font-bold pl-10" value={selectedLocation} onChange={(event) => setSelectedLocation(event.target.value)}>
-                    {locationOptions.map((option) => (
-                      <option key={option}>{option}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label htmlFor="town-filter" className="text-[10px] font-black uppercase tracking-[0.2em] text-text-light mb-5 block">Town or city</label>
-                <input
-                  id="town-filter"
-                  type="text"
-                  value={town}
-                  onChange={(event) => setTown(event.target.value)}
-                  placeholder="e.g. Kumasi, Lagos, Nairobi"
-                  className="font-bold"
-                />
-              </div>
-            </div>
-          </div>
-        </aside>
-
-        <main className="lg:col-span-3 space-y-6">
-          <JobAlerts
-            criteria={alertCriteriaFromFilters({ search, selectedTypes, allTypes: jobTypes, selectedLocation, town })}
-            isSignedIn={Boolean(user)}
-            isSeeker={user?.role === 'SEEKER'}
-          />
-          <section className="dashboard-panel space-y-5 p-4 sm:p-5 lg:hidden">
-            <div className="relative group">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-text-light transition-colors group-focus-within:text-primary" />
+          <div className="relative mt-7 rounded-2xl bg-white p-2 shadow-premium-xl sm:flex sm:items-center sm:gap-2">
+            <div className="relative flex-1">
+              <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-text-light" />
               <input
                 type="text"
-                placeholder="Design, Engineering, Marketing..."
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                className="w-full rounded-2xl border-none bg-surface py-4 pl-12 pr-4 text-base font-medium focus:ring-2 focus:ring-primary/20 shadow-inner"
-              />
-            </div>
-            <input
-              type="text"
-              aria-label="Town or city"
-              placeholder="Town or city (optional)"
-              value={town}
-              onChange={(event) => setTown(event.target.value)}
-              className="w-full rounded-2xl border-none bg-surface px-4 py-4 text-base font-medium focus:ring-2 focus:ring-primary/20 shadow-inner"
-            />
-            <div className="flex gap-3 overflow-x-auto pb-1">
-              {jobTypes.map((type) => (
-                <button
-                  key={type}
-                  type="button"
-                  onClick={() => toggleType(type)}
-                  className={`whitespace-nowrap rounded-full border px-4 py-2 text-[10px] font-black uppercase tracking-[0.18em] transition-all ${
-                    selectedTypes.includes(type)
-                      ? 'border-primary/20 bg-primary text-white'
-                      : 'border-surface-border bg-white text-text-muted'
-                  }`}
-                >
-                  {type}
-                </button>
-              ))}
-            </div>
-            <div className="relative">
-              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-light" />
-              <select className="appearance-none font-bold pl-10" value={selectedLocation} onChange={(event) => setSelectedLocation(event.target.value)}>
-                {locationOptions.map((option) => (
-                  <option key={option}>{option}</option>
-                ))}
-              </select>
-            </div>
-          </section>
-
-          <div className="dashboard-panel hidden p-4 sm:p-5 lg:block">
-            <div className="relative group">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-text-light transition-colors group-focus-within:text-primary" />
-              <input
-                type="text"
-                placeholder="Design, Engineering, Marketing..."
+                aria-label="Job title or keyword"
+                placeholder="Job title, skill or company"
                 value={search}
                 onChange={(event) => {
-                   setSearch(event.target.value)
-                   setShowSuggestions(true)
+                  setSearch(event.target.value)
+                  setShowSuggestions(true)
                 }}
                 onFocus={() => setShowSuggestions(true)}
                 onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                className="w-full rounded-2xl border-none bg-surface py-4 pl-12 pr-4 text-lg font-medium focus:ring-2 focus:ring-primary/20 shadow-inner"
+                className="w-full rounded-xl border-none bg-transparent py-4 pl-12 pr-4 text-base font-semibold text-text-main focus:ring-2 focus:ring-secondary/25"
               />
               {showSuggestions && suggestions.length > 0 && (
-                <div className="absolute top-full left-0 right-0 z-50 mt-2 rounded-2xl border border-surface-border bg-white p-3 shadow-premium-lg animate-in fade-in slide-in-from-top-2 duration-300">
-                  <p className="mb-2 px-3 text-[9px] font-black uppercase tracking-[0.2em] text-text-light">Suggested Skills</p>
+                <div className="absolute left-0 right-0 top-full z-50 mt-2 rounded-2xl border border-surface-border bg-white p-3 shadow-premium-lg">
+                  <p className="mb-2 px-2 text-xs font-bold text-text-light">Suggestions</p>
                   <div className="flex flex-wrap gap-2">
-                    {suggestions.map((s) => (
+                    {suggestions.map((suggestion) => (
                       <button
-                        key={s}
+                        key={suggestion}
                         type="button"
                         onClick={() => {
-                          setSearch(s)
+                          setSearch(suggestion)
                           setShowSuggestions(false)
                         }}
-                        className="rounded-xl border border-surface-border bg-surface-alt/20 px-4 py-2 text-xs font-bold text-text-muted hover:bg-primary/10 hover:text-primary transition-all"
+                        className="rounded-xl border border-surface-border px-4 py-2 text-sm font-bold text-text-muted transition-colors hover:bg-secondary/10 hover:text-secondary"
                       >
-                        {s}
+                        {suggestion}
                       </button>
                     ))}
                   </div>
                 </div>
               )}
             </div>
+            <div className="relative mt-1 flex-1 border-t border-surface-border sm:mt-0 sm:border-l sm:border-t-0">
+              <MapPin className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-text-light" />
+              <input
+                id="town-filter"
+                type="text"
+                aria-label="Town or city"
+                placeholder="Town or city"
+                value={town}
+                onChange={(event) => setTown(event.target.value)}
+                className="w-full rounded-xl border-none bg-transparent py-4 pl-12 pr-4 text-base font-semibold text-text-main focus:ring-2 focus:ring-secondary/25"
+              />
+            </div>
+            <a href="#results" className="btn btn-gold btn-lg mt-2 w-full justify-center px-8 sm:mt-0 sm:w-auto">
+              Search jobs
+            </a>
           </div>
+
+          <div className="mt-5 flex gap-2 overflow-x-auto pb-1" role="group" aria-label="Country">
+            {locationOptions.map((option) => (
+              <button
+                key={option}
+                type="button"
+                onClick={() => setSelectedLocation(option)}
+                aria-pressed={selectedLocation === option}
+                className={`whitespace-nowrap rounded-full border px-4 py-2 text-sm font-bold transition-colors ${
+                  selectedLocation === option
+                    ? 'border-gold bg-gold text-primary'
+                    : 'border-white/20 bg-white/10 text-white hover:bg-white/20'
+                }`}
+              >
+                {option}
+              </button>
+            ))}
+          </div>
+
+          {!isLoading && !error ? (
+            <p className="mt-5 text-sm font-semibold text-white/70">
+              {jobs.length} open {jobs.length === 1 ? 'role' : 'roles'}
+              {freshCount > 0 ? ` · ${freshCount} new in the last 3 days` : ''}
+              {remoteCount > 0 ? ` · ${remoteCount} remote` : ''}
+            </p>
+          ) : null}
+        </header>
+
+        <div id="results" className="mt-6 scroll-mt-28 space-y-5">
+          <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-surface-border bg-white p-3 sm:p-4">
+            <span className="mr-1 hidden text-sm font-bold text-text-muted sm:inline">Job type</span>
+            {jobTypes.map((type) => (
+              <button
+                key={type}
+                type="button"
+                onClick={() => toggleType(type)}
+                aria-pressed={selectedTypes.includes(type)}
+                className={`rounded-full border px-4 py-2 text-sm font-bold transition-colors ${
+                  selectedTypes.includes(type)
+                    ? 'border-secondary bg-secondary/10 text-secondary'
+                    : 'border-surface-border bg-white text-text-muted hover:border-secondary/40'
+                }`}
+              >
+                {type}
+              </button>
+            ))}
+            <div className="ml-auto flex items-center gap-3">
+              <p className="text-sm font-bold text-text-main">
+                {filteredJobs.length} {filteredJobs.length === 1 ? 'job' : 'jobs'}
+              </p>
+              {hasActiveFilters ? (
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className="inline-flex items-center gap-1 rounded-full bg-surface-alt px-3 py-1.5 text-sm font-bold text-text-muted hover:text-text-main"
+                >
+                  <X className="h-3.5 w-3.5" /> Clear
+                </button>
+              ) : null}
+            </div>
+          </div>
+
+          <JobAlerts
+            criteria={alertCriteriaFromFilters({ search, selectedTypes, allTypes: jobTypes, selectedLocation, town })}
+            isSignedIn={Boolean(user)}
+            isSeeker={user?.role === 'SEEKER'}
+          />
 
           {canCompareJobs ? (
             <section className="dashboard-panel overflow-hidden p-5 sm:p-6">
@@ -493,20 +456,31 @@ export default function JobListings() {
           ) : null}
 
           {isLoading ? (
-            <div className="dashboard-panel p-6 sm:p-10">
-              <p className="text-sm font-black uppercase tracking-[0.2em] text-text-light">Loading live opportunities...</p>
+            <div className="grid gap-4 xl:grid-cols-2" aria-label="Loading jobs">
+              {[0, 1, 2, 3].map((item) => (
+                <div key={item} className="h-56 animate-pulse rounded-2xl border border-surface-border bg-white" />
+              ))}
+              <p className="sr-only">Loading live opportunities...</p>
             </div>
           ) : error ? (
-            <div className="dashboard-panel border-error/10 p-6 sm:p-10">
+            <div className="rounded-2xl border border-error/20 bg-white p-6 sm:p-10">
               <p className="text-sm font-semibold text-error">{error}</p>
             </div>
           ) : filteredJobs.length === 0 ? (
-            <div className="dashboard-panel py-16 text-center sm:py-20">
-              <p className="text-2xl font-black text-text-main mb-4 tracking-tighter">No positions found</p>
-              <p className="text-text-muted font-medium">Try adjusting your search or filters.</p>
+            <div className="rounded-2xl border border-dashed border-surface-border bg-white px-6 py-16 text-center">
+              <Briefcase className="mx-auto h-10 w-10 text-text-light" />
+              <p className="mt-4 text-2xl font-black text-text-main">No positions found</p>
+              <p className="mx-auto mt-2 max-w-md font-medium text-text-muted">
+                Try adjusting your search or filters, or set an alert and we will tell you when a matching job is posted.
+              </p>
+              {hasActiveFilters ? (
+                <button type="button" onClick={clearFilters} className="btn btn-primary mt-6 px-6">
+                  Clear all filters
+                </button>
+              ) : null}
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="grid gap-4 xl:grid-cols-2">
               {filteredJobs.map((job) => {
                 const companyName = job.employer.employerProfile?.companyName || emailHandle(job.employer.email)
                 const location = formatJobLocationWithWorkMode(job.location)
@@ -514,102 +488,99 @@ export default function JobListings() {
                 const isNew = Date.now() - new Date(job.createdAt).getTime() < 1000 * 60 * 60 * 72
 
                 return (
-                  <div
+                  <article
                     key={job.id}
                     onClick={() => navigate(`/jobs/${job.id}`)}
-                    className="dashboard-panel group relative flex cursor-pointer flex-col gap-6 overflow-hidden border-surface-border bg-white p-5 transition-all hover:shadow-premium sm:p-8 md:flex-row md:items-start"
+                    className="group relative flex cursor-pointer flex-col gap-4 rounded-2xl border border-surface-border bg-white p-5 transition-all hover:-translate-y-0.5 hover:border-secondary/40 hover:shadow-premium-md sm:p-6"
                   >
-                    <div className="absolute top-0 right-0 h-32 w-32 bg-primary/5 rounded-full -mr-16 -mt-16 group-hover:bg-primary/10 transition-colors"></div>
-
-                    <CompanyLogo name={companyName} logoUrl={job.employer.employerProfile?.logoUrl} className="relative z-10 h-16 w-16 rounded-2xl text-xl sm:h-20 sm:w-20 sm:text-2xl" />
-
-                    <div className="flex-grow relative z-10">
-                      <div className="flex flex-wrap justify-between items-start gap-4 mb-4">
-                        <div>
-                          <div className="flex items-center flex-wrap gap-3 mb-2">
-                            <h3 className="font-black text-2xl tracking-tight group-hover:text-primary transition-colors text-text-main">{job.title}</h3>
-                            <div className="flex gap-2">
-                              {isNew ? <span className="badge bg-primary text-white scale-90">New</span> : null}
-                              <span className={`badge border-none scale-90 text-[9px] uppercase tracking-widest ${getJobWorkModeBadgeClass(job.location)}`}>
-                                {workModeLabel}
-                              </span>
-                              <VerifiedBadge
-                                type="employer"
-                                status={job.employer.isVerified ? 'APPROVED' : 'UNVERIFIED'}
-                                hideWhenUnverified
-                                showText={false}
-                              />
-                            </div>
-                          </div>
-                          <p className="text-sm font-bold tracking-tight text-text-muted">
-                            <Link to={`/companies/${job.employer.id}`} onClick={(event) => event.stopPropagation()} className="hover:text-secondary hover:underline">
-                              {companyName}
-                            </Link>
-                          </p>
+                    <div className="flex items-start gap-4">
+                      <CompanyLogo
+                        name={companyName}
+                        logoUrl={job.employer.employerProfile?.logoUrl}
+                        className="h-14 w-14 flex-none rounded-2xl text-lg sm:h-16 sm:w-16 sm:text-xl"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="text-xl font-extrabold leading-snug tracking-tight text-text-main transition-colors group-hover:text-secondary">
+                            {job.title}
+                          </h3>
+                          {isNew ? <span className="rounded-full bg-gold px-2.5 py-0.5 text-xs font-extrabold text-primary">New</span> : null}
+                          <VerifiedBadge
+                            type="employer"
+                            status={job.employer.isVerified ? 'APPROVED' : 'UNVERIFIED'}
+                            hideWhenUnverified
+                            showText={false}
+                          />
                         </div>
-                        <div className="flex flex-col items-end gap-3 text-right">
-                          <p className="text-xl font-black text-text-main tracking-tighter">{job.salary || 'Salary on request'}</p>
+                        <Link
+                          to={`/companies/${job.employer.id}`}
+                          onClick={(event) => event.stopPropagation()}
+                          className="mt-0.5 inline-block text-sm font-bold text-text-muted hover:text-secondary hover:underline"
+                        >
+                          {companyName}
+                        </Link>
+                      </div>
+                      <button
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          setReportTarget({ id: job.id, name: companyName })
+                        }}
+                        className="rounded-lg border border-transparent p-2 text-text-light transition-all hover:border-error/10 hover:bg-error/5 hover:text-error"
+                        title="Report this job"
+                        aria-label="Report this job"
+                      >
+                        <Flag className="h-4 w-4" />
+                      </button>
+                    </div>
+
+                    <p className="line-clamp-2 text-sm font-medium leading-relaxed text-text-muted">{job.description}</p>
+
+                    <div className="flex flex-wrap gap-2 text-sm font-bold text-text-muted">
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-surface-alt px-3 py-1">
+                        <MapPin className="h-3.5 w-3.5 text-secondary" /> {location}
+                      </span>
+                      <span className="rounded-full bg-surface-alt px-3 py-1">{job.type}</span>
+                      <span className={`rounded-full px-3 py-1 ${getJobWorkModeBadgeClass(job.location)}`}>{workModeLabel}</span>
+                      {job.category ? <span className="rounded-full bg-surface-alt px-3 py-1">{job.category}</span> : null}
+                    </div>
+
+                    <div className="mt-auto flex flex-wrap items-center justify-between gap-3 border-t border-surface-border pt-4">
+                      <div>
+                        <p className="text-lg font-black tracking-tight text-text-main">{job.salary || 'Salary on request'}</p>
+                        <p className="mt-0.5 flex items-center gap-1.5 text-xs font-semibold text-text-light">
+                          <Clock className="h-3.5 w-3.5" /> Posted {formatRelativeTime(job.createdAt)}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {canCompareJobs ? (
                           <button
+                            type="button"
+                            aria-label={`Compare ${job.title}`}
                             onClick={(event) => {
                               event.stopPropagation()
-                              setReportTarget({ id: job.id, name: companyName })
+                              toggleComparisonSelection(job.id)
                             }}
-                            className="p-2 hover:bg-error/5 rounded-lg text-text-light hover:text-error transition-all group/report border border-transparent hover:border-error/10"
-                            title="Report this job"
+                            disabled={!selectedJobIds.includes(job.id) && selectedJobIds.length >= 3}
+                            className={`btn btn-sm px-4 ${
+                              selectedJobIds.includes(job.id)
+                                ? 'border-primary/20 bg-primary text-white hover:bg-primary-dark'
+                                : 'btn-outline border-surface-border text-text-main'
+                            } disabled:cursor-not-allowed disabled:opacity-40`}
                           >
-                            <Flag className="h-4 w-4" />
+                            {selectedJobIds.includes(job.id) ? 'Selected' : 'Compare'}
                           </button>
-                        </div>
-                      </div>
-
-                      <p className="text-sm text-text-muted leading-relaxed line-clamp-2">{job.description}</p>
-
-                      <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-surface-border/50 pt-6">
-                        <div className="flex items-center gap-2 text-xs text-text-muted font-bold uppercase tracking-wider">
-                          <MapPin className="h-3.5 w-3.5 text-primary" /> {location}
-                        </div>
-                        <div className="flex items-center gap-2 text-xs text-text-muted font-bold uppercase tracking-wider">
-                          <Clock className="h-3.5 w-3.5 text-primary" /> {formatRelativeTime(job.createdAt)}
-                        </div>
-                        <div className="flex items-center gap-2 text-xs text-text-muted font-bold uppercase tracking-wider">
-                          {job.type}
-                        </div>
-                        {job.category ? (
-                          <div className="flex items-center gap-2 text-xs text-text-muted font-bold uppercase tracking-wider">
-                            {job.category}
-                          </div>
                         ) : null}
-                        <div className="ml-auto flex items-center gap-3">
-                          {canCompareJobs ? (
-                            <button
-                              type="button"
-                              aria-label={`Compare ${job.title}`}
-                              onClick={(event) => {
-                                event.stopPropagation()
-                                toggleComparisonSelection(job.id)
-                              }}
-                              disabled={!selectedJobIds.includes(job.id) && selectedJobIds.length >= 3}
-                              className={`btn btn-sm px-5 text-[10px] font-black uppercase tracking-[0.18em] ${
-                                selectedJobIds.includes(job.id)
-                                  ? 'border-primary/20 bg-primary text-white hover:bg-primary-dark'
-                                  : 'btn-outline border-surface-border text-text-main'
-                              } disabled:cursor-not-allowed disabled:opacity-40`}
-                            >
-                              {selectedJobIds.includes(job.id) ? 'Selected' : 'Compare'}
-                            </button>
-                          ) : null}
-                          <div className="flex items-center gap-1 text-primary font-black text-xs uppercase tracking-widest opacity-0 transition-all translate-x-2 group-hover:translate-x-0 group-hover:opacity-100">
-                            View Position <ChevronRight className="h-4 w-4" />
-                          </div>
-                        </div>
+                        <span className="btn btn-primary btn-sm px-4">
+                          View job <ChevronRight className="h-4 w-4" />
+                        </span>
                       </div>
                     </div>
-                  </div>
+                  </article>
                 )
               })}
             </div>
           )}
-        </main>
+        </div>
       </div>
 
       <ReportModal
