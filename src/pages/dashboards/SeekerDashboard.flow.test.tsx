@@ -1,3 +1,5 @@
+import { QueryClientProvider } from '@tanstack/react-query'
+import { makeTestQueryClient } from '../../test/queryClient'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -147,9 +149,9 @@ describe('SeekerDashboard application monitoring flow', () => {
     })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <SeekerDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
     expect(await screen.findByText('INTERVIEW')).toBeInTheDocument()
@@ -181,9 +183,9 @@ describe('SeekerDashboard application monitoring flow', () => {
     })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <SeekerDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
     expect((await screen.findAllByText('React Product Engineer')).length).toBeGreaterThan(0)
@@ -281,9 +283,9 @@ describe('SeekerDashboard application monitoring flow', () => {
     })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <SeekerDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
     expect(await screen.findByText('AI Role Comparison')).toBeInTheDocument()
@@ -394,16 +396,16 @@ describe('SeekerDashboard application monitoring flow', () => {
     })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <SeekerDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
     expect(await screen.findByText('Proposal Pulse')).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Compare Frontend Engineer Offer' }))
     fireEvent.click(screen.getByRole('button', { name: 'Compare Launch Design Proposal' }))
-    fireEvent.click(screen.getByRole('button', { name: /generate ai proposal comparison/i }))
+    fireEvent.click(screen.getByRole('button', { name: /compare proposals/i }))
 
     await waitFor(() => {
       expect(apiCompareProposalsMock).toHaveBeenCalledWith([
@@ -504,16 +506,16 @@ describe('SeekerDashboard application monitoring flow', () => {
     })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <SeekerDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
     expect(await screen.findByText('Work Pulse')).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Compare Launch Design Sprint' }))
     fireEvent.click(screen.getByRole('button', { name: 'Compare Backend Engineer Contract' }))
-    fireEvent.click(screen.getByRole('button', { name: /generate ai agreement comparison/i }))
+    fireEvent.click(screen.getByRole('button', { name: /compare agreements/i }))
 
     await waitFor(() => {
       expect(apiCompareAgreementsMock).toHaveBeenCalledWith([
@@ -572,9 +574,9 @@ describe('SeekerDashboard application monitoring flow', () => {
     })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <SeekerDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
     expect(await screen.findByText('Launch Design Sprint')).toBeInTheDocument()
@@ -605,9 +607,9 @@ describe('SeekerDashboard application monitoring flow', () => {
     })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <SeekerDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
     expect(await screen.findByText('AI Profile Coach')).toBeInTheDocument()
@@ -658,9 +660,9 @@ describe('SeekerDashboard application monitoring flow', () => {
     })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <SeekerDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
     expect((await screen.findAllByText('Frontend Engineer')).length).toBeGreaterThan(0)
@@ -705,9 +707,9 @@ describe('SeekerDashboard application monitoring flow', () => {
     })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <SeekerDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
     expect(await screen.findByText('Agreement Live')).toBeInTheDocument()
@@ -754,9 +756,9 @@ describe('SeekerDashboard application monitoring flow', () => {
     })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <SeekerDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
     expect(await screen.findByText('Landing Page Design')).toBeInTheDocument()
@@ -807,9 +809,9 @@ describe('SeekerDashboard application monitoring flow', () => {
     })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <SeekerDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
     expect(await screen.findByText('Mobile UI Kit')).toBeInTheDocument()
@@ -846,9 +848,9 @@ describe('SeekerDashboard application monitoring flow', () => {
     })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <SeekerDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
     expect(await screen.findByText('Wireframes')).toBeInTheDocument()
@@ -890,9 +892,9 @@ describe('SeekerDashboard application monitoring flow', () => {
     })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <SeekerDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
     expect(await screen.findByText('Payment Pulse')).toBeInTheDocument()
@@ -941,13 +943,13 @@ describe('SeekerDashboard application monitoring flow', () => {
     })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <SeekerDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
     expect(await screen.findByText('Verification has not been requested yet.')).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: /request verification/i }))
+    fireEvent.click(screen.getByRole('button', { name: /manual verification request/i }))
     fireEvent.change(screen.getByPlaceholderText(/explain how the team can verify your identity/i), {
       target: { value: 'Government ID shared through a secure drive along with a matching profile record.' },
     })
@@ -1031,9 +1033,9 @@ describe('SeekerDashboard application monitoring flow', () => {
     })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <SeekerDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
     expect(await screen.findByText('More verification detail is required.')).toBeInTheDocument()
@@ -1058,47 +1060,40 @@ describe('SeekerDashboard application monitoring flow', () => {
   }, 10000)
 
   it('reloads the seeker dashboard pulse when a realtime proposal event arrives', async () => {
-    apiGetDashboardMock.mockResolvedValue({
-      applications: [],
-      recommendedJobs: [],
-      unreadMessages: 0,
-      pendingProposalActions: 0,
-      proposalActionItems: [],
-      cvCount: 1,
-    })
-
-    apiGetDashboardWorkflowSummaryMock.mockResolvedValue({
-      activeAgreementCount: 0,
-      upcomingMilestones: [],
-      pendingProposalActions: 1,
-      proposalActionItems: [
-        {
-          id: 'proposal-action-1',
-          title: 'Frontend Engineer Counter',
-          amount: '$5,000',
-          timeline: 'Immediate start',
-          status: 'COUNTERED',
-          counterpartyName: 'JobWahala Labs',
-          updatedAt: '2026-03-23T00:00:00.000Z',
-          source: null,
-        },
-      ],
-      pendingReviewActions: 0,
-      reviewActionItems: [],
-      pendingDisputeActions: 0,
-      disputeActionItems: [],
-      pendingPaymentActions: 0,
-      paymentActionItems: [],
-    })
-
-    apiGetSentServiceRequestsMock.mockResolvedValue({
-      requests: [],
-    })
+    apiGetDashboardMock
+      .mockResolvedValueOnce({
+        applications: [],
+        recommendedJobs: [],
+        unreadMessages: 0,
+        pendingProposalActions: 0,
+        proposalActionItems: [],
+        cvCount: 1,
+      })
+      .mockResolvedValueOnce({
+        applications: [],
+        recommendedJobs: [],
+        unreadMessages: 0,
+        cvCount: 1,
+        pendingProposalActions: 1,
+        proposalActionItems: [
+          {
+            id: 'proposal-action-1',
+            title: 'Frontend Engineer Counter',
+            amount: '$5,000',
+            timeline: 'Immediate start',
+            status: 'COUNTERED',
+            counterpartyName: 'JobWahala Labs',
+            updatedAt: '2026-03-23T00:00:00.000Z',
+            source: null,
+          },
+        ],
+      })
+    apiGetSentServiceRequestsMock.mockResolvedValue({ requests: [] })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <SeekerDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
     expect(await screen.findByText('Proposal Pulse')).toBeInTheDocument()
@@ -1110,32 +1105,19 @@ describe('SeekerDashboard application monitoring flow', () => {
 
     expect(await screen.findByText('Frontend Engineer Counter')).toBeInTheDocument()
     expect(screen.getByText('COUNTERED')).toBeInTheDocument()
-    expect(apiGetDashboardWorkflowSummaryMock).toHaveBeenCalledTimes(1)
-    expect(apiGetDashboardOverviewMock).toHaveBeenCalledTimes(1)
-    expect(apiGetDashboardMock).toHaveBeenCalledTimes(1)
+    expect(apiGetDashboardMock).toHaveBeenCalledTimes(2)
   })
 
-  it('reloads only the seeker message pulse when a realtime message event arrives', async () => {
-    apiGetDashboardMock.mockResolvedValue({
-      applications: [],
-      recommendedJobs: [],
-      unreadMessages: 0,
-      cvCount: 1,
-    })
-
-    apiGetSentServiceRequestsMock.mockResolvedValue({
-      requests: [],
-    })
-
-    apiGetMessageSummaryMock.mockResolvedValue({
-      unreadMessages: 4,
-      recentMessages: [],
-    })
+  it('reloads the seeker message pulse when a realtime message event arrives', async () => {
+    apiGetDashboardMock
+      .mockResolvedValueOnce({ applications: [], recommendedJobs: [], unreadMessages: 0, cvCount: 1 })
+      .mockResolvedValueOnce({ applications: [], recommendedJobs: [], unreadMessages: 4, cvCount: 1 })
+    apiGetSentServiceRequestsMock.mockResolvedValue({ requests: [] })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <SeekerDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
     expect(
@@ -1147,7 +1129,6 @@ describe('SeekerDashboard application monitoring flow', () => {
     expect(
       await screen.findByText('You currently have 4 unread conversation updates.'),
     ).toBeInTheDocument()
-    expect(apiGetMessageSummaryMock).toHaveBeenCalledTimes(1)
-    expect(apiGetDashboardMock).toHaveBeenCalledTimes(1)
+    expect(apiGetDashboardMock).toHaveBeenCalledTimes(2)
   })
 })

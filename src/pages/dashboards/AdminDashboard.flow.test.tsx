@@ -1,4 +1,6 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { QueryClientProvider } from '@tanstack/react-query'
+import { makeTestQueryClient } from '../../test/queryClient'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import AdminDashboard from './AdminDashboard'
@@ -11,7 +13,7 @@ const apiGetAdminReportsMock = vi.fn()
 const apiGetAdminServicesMock = vi.fn()
 const apiGetAdminUsersMock = vi.fn()
 const apiGetAdminVerificationsMock = vi.fn()
-const apiUpdateAdminDisputeStatusMock = vi.fn()
+const apiResolveDisputeMock = vi.fn()
 const apiUpdateAdminJobsStatusBulkMock = vi.fn()
 const apiUpdateAdminJobStatusMock = vi.fn()
 const apiUpdateAdminReportsStatusBulkMock = vi.fn()
@@ -38,8 +40,8 @@ vi.mock('../../lib/api', () => ({
     apiUpdateAdminJobStatusMock(...args),
   apiUpdateAdminReportsStatusBulk: (...args: unknown[]) =>
     apiUpdateAdminReportsStatusBulkMock(...args),
-  apiUpdateAdminDisputeStatus: (...args: unknown[]) =>
-    apiUpdateAdminDisputeStatusMock(...args),
+  apiResolveDispute: (...args: unknown[]) =>
+    apiResolveDisputeMock(...args),
   apiUpdateAdminReportStatus: (...args: unknown[]) =>
     apiUpdateAdminReportStatusMock(...args),
   apiUpdateAdminServicesStatusBulk: (...args: unknown[]) =>
@@ -110,9 +112,9 @@ describe('AdminDashboard moderation flow', () => {
     })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <AdminDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
     expect(await screen.findByText('Suspicious Listing')).toBeInTheDocument()
@@ -175,9 +177,9 @@ describe('AdminDashboard moderation flow', () => {
     })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <AdminDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
     expect(await screen.findByText('Operations Lead')).toBeInTheDocument()
@@ -223,9 +225,9 @@ describe('AdminDashboard moderation flow', () => {
     })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <AdminDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
     fireEvent.click(await screen.findByRole('button', { name: 'Users' }))
@@ -285,9 +287,9 @@ describe('AdminDashboard moderation flow', () => {
     })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <AdminDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
     fireEvent.click(await screen.findByRole('button', { name: 'Users' }))
@@ -344,9 +346,9 @@ describe('AdminDashboard moderation flow', () => {
     })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <AdminDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
     fireEvent.click(await screen.findByRole('button', { name: 'Jobs' }))
@@ -414,9 +416,9 @@ describe('AdminDashboard moderation flow', () => {
     })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <AdminDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
     fireEvent.click(await screen.findByRole('button', { name: 'Jobs' }))
@@ -455,7 +457,7 @@ describe('AdminDashboard moderation flow', () => {
       category: 'Operations',
     })
     expect(await screen.findByText('Operations Lead')).toBeInTheDocument()
-    expect(screen.getByText(/Admin posted on behalf/i)).toBeInTheDocument()
+    expect(screen.getByText(/Admin posted/i)).toBeInTheDocument()
   })
 
   it('filters admin jobs by search text and posting origin', async () => {
@@ -496,9 +498,9 @@ describe('AdminDashboard moderation flow', () => {
     ])
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <AdminDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
     fireEvent.click(await screen.findByRole('button', { name: 'Jobs' }))
@@ -588,9 +590,9 @@ describe('AdminDashboard moderation flow', () => {
     })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <AdminDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
     fireEvent.click(await screen.findByRole('button', { name: 'Jobs' }))
@@ -645,9 +647,9 @@ describe('AdminDashboard moderation flow', () => {
     })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <AdminDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
     fireEvent.click(await screen.findByRole('button', { name: 'Services' }))
@@ -727,9 +729,9 @@ describe('AdminDashboard moderation flow', () => {
     })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <AdminDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
     fireEvent.click(await screen.findByRole('button', { name: 'Services' }))
@@ -793,9 +795,9 @@ describe('AdminDashboard moderation flow', () => {
     })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <AdminDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
     fireEvent.click(await screen.findByRole('button', { name: 'Verifications' }))
@@ -895,9 +897,9 @@ describe('AdminDashboard moderation flow', () => {
     })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <AdminDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
     fireEvent.click(await screen.findByRole('button', { name: 'Verifications' }))
@@ -998,23 +1000,28 @@ describe('AdminDashboard moderation flow', () => {
       },
     ])
 
-    apiUpdateAdminDisputeStatusMock.mockResolvedValue({
+    apiResolveDisputeMock.mockResolvedValue({
       dispute: { id: 'dispute-1', status: 'RESOLVED' },
     })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <AdminDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
     fireEvent.click(await screen.findByRole('button', { name: 'Disputes' }))
-    fireEvent.click((await screen.findAllByRole('button', { name: 'RESOLVED' }))[0])
+    fireEvent.change(await screen.findByPlaceholderText(/explain the reasoning/i), {
+      target: { value: 'Payment verified and released.' },
+    })
+    fireEvent.click((await screen.findAllByRole('button', { name: /set resolved/i }))[0])
 
-    expect(await screen.findByRole('button', { name: 'RESOLVED' })).toBeDisabled()
-    expect(apiUpdateAdminDisputeStatusMock).toHaveBeenCalledWith(
-      'dispute-1',
-      'RESOLVED',
+    await waitFor(() =>
+      expect(apiResolveDisputeMock).toHaveBeenCalledWith('dispute-1', {
+        status: 'RESOLVED',
+        resolutionNote: 'Payment verified and released.',
+      }),
     )
+    expect(await screen.findByRole('button', { name: /set resolved/i })).toBeDisabled()
   })
 })

@@ -1,3 +1,5 @@
+import { QueryClientProvider } from '@tanstack/react-query'
+import { makeTestQueryClient } from '../../test/queryClient'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -121,9 +123,9 @@ describe('EmployerDashboard job posting flow', () => {
     })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <EmployerDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
     expect(await screen.findByText('No jobs posted yet.')).toBeInTheDocument()
@@ -133,7 +135,7 @@ describe('EmployerDashboard job posting flow', () => {
     fireEvent.change(screen.getByPlaceholderText('Job title'), {
       target: { value: 'Product Designer' },
     })
-    fireEvent.change(screen.getByPlaceholderText('Location'), {
+    fireEvent.change(screen.getByPlaceholderText('Location or work mode (Remote, Hybrid, Accra)'), {
       target: { value: 'Remote' },
     })
     fireEvent.change(screen.getByRole('combobox'), {
@@ -196,9 +198,9 @@ describe('EmployerDashboard job posting flow', () => {
     })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <EmployerDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
     expect(await screen.findByText('No jobs posted yet.')).toBeInTheDocument()
@@ -208,7 +210,7 @@ describe('EmployerDashboard job posting flow', () => {
     fireEvent.change(screen.getByPlaceholderText('Job title'), {
       target: { value: 'Product Designer' },
     })
-    fireEvent.change(screen.getByPlaceholderText('Location'), {
+    fireEvent.change(screen.getByPlaceholderText('Location or work mode (Remote, Hybrid, Accra)'), {
       target: { value: 'Remote' },
     })
     fireEvent.change(screen.getByRole('combobox'), {
@@ -340,9 +342,9 @@ describe('EmployerDashboard job posting flow', () => {
     })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <EmployerDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
     expect(
@@ -422,9 +424,9 @@ describe('EmployerDashboard job posting flow', () => {
     })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <EmployerDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
     expect(await screen.findByText('I can own the frontend roadmap and execution.')).toBeInTheDocument()
@@ -556,9 +558,9 @@ describe('EmployerDashboard job posting flow', () => {
     })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <EmployerDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
     expect(await screen.findByText('0 shortlisted')).toBeInTheDocument()
@@ -632,12 +634,12 @@ describe('EmployerDashboard job posting flow', () => {
     })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <EmployerDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
-    expect(await screen.findAllByText('88% fit')).toHaveLength(2)
+    await waitFor(() => expect(screen.getAllByText('88% fit')).toHaveLength(2))
     expect(screen.getAllByText('Skills matched: React, TypeScript').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Role alignment: frontend, engineer').length).toBeGreaterThan(0)
   })
@@ -688,9 +690,9 @@ describe('EmployerDashboard job posting flow', () => {
     })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <EmployerDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
     expect(await screen.findByText('I can lead the React roadmap and mentor a small frontend squad.')).toBeInTheDocument()
@@ -779,9 +781,9 @@ describe('EmployerDashboard job posting flow', () => {
     })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <EmployerDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
     expect(await screen.findByText('I can lead the React roadmap and mentor a small frontend squad.')).toBeInTheDocument()
@@ -860,9 +862,9 @@ describe('EmployerDashboard job posting flow', () => {
     })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <EmployerDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
     expect(await screen.findByText('Ada Mensah')).toBeInTheDocument()
@@ -982,9 +984,9 @@ describe('EmployerDashboard job posting flow', () => {
     })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <EmployerDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
     expect(await screen.findByText('Proposal Pulse')).toBeInTheDocument()
@@ -1093,9 +1095,9 @@ describe('EmployerDashboard job posting flow', () => {
     })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <EmployerDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
     expect(await screen.findByText('Agreement Pulse')).toBeInTheDocument()
@@ -1161,9 +1163,9 @@ describe('EmployerDashboard job posting flow', () => {
     })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <EmployerDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
     expect(await screen.findByText('Frontend Engineer Contract')).toBeInTheDocument()
@@ -1301,9 +1303,9 @@ describe('EmployerDashboard job posting flow', () => {
     })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <EmployerDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
     fireEvent.click((await screen.findAllByRole('button', { name: 'HIRED' }))[0])
@@ -1346,9 +1348,9 @@ describe('EmployerDashboard job posting flow', () => {
     apiGetJobApplicantsMock.mockResolvedValue({ applications: [] })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <EmployerDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
     expect(await screen.findByText('Payment Pulse')).toBeInTheDocument()
@@ -1357,7 +1359,7 @@ describe('EmployerDashboard job posting flow', () => {
   })
 
   it('reloads employer dashboard and keeps the selected applicant review open after a realtime agreement event', async () => {
-    apiGetDashboardMock.mockResolvedValue({
+    apiGetDashboardMock.mockResolvedValueOnce({
       jobs: [
         {
           id: 'job-rt-1',
@@ -1390,7 +1392,7 @@ describe('EmployerDashboard job posting flow', () => {
       paymentActionItems: [],
     })
 
-    apiGetDashboardOverviewMock.mockResolvedValue({
+    const overviewData = ({
       jobs: [
         {
           id: 'job-rt-1',
@@ -1420,7 +1422,7 @@ describe('EmployerDashboard job posting flow', () => {
       ],
     })
 
-    apiGetDashboardWorkflowSummaryMock.mockResolvedValue({
+    const workflowData = ({
       activeAgreementCount: 0,
       upcomingMilestones: [],
       pendingProposalActions: 0,
@@ -1448,6 +1450,8 @@ describe('EmployerDashboard job posting flow', () => {
         },
       ],
     })
+
+    apiGetDashboardMock.mockResolvedValue({ ...overviewData, ...workflowData, unreadMessages: 0 })
 
     apiGetJobApplicantsMock
       .mockResolvedValueOnce({
@@ -1498,9 +1502,9 @@ describe('EmployerDashboard job posting flow', () => {
       })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <EmployerDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
     expect(await screen.findByText('I can own the frontend roadmap.')).toBeInTheDocument()
@@ -1513,28 +1517,20 @@ describe('EmployerDashboard job posting flow', () => {
     await waitFor(() => {
       expect(apiGetJobApplicantsMock).toHaveBeenNthCalledWith(2, 'job-rt-1')
     })
-    expect(apiGetDashboardWorkflowSummaryMock).toHaveBeenCalledTimes(1)
-    expect(apiGetDashboardOverviewMock).toHaveBeenCalledTimes(1)
-    expect(apiGetDashboardMock).toHaveBeenCalledTimes(1)
+    expect(apiGetDashboardMock).toHaveBeenCalledTimes(2)
   }, 10000)
 
   it('reloads only the employer message pulse when a realtime message event arrives', async () => {
-    apiGetDashboardMock.mockResolvedValue({
-      jobs: [],
-      recentApplications: [],
-      unreadMessages: 0,
-    })
+    apiGetDashboardMock
+      .mockResolvedValueOnce({ jobs: [], recentApplications: [], unreadMessages: 0 })
+      .mockResolvedValue({ jobs: [], recentApplications: [], unreadMessages: 3 })
     apiGetSentServiceRequestsMock.mockResolvedValue({ requests: [] })
     apiGetJobApplicantsMock.mockResolvedValue({ applications: [] })
-    apiGetMessageSummaryMock.mockResolvedValue({
-      unreadMessages: 3,
-      recentMessages: [],
-    })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <EmployerDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
     expect(
@@ -1546,7 +1542,6 @@ describe('EmployerDashboard job posting flow', () => {
     expect(
       await screen.findByText('You currently have 3 unread conversation updates.'),
     ).toBeInTheDocument()
-    expect(apiGetMessageSummaryMock).toHaveBeenCalledTimes(1)
-    expect(apiGetDashboardMock).toHaveBeenCalledTimes(1)
+    expect(apiGetDashboardMock).toHaveBeenCalledTimes(2)
   })
 })

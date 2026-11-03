@@ -161,17 +161,17 @@ describe('Auth onboarding flow', () => {
       expect(screen.queryByText('Loading Page')).not.toBeInTheDocument()
     }, { timeout: 5000 })
 
-    fireEvent.change(await screen.findByPlaceholderText('Enter your full name'), {
+    fireEvent.change(await screen.findByPlaceholderText('Kwame Mensah'), {
       target: { value: 'Flow Test User' },
     })
-    fireEvent.change(screen.getByPlaceholderText('name@enterprise.com'), {
+    fireEvent.change(screen.getByPlaceholderText('you@example.com'), {
       target: { value: 'flow-seeker@example.com' },
     })
-    fireEvent.change(screen.getByPlaceholderText('Min 12 characters'), {
+    fireEvent.change(screen.getByPlaceholderText('At least 8 characters'), {
       target: { value: 'SuperSecure123!' },
     })
     fireEvent.click(
-      screen.getByRole('button', { name: /initialize profile/i }),
+      screen.getByRole('button', { name: /create account/i }),
     )
 
     expect(

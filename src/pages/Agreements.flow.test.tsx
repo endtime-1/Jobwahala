@@ -8,7 +8,7 @@ const apiCompareAgreementsMock = vi.fn()
 const apiCreateAgreementDisputeMock = vi.fn()
 const apiCreateAgreementMilestoneMock = vi.fn()
 const apiCreateAgreementReviewMock = vi.fn()
-const apiCreateAgreementMilestonePaymentSessionMock = vi.fn()
+const apiInitializeMilestonePaymentMock = vi.fn()
 const apiGenerateAgreementDecisionBriefMock = vi.fn()
 const apiGetMyAgreementsMock = vi.fn()
 const apiVerifyAgreementPaymentMock = vi.fn()
@@ -31,8 +31,8 @@ vi.mock('../lib/api', () => ({
     apiCreateAgreementMilestoneMock(...args),
   apiCreateAgreementReview: (...args: unknown[]) =>
     apiCreateAgreementReviewMock(...args),
-  apiCreateAgreementMilestonePaymentSession: (...args: unknown[]) =>
-    apiCreateAgreementMilestonePaymentSessionMock(...args),
+  apiInitializeMilestonePayment: (...args: unknown[]) =>
+    apiInitializeMilestonePaymentMock(...args),
   apiGenerateAgreementDecisionBrief: (...args: unknown[]) =>
     apiGenerateAgreementDecisionBriefMock(...args),
   apiGetMyAgreements: (...args: unknown[]) => apiGetMyAgreementsMock(...args),
@@ -653,7 +653,7 @@ describe('Agreements lifecycle flow', () => {
         ],
       })
 
-    apiCreateAgreementMilestonePaymentSessionMock.mockResolvedValue({
+    apiInitializeMilestonePaymentMock.mockResolvedValue({
       payment: { id: 'payment-1', status: 'PENDING' },
     })
     apiUpdateAgreementPaymentStatusMock.mockResolvedValue({
@@ -671,8 +671,8 @@ describe('Agreements lifecycle flow', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /start payment/i }))
 
-    expect(await screen.findByText('JW-PAY-TEST1234')).toBeInTheDocument()
-    expect(apiCreateAgreementMilestonePaymentSessionMock).toHaveBeenCalledWith(
+    expect((await screen.findAllByText(/JW-PAY-TEST1234/)).length).toBeGreaterThan(0)
+    expect(apiInitializeMilestonePaymentMock).toHaveBeenCalledWith(
       'agreement-3',
       'milestone-9',
     )

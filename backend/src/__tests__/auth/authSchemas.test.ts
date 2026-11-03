@@ -13,7 +13,7 @@ import {
 describe('registerSchema', () => {
   it('accepts valid registration with email, password, and role', () => {
     const result = registerSchema.safeParse({
-      body: { email: 'Test@Example.COM', password: 'securepass123', role: 'seeker' },
+      body: { email: 'Test@Example.COM', password: 'Securepass123', role: 'seeker' },
     });
 
     expect(result.success).toBe(true);
@@ -25,7 +25,7 @@ describe('registerSchema', () => {
 
   it('defaults role to SEEKER when omitted', () => {
     const result = registerSchema.safeParse({
-      body: { email: 'user@test.com', password: 'password123' },
+      body: { email: 'user@test.com', password: 'Password123' },
     });
 
     expect(result.success).toBe(true);
@@ -44,7 +44,7 @@ describe('registerSchema', () => {
 
   it('rejects invalid emails', () => {
     const result = registerSchema.safeParse({
-      body: { email: 'not-an-email', password: 'password123' },
+      body: { email: 'not-an-email', password: 'Password123' },
     });
 
     expect(result.success).toBe(false);
@@ -52,7 +52,7 @@ describe('registerSchema', () => {
 
   it('rejects invalid roles', () => {
     const result = registerSchema.safeParse({
-      body: { email: 'user@test.com', password: 'password123', role: 'ADMIN' },
+      body: { email: 'user@test.com', password: 'Password123', role: 'ADMIN' },
     });
 
     expect(result.success).toBe(false);
@@ -60,7 +60,7 @@ describe('registerSchema', () => {
 
   it('rejects extra fields (strict mode)', () => {
     const result = registerSchema.safeParse({
-      body: { email: 'user@test.com', password: 'password123', sneaky: true },
+      body: { email: 'user@test.com', password: 'Password123', sneaky: true },
     });
 
     expect(result.success).toBe(false);
@@ -72,7 +72,7 @@ describe('registerSchema', () => {
 describe('loginSchema', () => {
   it('accepts valid login', () => {
     const result = loginSchema.safeParse({
-      body: { email: 'User@Test.COM', password: 'mypassword' },
+      body: { email: 'User@Test.COM', password: 'Mypassword1' },
     });
 
     expect(result.success).toBe(true);
@@ -172,7 +172,7 @@ describe('resetPasswordSchema', () => {
 
   it('rejects missing token', () => {
     const result = resetPasswordSchema.safeParse({
-      body: { password: 'validpassword123' },
+      body: { password: 'Validpassword123' },
     });
 
     expect(result.success).toBe(false);

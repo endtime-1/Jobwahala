@@ -1,3 +1,5 @@
+import { QueryClientProvider } from '@tanstack/react-query'
+import { makeTestQueryClient } from '../../test/queryClient'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -131,9 +133,9 @@ describe('FreelancerDashboard service workflow', () => {
     })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <FreelancerDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
     expect(await screen.findByText('No services published yet.')).toBeInTheDocument()
@@ -154,7 +156,7 @@ describe('FreelancerDashboard service workflow', () => {
     })
     fireEvent.change(
       screen.getByPlaceholderText(
-        'Describe what you deliver, your process, and expected outcome...',
+        'Describe your service...',
       ),
       {
         target: { value: 'Responsive product landing page package' },
@@ -197,9 +199,9 @@ describe('FreelancerDashboard service workflow', () => {
     })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <FreelancerDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
     expect(await screen.findByText('No services published yet.')).toBeInTheDocument()
@@ -220,14 +222,14 @@ describe('FreelancerDashboard service workflow', () => {
     })
     fireEvent.change(
       screen.getByPlaceholderText(
-        'Describe what you deliver, your process, and expected outcome...',
+        'Describe your service...',
       ),
       {
         target: { value: 'Responsive product landing page package' },
       },
     )
 
-    fireEvent.click(screen.getByRole('button', { name: /generate ai service draft/i }))
+    fireEvent.click(screen.getByRole('button', { name: /generate ai draft/i }))
 
     expect(apiGenerateServiceDraftMock).toHaveBeenCalledWith({
       title: 'Landing Page Design',
@@ -290,7 +292,7 @@ describe('FreelancerDashboard service workflow', () => {
         requests: [
           {
             id: 'request-proposal-1',
-            status: 'PENDING',
+            status: 'ACCEPTED',
             message: 'Need a launch landing page for our campaign.',
             budget: 'GHS 3,000',
             timeline: '2 weeks',
@@ -318,7 +320,7 @@ describe('FreelancerDashboard service workflow', () => {
         requests: [
           {
             id: 'request-proposal-1',
-            status: 'PENDING',
+            status: 'ACCEPTED',
             message: 'Need a launch landing page for our campaign.',
             budget: 'GHS 3,000',
             timeline: '2 weeks',
@@ -357,9 +359,9 @@ describe('FreelancerDashboard service workflow', () => {
     })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <FreelancerDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
     expect(
@@ -413,7 +415,7 @@ describe('FreelancerDashboard service workflow', () => {
       requests: [
         {
           id: 'request-ai-1',
-          status: 'PENDING',
+          status: 'ACCEPTED',
           message: 'Need a launch landing page for our campaign.',
           budget: 'GHS 3,000',
           timeline: '2 weeks',
@@ -449,9 +451,9 @@ describe('FreelancerDashboard service workflow', () => {
     })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <FreelancerDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
     expect(await screen.findByText('Need a launch landing page for our campaign.')).toBeInTheDocument()
@@ -564,16 +566,16 @@ describe('FreelancerDashboard service workflow', () => {
     })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <FreelancerDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
     expect(await screen.findByText('Proposal Pulse')).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Compare Launch Design Counter' }))
     fireEvent.click(screen.getByRole('button', { name: 'Compare Brand Refresh Proposal' }))
-    fireEvent.click(screen.getByRole('button', { name: /generate ai proposal comparison/i }))
+    fireEvent.click(screen.getByRole('button', { name: /compare proposals/i }))
 
     expect(
       await screen.findByText(
@@ -674,16 +676,16 @@ describe('FreelancerDashboard service workflow', () => {
     })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <FreelancerDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
-    expect(await screen.findByText('Agreement Pulse')).toBeInTheDocument()
+    expect(await screen.findByText('Work Pulse')).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Compare Launch Design Sprint' }))
     fireEvent.click(screen.getByRole('button', { name: 'Compare Brand Refresh Retainer' }))
-    fireEvent.click(screen.getByRole('button', { name: /generate ai agreement comparison/i }))
+    fireEvent.click(screen.getByRole('button', { name: /compare agreements/i }))
 
     expect(
       await screen.findByText(
@@ -742,9 +744,9 @@ describe('FreelancerDashboard service workflow', () => {
     })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <FreelancerDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
     expect(await screen.findByText('Launch Design Sprint')).toBeInTheDocument()
@@ -851,9 +853,9 @@ describe('FreelancerDashboard service workflow', () => {
     })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <FreelancerDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
     expect(await screen.findByText('1 pending')).toBeInTheDocument()
@@ -901,9 +903,9 @@ describe('FreelancerDashboard service workflow', () => {
     })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <FreelancerDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
     expect(await screen.findByText('Payment Pulse')).toBeInTheDocument()
@@ -912,107 +914,88 @@ describe('FreelancerDashboard service workflow', () => {
   })
 
   it('reloads freelancer dashboard action cards when a realtime agreement event arrives', async () => {
-    apiGetDashboardMock.mockResolvedValue({
-      services: [],
-      recentMessages: [],
-      unreadMessages: 0,
-      pendingPaymentActions: 0,
-      paymentActionItems: [],
-    })
-
-    apiGetDashboardWorkflowSummaryMock.mockResolvedValue({
-      activeAgreementCount: 0,
-      upcomingMilestones: [],
-      pendingProposalActions: 0,
-      proposalActionItems: [],
-      pendingReviewActions: 0,
-      reviewActionItems: [],
-      pendingDisputeActions: 0,
-      disputeActionItems: [],
-      pendingPaymentActions: 1,
-      paymentActionItems: [
-        {
-          id: 'milestone-rt-1',
-          title: 'Design QA Pass',
-          amount: 'GHS 800',
-          status: 'COMPLETED',
-          paymentStatus: 'PENDING',
-          action: 'REQUEST_PAYMENT',
-          counterpartyName: 'Acme Labs',
-          agreement: {
-            id: 'agreement-rt-2',
-            title: 'Landing Page Design',
-            type: 'SERVICE',
-            updatedAt: '2026-03-23T00:00:00.000Z',
+    apiGetDashboardMock
+      .mockResolvedValueOnce({
+        services: [],
+        recentMessages: [],
+        unreadMessages: 0,
+        pendingPaymentActions: 0,
+        paymentActionItems: [],
+      })
+      .mockResolvedValueOnce({
+        services: [],
+        recentMessages: [],
+        unreadMessages: 0,
+        pendingPaymentActions: 1,
+        paymentActionItems: [
+          {
+            id: 'milestone-rt-1',
+            title: 'Design QA Pass',
+            amount: 'GHS 800',
+            status: 'COMPLETED',
+            paymentStatus: 'PENDING',
+            action: 'REQUEST_PAYMENT',
+            counterpartyName: 'Acme Labs',
+            agreement: {
+              id: 'agreement-rt-2',
+              title: 'Landing Page Design',
+              type: 'SERVICE',
+              updatedAt: '2026-03-23T00:00:00.000Z',
+            },
           },
-        },
-      ],
-    })
-
-    apiGetReceivedServiceRequestsMock.mockResolvedValue({
-      requests: [],
-    })
+        ],
+      })
+    apiGetReceivedServiceRequestsMock.mockResolvedValue({ requests: [] })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <FreelancerDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
     expect(await screen.findByText('Payment Pulse')).toBeInTheDocument()
     expect(
-      screen.getByText('No milestone payout actions are waiting on you right now.'),
+      screen.getByText('No milestone payout actions need your input right now.'),
     ).toBeInTheDocument()
 
     realtimeHandlers.onAgreementsRefresh?.({ agreementId: 'agreement-rt-2' })
 
     expect(await screen.findByText('Design QA Pass')).toBeInTheDocument()
     expect(screen.getByText('REQUEST')).toBeInTheDocument()
-    expect(apiGetDashboardWorkflowSummaryMock).toHaveBeenCalledTimes(1)
-    expect(apiGetDashboardMock).toHaveBeenCalledTimes(1)
+    expect(apiGetDashboardMock).toHaveBeenCalledTimes(2)
   })
 
   it('reloads the freelancer inbox preview when a realtime message event arrives', async () => {
-    apiGetDashboardMock.mockResolvedValue({
-      services: [],
-      recentMessages: [],
-      unreadMessages: 0,
-    })
-
-    apiGetReceivedServiceRequestsMock.mockResolvedValue({
-      requests: [],
-    })
-
-    apiGetMessageSummaryMock.mockResolvedValue({
-      unreadMessages: 2,
-      recentMessages: [
-        {
-          id: 'conversation-live-1',
-          participant: {
-            id: 'client-live-1',
-            email: 'client@example.com',
+    apiGetDashboardMock
+      .mockResolvedValueOnce({ services: [], recentMessages: [], unreadMessages: 0 })
+      .mockResolvedValueOnce({
+        services: [],
+        unreadMessages: 2,
+        recentMessages: [
+          {
+            id: 'conversation-live-1',
+            participant: { id: 'client-live-1', email: 'client@example.com' },
+            lastMessage: {
+              content: 'Need one more revision before launch.',
+              createdAt: '2026-03-23T00:00:00.000Z',
+            },
+            unreadCount: 2,
           },
-          lastMessage: {
-            content: 'Need one more revision before launch.',
-            createdAt: '2026-03-23T00:00:00.000Z',
-          },
-          unreadCount: 2,
-        },
-      ],
-    })
+        ],
+      })
+    apiGetReceivedServiceRequestsMock.mockResolvedValue({ requests: [] })
 
     render(
-      <MemoryRouter>
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
         <FreelancerDashboard />
-      </MemoryRouter>,
+      </MemoryRouter></QueryClientProvider>,
     )
 
-    expect(await screen.findByText('No recent messages yet.')).toBeInTheDocument()
+    expect(await screen.findByText('No recent conversations.')).toBeInTheDocument()
 
     realtimeHandlers.onMessagesRefresh?.({ conversationId: 'conversation-live-1' })
 
     expect(await screen.findByText('Need one more revision before launch.')).toBeInTheDocument()
-    expect(apiGetMessageSummaryMock).toHaveBeenCalledTimes(1)
-    expect(apiGetDashboardMock).toHaveBeenCalledTimes(1)
+    expect(apiGetDashboardMock).toHaveBeenCalledTimes(2)
   })
 })
