@@ -93,7 +93,7 @@
 }
 
 /* The navbar is shared with the home page, so its links are sentence-case everywhere. */
-.nav-link {
+.nav-link.nav-link {
   text-transform: none;
   letter-spacing: 0;
   font-size: 0.95rem;

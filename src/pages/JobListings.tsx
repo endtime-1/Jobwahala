@@ -199,7 +199,7 @@ export default function JobListings() {
   }
 
   return (
-    <div className="pb-24 pt-28 md:pt-32 xl:pt-36">
+    <div className="pb-24 pt-32 xl:pt-36">
       <SEO
         title="Find Jobs and Freelance Work Across Africa"
         description="Filter and apply for full-time, contract, and freelance roles in Accra and across Africa. Updated daily."

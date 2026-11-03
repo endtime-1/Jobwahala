@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
-import { MapPin, CheckCircle, ChevronLeft, Send, Clock, Share2, Bookmark, AlertTriangle, Building2, Globe, ChevronRight, BriefcaseBusiness, Sparkles } from 'lucide-react'
+import { MapPin, CheckCircle, ChevronLeft, Send, Clock, Share2, Bookmark, AlertTriangle, Building2, Globe, ChevronRight, BriefcaseBusiness, Sparkles, ShieldCheck, MessageCircle } from 'lucide-react'
 import ReportModal from '../components/ReportModal'
 import CompanyLogo from '../components/CompanyLogo'
 import VerifiedBadge from '../components/VerifiedBadge'
@@ -8,7 +8,6 @@ import { apiApplyForJob, apiDeleteApplication, apiGetJobApplicationCoaching, api
 import { emailHandle, formatRelativeTime } from '../lib/display'
 import {
   formatJobLocationWithWorkMode,
-  getJobWorkModeBadgeClass,
   getJobWorkModeLabel,
 } from '../lib/workMode'
 import { useAuth } from '../context/AuthContext'
@@ -218,13 +217,23 @@ export default function JobDetails() {
   const locationLabel = formatJobLocationWithWorkMode(job.location)
 
   return (
-    <div className="container animate-in fade-in slide-in-from-bottom-4 pt-32 pb-24 duration-700 md:pt-32 xl:pt-36">
+    <div className="container pt-32 pb-24 xl:pt-36">
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <Link to="/jobs" className="group flex items-center gap-2 text-sm font-semibold text-text-muted transition-all hover:text-primary">
           <ChevronLeft className="h-4 w-4 transform group-hover:-translate-x-1 transition-transform" /> Back to Job Search
         </Link>
         <div className="flex items-center gap-3">
+          <a
+            href={`https://wa.me/?text=${encodeURIComponent(`${job.title} at ${companyName} on JobWahala: ${window.location.href}`)}`}
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Share on WhatsApp"
+            className="inline-flex h-11 items-center gap-2 rounded-2xl border border-surface-border bg-white px-4 text-sm font-bold text-text-muted shadow-sm transition-all hover:border-success hover:text-success"
+          >
+            <MessageCircle className="h-5 w-5" /> Share
+          </a>
           <button
+            aria-label="Copy link"
             onClick={() => navigator.clipboard.writeText(window.location.href)}
             className="flex h-11 w-11 items-center justify-center rounded-2xl border border-surface-border bg-white text-text-muted shadow-sm transition-all hover:border-primary hover:text-primary"
           >
@@ -251,81 +260,77 @@ export default function JobDetails() {
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-10">
         <div className="space-y-8 lg:col-span-8 lg:space-y-10">
-          <div className="dashboard-hero px-5 py-6 sm:px-7 sm:py-7 lg:px-8 lg:py-8">
-            <div className="relative z-10 flex flex-col gap-8 md:flex-row md:items-start">
-              <CompanyLogo name={companyName} logoUrl={job.employer.employerProfile?.logoUrl} className="h-20 w-20 rounded-[1.75rem] text-3xl sm:h-24 sm:w-24 sm:text-4xl" />
-              <div className="flex-grow">
-                <div className="dashboard-kicker mb-4">
-                  <BriefcaseBusiness className="h-3.5 w-3.5" /> Live role briefing
-                </div>
-                <div className="mb-4 flex flex-wrap items-center gap-4">
-                  <h1 className="text-4xl font-black leading-tight tracking-tighter text-text-main md:text-5xl">{job.title}</h1>
+          <div
+            className="relative overflow-hidden rounded-[2rem] p-6 text-white sm:p-9"
+            style={{
+              background:
+                'radial-gradient(600px 300px at 100% 0%, rgba(47,109,246,0.5), transparent 60%), radial-gradient(420px 260px at 0% 100%, rgba(255,197,49,0.16), transparent 60%), #101a2b',
+            }}
+          >
+            <div className="heritage-strip absolute inset-x-0 top-0" aria-hidden />
+            <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
+              <CompanyLogo name={companyName} logoUrl={job.employer.employerProfile?.logoUrl} className="h-20 w-20 flex-none rounded-2xl text-3xl sm:h-24 sm:w-24 sm:text-4xl" />
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-3">
+                  <h1 className="text-3xl font-black leading-tight tracking-tight sm:text-5xl">{job.title}</h1>
                   <VerifiedBadge
                     type="employer"
                     status={job.employer.isVerified ? 'APPROVED' : 'UNVERIFIED'}
                     hideWhenUnverified
                   />
                 </div>
-                <div className="mb-8 flex flex-wrap items-center gap-x-6 gap-y-3 font-bold tracking-tight text-text-muted">
-                  <span className="flex items-center gap-2 text-sm uppercase tracking-wider">
-                    <Building2 className="h-4 w-4 text-primary" />{" "}
-                    <Link to={`/companies/${job.employer.id}`} className="hover:text-secondary hover:underline">
-                      {companyName}
-                    </Link>
+                <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 text-base font-semibold text-white/80">
+                  <Link to={`/companies/${job.employer.id}`} className="inline-flex items-center gap-2 hover:text-gold hover:underline">
+                    <Building2 className="h-4 w-4 text-gold" /> {companyName}
+                  </Link>
+                  <span className="inline-flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-gold" /> {locationLabel}
                   </span>
-                  <span className="flex items-center gap-2 text-sm uppercase tracking-wider">
-                    <MapPin className="h-4 w-4 text-primary" /> {locationLabel}
-                  </span>
-                  <span className="flex items-center gap-2 text-sm uppercase tracking-wider">
-                    <Clock className="h-4 w-4 text-primary" /> {formatRelativeTime(job.createdAt)}
+                  <span className="inline-flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-gold" /> Posted {formatRelativeTime(job.createdAt)}
                   </span>
                 </div>
-                <div className="flex flex-wrap gap-3">
-                  <span className={`badge border-none ${getJobWorkModeBadgeClass(job.location)}`}>{workModeLabel}</span>
-                  <span className="badge bg-primary text-white">{job.type}</span>
-                  <span className="badge bg-secondary text-white">{job.salary || 'Salary on request'}</span>
-                  {job.category ? <span className="badge bg-surface-alt text-text-muted border-surface-border">{job.category}</span> : null}
+                <div className="mt-6 flex flex-wrap items-center gap-3">
+                  <span className="rounded-full bg-gold px-4 py-2 text-base font-extrabold text-primary">{job.salary || 'Salary on request'}</span>
+                  <span className="rounded-full bg-white/15 px-4 py-2 text-sm font-bold">{job.type}</span>
+                  <span className="rounded-full bg-white/15 px-4 py-2 text-sm font-bold">{workModeLabel}</span>
+                  {job.category ? <span className="rounded-full bg-white/15 px-4 py-2 text-sm font-bold">{job.category}</span> : null}
                 </div>
               </div>
             </div>
           </div>
 
           <div className="space-y-6">
-            <section className="dashboard-panel p-5 sm:p-7 lg:p-8">
-              <h2 className="mb-8 border-b border-surface-border pb-4 text-sm font-black uppercase tracking-[0.2em] text-text-light">
-                Role Description
-              </h2>
-              <div className="space-y-6 text-lg font-medium leading-relaxed text-text-main">
-                <p>{job.description}</p>
-              </div>
+            <section className="rounded-2xl border border-surface-border bg-white p-6 sm:p-8">
+              <h2 className="text-2xl font-black tracking-tight text-text-main">About this job</h2>
+              <p className="mt-4 whitespace-pre-line text-lg font-medium leading-relaxed text-text-main">{job.description}</p>
             </section>
 
-            <section className="dashboard-panel p-5 sm:p-7 lg:p-8">
-              <h2 className="mb-8 border-b border-surface-border pb-4 text-sm font-black uppercase tracking-[0.2em] text-text-light">
-                Role Snapshot
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <section className="rounded-2xl border border-surface-border bg-white p-6 sm:p-8">
+              <h2 className="text-2xl font-black tracking-tight text-text-main">The job at a glance</h2>
+              <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {[
-                  { label: 'Work type', value: job.type, icon: <BriefcaseBusiness className="h-5 w-5 text-primary" /> },
-                  { label: 'Work mode', value: workModeLabel, icon: <Globe className="h-5 w-5 text-primary" /> },
-                  { label: 'Location', value: locationLabel, icon: <MapPin className="h-5 w-5 text-primary" /> },
-                  { label: 'Compensation', value: job.salary || 'Salary on request', icon: <CheckCircle className="h-5 w-5 text-primary" /> },
-                  { label: 'Category', value: job.category || 'General', icon: <Building2 className="h-5 w-5 text-primary" /> },
+                  { label: 'Work type', value: job.type, icon: <BriefcaseBusiness className="h-5 w-5 text-secondary" /> },
+                  { label: 'Work mode', value: workModeLabel, icon: <Globe className="h-5 w-5 text-secondary" /> },
+                  { label: 'Location', value: locationLabel, icon: <MapPin className="h-5 w-5 text-secondary" /> },
+                  { label: 'Pay', value: job.salary || 'Salary on request', icon: <CheckCircle className="h-5 w-5 text-secondary" /> },
+                  { label: 'Category', value: job.category || 'General', icon: <Building2 className="h-5 w-5 text-secondary" /> },
                 ].map((item) => (
-                  <div key={item.label} className="rounded-[1.75rem] border border-surface-border bg-white p-5 shadow-sm sm:p-6">
-                    <div className="h-12 w-12 rounded-2xl bg-primary/5 flex items-center justify-center mb-4">{item.icon}</div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-text-light mb-2">{item.label}</p>
-                    <p className="text-lg font-black text-text-main tracking-tight">{item.value}</p>
+                  <div key={item.label} className="rounded-xl bg-surface-alt/60 p-4">
+                    {item.icon}
+                    <p className="mt-3 text-sm font-semibold text-text-muted">{item.label}</p>
+                    <p className="mt-0.5 text-base font-extrabold text-text-main">{item.value}</p>
                   </div>
                 ))}
               </div>
             </section>
 
-            <section className="dashboard-panel p-5 sm:p-7 lg:p-8">
-              <h2 className="mb-8 border-b border-surface-border pb-4 text-sm font-black uppercase tracking-[0.2em] text-text-light">
-                About the Employer
-              </h2>
-              <p className="text-text-main font-medium leading-relaxed text-lg">{companyDescription}</p>
+            <section className="rounded-2xl border border-surface-border bg-white p-6 sm:p-8">
+              <h2 className="text-2xl font-black tracking-tight text-text-main">About {companyName}</h2>
+              <p className="mt-4 text-lg font-medium leading-relaxed text-text-main">{companyDescription}</p>
+              <Link to={`/companies/${job.employer.id}`} className="mt-5 inline-flex items-center gap-1 font-extrabold text-secondary hover:underline">
+                See all jobs from {companyName} <ChevronRight className="h-4 w-4" />
+              </Link>
             </section>
           </div>
         </div>
@@ -335,7 +340,7 @@ export default function JobDetails() {
             <div className="dashboard-panel relative overflow-hidden border-primary/20 p-5 sm:p-7 group/apply">
               <div className="absolute top-0 right-0 h-40 w-40 bg-primary/5 rounded-full -mr-20 -mt-20 blur-3xl group-hover/apply:bg-primary/10 transition-colors"></div>
 
-              <h3 className="relative z-10 mb-6 text-2xl font-black tracking-tighter text-text-main">Apply for Role</h3>
+              <h3 className="relative z-10 mb-4 text-2xl font-black tracking-tight text-text-main">Apply for this job</h3>
               {user && role === 'SEEKER' ? (
                 <div className="relative z-10 mb-6 rounded-[1.6rem] border border-primary/10 bg-primary/5 p-5">
                   <div className="flex items-start justify-between gap-4">
@@ -405,7 +410,7 @@ export default function JobDetails() {
                         <p className="text-[10px] font-black uppercase tracking-[0.2em] text-success mb-2">Application Live</p>
                         <p className="text-lg font-black text-text-main mb-2">Status: {application.status}</p>
                         <p className="text-sm text-text-muted font-medium leading-relaxed">
-                          Your application is stored in the backend and will keep updating here as the employer moves it through the pipeline.
+                          The employer can see your application. This page updates as they review it.
                         </p>
                         <p className="mt-3 text-[10px] font-black uppercase tracking-[0.2em] text-text-light">
                           Applied {formatRelativeTime(application.createdAt)}
@@ -439,7 +444,7 @@ export default function JobDetails() {
               ) : !user ? (
                 <div className="space-y-4 relative z-10">
                   <p className="text-text-muted font-medium leading-relaxed text-sm">
-                    Sign in as a job seeker to apply through the live backend and track your application status.
+                    Create a free account or sign in to apply. It takes about a minute, and you can follow your application from your dashboard.
                   </p>
                   <button
                     type="button"
@@ -449,6 +454,9 @@ export default function JobDetails() {
                     Sign In to Apply
                     <ChevronRight className="h-5 w-5" />
                   </button>
+                  <Link to="/signup" className="btn btn-outline btn-lg w-full justify-center rounded-2xl">
+                    Create a free account
+                  </Link>
                 </div>
               ) : role !== 'SEEKER' ? (
                 <div className="space-y-4 relative z-10">
@@ -462,7 +470,7 @@ export default function JobDetails() {
               ) : (
                 <>
                   <p className="text-text-muted font-medium leading-relaxed mb-8 relative z-10 text-sm">
-                    Applications are sent to the live backend, duplicate submissions are blocked, and your status is stored on the platform.
+                    Your application goes straight to the employer. You can follow it from your dashboard.
                   </p>
 
                   <div className="space-y-4 relative z-10">
@@ -545,6 +553,17 @@ export default function JobDetails() {
               <Link to="/jobs" className="btn btn-outline btn-sm w-full rounded-lg uppercase tracking-widest font-black text-[10px] flex items-center justify-center gap-2 border-surface-border text-text-muted hover:border-primary hover:text-primary transition-all bg-white">
                 Browse More Roles <ChevronRight className="h-4 w-4" />
               </Link>
+            </div>
+
+            <div className="rounded-2xl border border-success/25 bg-success/5 p-5">
+              <p className="flex items-center gap-2 font-extrabold text-text-main">
+                <ShieldCheck className="h-5 w-5 text-success" /> Apply safely
+              </p>
+              <ul className="mt-3 space-y-2 text-sm font-medium text-text-muted">
+                <li>Never pay money to apply for a job.</li>
+                <li>Keep your conversations on JobWahala.</li>
+                <li>Report anything that looks wrong.</li>
+              </ul>
             </div>
 
             <button
