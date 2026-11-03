@@ -15,6 +15,8 @@ RUN npm run build
 FROM nginx:1.27-alpine
 
 ENV BACKEND_UPSTREAM=api:5000
+# Makes the nginx entrypoint export NGINX_LOCAL_RESOLVERS (the container's own DNS server) for nginx.conf.
+ENV NGINX_ENTRYPOINT_LOCAL_RESOLVERS=1
 
 # Healthcheck to monitor web server health
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
