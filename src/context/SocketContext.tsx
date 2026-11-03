@@ -56,6 +56,11 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
       const newSocket = io(socketUrl, {
         auth: { token },
         transports: ['websocket'],
+        // Where the socket server is not reachable (for example behind a proxy that only forwards /api),
+        // give up quietly after a few tries instead of retrying forever. Live updates also arrive over
+        // the server-sent events channel, so nothing depends on this connection.
+        reconnectionAttempts: 3,
+        reconnectionDelayMax: 10000,
       });
       activeSocket = newSocket;
 

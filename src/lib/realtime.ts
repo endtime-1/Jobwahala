@@ -67,27 +67,53 @@ export const dispatchRealtimeEvent = (event: string, data: any) => {
   if (event === 'connected') listeners.connected.forEach(l => l())
 }
 
+// One live-updates connection per browser tab, shared by every component that subscribes.
+// Before this, each subscriber opened its own stream: a signed-in page held 3-4 permanent
+// connections, used up the browser's per-site limit on plain HTTP/1.1, multiplied server load
+// and fired every handler once per connection for each event.
+let sharedSource: EventSource | null = null
+let sharedToken: string | null = null
+let subscriberCount = 0
+const errorHandlers = new Set<() => void>()
+
+const closeSharedSource = () => {
+  if (sharedSource) sharedSource.close()
+  sharedSource = null
+  sharedToken = null
+}
+
+const openSharedSource = (token: string) => {
+  const source = new window.EventSource(`${BASE_URL}/realtime/stream?token=${encodeURIComponent(token)}`)
+  source.addEventListener('connected', () => dispatchRealtimeEvent('connected', {}))
+  source.addEventListener('notifications.refresh', (e) => dispatchRealtimeEvent('notifications.refresh', (e as MessageEvent).data))
+  source.addEventListener('messages.refresh', (e) => dispatchRealtimeEvent('messages.refresh', (e as MessageEvent).data))
+  source.addEventListener('proposals.refresh', (e) => dispatchRealtimeEvent('proposals.refresh', (e as MessageEvent).data))
+  source.addEventListener('agreements.refresh', (e) => dispatchRealtimeEvent('agreements.refresh', (e as MessageEvent).data))
+  source.onerror = () => errorHandlers.forEach((handler) => handler())
+  sharedSource = source
+  sharedToken = token
+}
+
+const ensureSharedSource = () => {
+  if (typeof window === 'undefined' || !window.EventSource) return
+
+  const token = localStorage.getItem('jobwahala_token')
+
+  // Signed out, or signed in as someone else: never keep a stream open on the old identity.
+  if (sharedSource && sharedToken !== token) closeSharedSource()
+  if (!sharedSource && token) openSharedSource(token)
+}
+
 export const subscribeToRealtimeEvents = (handlers: RealtimeHandlers) => {
   if (handlers.onNotificationsRefresh) listeners.notifications.add(handlers.onNotificationsRefresh)
   if (handlers.onMessagesRefresh) listeners.messages.add(handlers.onMessagesRefresh)
   if (handlers.onProposalsRefresh) listeners.proposals.add(handlers.onProposalsRefresh)
   if (handlers.onAgreementsRefresh) listeners.agreements.add(handlers.onAgreementsRefresh)
   if (handlers.onConnected) listeners.connected.add(handlers.onConnected)
+  if (handlers.onError) errorHandlers.add(handlers.onError)
 
-  // Side-effect: Still initialize SSE for fallback if needed, but Socket.io will also dispatch
-  let source: EventSource | null = null
-  if (typeof window !== 'undefined' && window.EventSource) {
-     const token = localStorage.getItem('jobwahala_token')
-     if (token) {
-        source = new window.EventSource(`${BASE_URL}/realtime/stream?token=${encodeURIComponent(token)}`)
-        source.addEventListener('connected', () => dispatchRealtimeEvent('connected', {}))
-        source.addEventListener('notifications.refresh', (e) => dispatchRealtimeEvent('notifications.refresh', (e as MessageEvent).data))
-        source.addEventListener('messages.refresh', (e) => dispatchRealtimeEvent('messages.refresh', (e as MessageEvent).data))
-        source.addEventListener('proposals.refresh', (e) => dispatchRealtimeEvent('proposals.refresh', (e as MessageEvent).data))
-        source.addEventListener('agreements.refresh', (e) => dispatchRealtimeEvent('agreements.refresh', (e as MessageEvent).data))
-        if (handlers.onError) source.onerror = () => handlers.onError!()
-     }
-  }
+  subscriberCount += 1
+  ensureSharedSource()
 
   return () => {
     if (handlers.onNotificationsRefresh) listeners.notifications.delete(handlers.onNotificationsRefresh)
@@ -95,6 +121,9 @@ export const subscribeToRealtimeEvents = (handlers: RealtimeHandlers) => {
     if (handlers.onProposalsRefresh) listeners.proposals.delete(handlers.onProposalsRefresh)
     if (handlers.onAgreementsRefresh) listeners.agreements.delete(handlers.onAgreementsRefresh)
     if (handlers.onConnected) listeners.connected.delete(handlers.onConnected)
-    if (source) source.close()
+    if (handlers.onError) errorHandlers.delete(handlers.onError)
+
+    subscriberCount = Math.max(0, subscriberCount - 1)
+    if (subscriberCount === 0) closeSharedSource()
   }
 }

@@ -59,6 +59,19 @@ describe('SocketProvider', () => {
     expect(ioMock).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ auth: { token: 'test-token' } }))
   })
 
+  it('gives up after a few attempts instead of retrying forever when the server is unreachable', async () => {
+    useAuthMock.mockReturnValue({ user: { id: 'u1' } })
+
+    render(
+      <SocketProvider>
+        <div>child</div>
+      </SocketProvider>,
+    )
+
+    await waitFor(() => expect(ioMock).toHaveBeenCalled())
+    expect(ioMock).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ reconnectionAttempts: 3 }))
+  })
+
   it('forwards realtime refresh events to the app', async () => {
     useAuthMock.mockReturnValue({ user: { id: 'u1' } })
 
