@@ -1433,66 +1433,90 @@ const renderForm = () => (
 
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-2">
         <div className="space-y-6">
-          <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-text-light">Professional Identity</label>
-          <input
-            type="text"
-            placeholder="Full Name"
-            className="h-14 font-bold"
-            value={formData.fullName}
-            onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-          />
-          <input
-            type="text"
-            placeholder="Headline (e.g. Frontend Engineer)"
-            className="h-14 font-bold"
-            value={formData.headline}
-            onChange={(e) => setFormData({ ...formData, headline: e.target.value })}
-          />
-          <input
-            type="email"
-            placeholder="Email Address"
-            className="h-14 font-bold"
-            value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-          />
-          <input
-            type="text"
-            placeholder="Phone Number"
-            className="h-14 font-bold"
-            value={formData.phone}
-            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-          />
+          <label className="block text-lg font-extrabold text-text-main">Professional Identity</label>
+          <label className="block space-y-1.5">
+            <span className="block text-sm font-bold text-text-main">Full Name</span>
+            <input
+              type="text"
+              placeholder="Full Name"
+              className="h-14 text-base font-semibold"
+              value={formData.fullName}
+              onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+            />
+          </label>
+          <label className="block space-y-1.5">
+            <span className="block text-sm font-bold text-text-main">Headline</span>
+            <input
+              type="text"
+              placeholder="Headline (e.g. Frontend Engineer)"
+              className="h-14 text-base font-semibold"
+              value={formData.headline}
+              onChange={(e) => setFormData({ ...formData, headline: e.target.value })}
+            />
+          </label>
+          <label className="block space-y-1.5">
+            <span className="block text-sm font-bold text-text-main">Email Address</span>
+            <input
+              type="email"
+              placeholder="Email Address"
+              className="h-14 text-base font-semibold"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            />
+          </label>
+          <label className="block space-y-1.5">
+            <span className="block text-sm font-bold text-text-main">Phone Number</span>
+            <input
+              type="text"
+              placeholder="Phone Number"
+              className="h-14 text-base font-semibold"
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+            />
+          </label>
         </div>
         <div className="space-y-6">
-          <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-text-light">Contact Links</label>
-          <input
-            type="text"
-            placeholder="Location (e.g. Accra, Ghana)"
-            className="h-14 font-bold"
-            value={formData.location}
-            onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-          />
-          <input
-            type="text"
-            placeholder="Portfolio URL"
-            className="h-14 font-bold"
-            value={formData.portfolio}
-            onChange={(e) => setFormData({ ...formData, portfolio: e.target.value })}
-          />
-          <input
-            type="text"
-            placeholder="LinkedIn URL"
-            className="h-14 font-bold"
-            value={formData.linkedin}
-            onChange={(e) => setFormData({ ...formData, linkedin: e.target.value })}
-          />
-          <input
-            type="text"
-            placeholder="Website URL"
-            className="h-14 font-bold"
-            value={formData.website}
-            onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-          />
+          <label className="block text-lg font-extrabold text-text-main">Contact Links</label>
+          <label className="block space-y-1.5">
+            <span className="block text-sm font-bold text-text-main">Location</span>
+            <input
+              type="text"
+              placeholder="Location (e.g. Accra, Ghana)"
+              className="h-14 text-base font-semibold"
+              value={formData.location}
+              onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+            />
+          </label>
+          <label className="block space-y-1.5">
+            <span className="block text-sm font-bold text-text-main">Portfolio URL</span>
+            <input
+              type="text"
+              placeholder="Portfolio URL"
+              className="h-14 text-base font-semibold"
+              value={formData.portfolio}
+              onChange={(e) => setFormData({ ...formData, portfolio: e.target.value })}
+            />
+          </label>
+          <label className="block space-y-1.5">
+            <span className="block text-sm font-bold text-text-main">LinkedIn URL</span>
+            <input
+              type="text"
+              placeholder="LinkedIn URL"
+              className="h-14 text-base font-semibold"
+              value={formData.linkedin}
+              onChange={(e) => setFormData({ ...formData, linkedin: e.target.value })}
+            />
+          </label>
+          <label className="block space-y-1.5">
+            <span className="block text-sm font-bold text-text-main">Website URL</span>
+            <input
+              type="text"
+              placeholder="Website URL"
+              className="h-14 text-base font-semibold"
+              value={formData.website}
+              onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+            />
+          </label>
         </div>
       </div>
 
@@ -1508,7 +1532,7 @@ const renderForm = () => (
 
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-2">
         <div className="space-y-6">
-          <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-text-light">Selected Achievements</label>
+          <label className="block text-lg font-extrabold text-text-main">Selected Achievements</label>
           <textarea
             placeholder="One achievement per line. Example: Increased checkout conversion by 18%."
             className="min-h-[150px] font-bold py-4"
@@ -1517,20 +1541,23 @@ const renderForm = () => (
           />
         </div>
         <div className="space-y-6">
-          <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-text-light">Skills & Languages</label>
+          <label className="block text-lg font-extrabold text-text-main">Skills & Languages</label>
           <textarea
             placeholder="Core skills separated by commas..."
             className="min-h-[110px] font-bold py-4"
             value={formData.skills}
             onChange={(e) => setFormData({ ...formData, skills: e.target.value })}
           />
-          <input
-            type="text"
-            placeholder="Languages (e.g. English, Twi, French)"
-            className="h-14 font-bold"
-            value={formData.languages}
-            onChange={(e) => setFormData({ ...formData, languages: e.target.value })}
-          />
+          <label className="block space-y-1.5">
+            <span className="block text-sm font-bold text-text-main">Languages</span>
+            <input
+              type="text"
+              placeholder="Languages (e.g. English, Twi, French)"
+              className="h-14 text-base font-semibold"
+              value={formData.languages}
+              onChange={(e) => setFormData({ ...formData, languages: e.target.value })}
+            />
+          </label>
         </div>
       </div>
 
@@ -2173,7 +2200,7 @@ const renderForm = () => (
                     if (s.num === 3 && generatedContent) setStep(3)
                   }}
                   disabled={s.num === 2 || (s.num === 3 && !generatedContent)}
-                  className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all disabled:cursor-default ${
+                  className={`flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-bold transition-all disabled:cursor-default sm:px-4 ${
                     step === s.num
                       ? 'bg-text-main text-white shadow-lg'
                       : step > s.num && s.num !== 2
@@ -2183,8 +2210,8 @@ const renderForm = () => (
                           : 'text-text-light'
                   }`}
                 >
-                  {s.icon}
-                  <span className="hidden sm:inline">{s.label}</span>
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-current/15 text-xs font-extrabold">{s.num}</span>
+                  <span>{s.label}</span>
                 </button>
               </div>
             ))}
@@ -2194,7 +2221,7 @@ const renderForm = () => (
             <button
               type="button"
               onClick={handleClearDraft}
-              className="text-[10px] font-black uppercase tracking-widest text-text-light transition-colors hover:text-error"
+              className="text-sm font-bold text-text-muted transition-colors hover:text-error"
             >
               Clear Draft
             </button>
