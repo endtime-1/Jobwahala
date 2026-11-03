@@ -112,6 +112,34 @@ const intersectTerms = (left: Iterable<string>, right: Set<string>) =>
 
 const sortReasons = (reasons: string[]) => reasons.filter(Boolean).slice(0, 3);
 
+// Skills worth calling out as gaps. Matched as whole words so "java" does not hit "javascript".
+const SKILL_LEXICON = [
+  'javascript', 'typescript', 'react', 'next.js', 'vue', 'angular', 'node.js', 'express', 'html', 'css', 'tailwind',
+  'python', 'django', 'flask', 'java', 'spring', 'kotlin', 'swift', 'flutter', 'react native', 'php', 'laravel', 'c#', '.net', 'rust', 'ruby',
+  'sql', 'postgresql', 'mysql', 'mongodb', 'redis', 'graphql', 'rest api', 'prisma',
+  'aws', 'azure', 'gcp', 'docker', 'kubernetes', 'ci/cd', 'git', 'linux', 'terraform',
+  'machine learning', 'data analysis', 'power bi', 'tableau', 'excel', 'figma', 'ui design', 'ux research', 'photoshop', 'illustrator',
+  'seo', 'content writing', 'copywriting', 'social media', 'digital marketing', 'project management', 'agile', 'scrum',
+  'customer support', 'accounting', 'quickbooks', 'bookkeeping', 'recruitment', 'video editing', 'cypress',
+];
+
+const escapeRegExp = (value: string) =>
+  Array.from(value, (ch) => ('.*+?^${}()|[]'.includes(ch) || ch === String.fromCharCode(92) ? String.fromCharCode(92) + ch : ch)).join('');
+
+const textMentionsSkill = (text: string, skill: string) =>
+  new RegExp(`(^|[^a-z0-9+#])${escapeRegExp(skill)}($|[^a-z0-9+#])`, 'i').test(text);
+
+export const findSkillGaps = (profile: MatchableProfile | null | undefined, jobText: string) => {
+  const profileText = [profile?.skills, profile?.experience].filter(Boolean).join(' ');
+
+  // Without any stated skills every skill would look like a gap, which is noise rather than guidance.
+  if (!profile?.skills?.trim()) return [];
+
+  return SKILL_LEXICON.filter(
+    (skill) => textMentionsSkill(jobText, skill) && !textMentionsSkill(profileText, skill),
+  ).slice(0, 4);
+};
+
 export const scoreJobForSeeker = (profile: MatchableProfile | null | undefined, job: MatchableJob) => {
   const jobText = [job.title, job.description, job.category, job.type, job.location]
     .filter(Boolean)
@@ -154,6 +182,7 @@ export const scoreJobForSeeker = (profile: MatchableProfile | null | undefined, 
       98
     ),
     matchReasons: reasons,
+    skillGaps: findSkillGaps(profile, jobText),
   };
 };
 

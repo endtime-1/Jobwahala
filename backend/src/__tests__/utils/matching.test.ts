@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { scoreJobForSeeker, scoreApplicantForJob, scoreServiceForClient } from '../../utils/matching';
+import { scoreJobForSeeker, scoreApplicantForJob, scoreServiceForClient, findSkillGaps } from '../../utils/matching';
 
 // ── scoreJobForSeeker ─────────────────────────────────────────────────
 
@@ -158,5 +158,47 @@ describe('scoreServiceForClient', () => {
 
     expect(result.matchScore).toBeLessThanOrEqual(97);
     expect(result.matchScore).toBeGreaterThanOrEqual(20);
+  });
+});
+
+// ── skill gaps ────────────────────────────────────────────────────────
+
+describe('findSkillGaps', () => {
+  const jobText = 'Senior role using React, TypeScript, Node.js and PostgreSQL on AWS with Docker.';
+
+  it('lists job skills the seeker has not stated', () => {
+    const gaps = findSkillGaps({ skills: 'React, TypeScript' }, jobText);
+
+    expect(gaps).toEqual(expect.arrayContaining(['node.js', 'postgresql', 'aws', 'docker']));
+    expect(gaps).not.toContain('react');
+    expect(gaps).not.toContain('typescript');
+  });
+
+  it('caps the list at four so the hint stays actionable', () => {
+    expect(findSkillGaps({ skills: 'Excel' }, jobText).length).toBeLessThanOrEqual(4);
+  });
+
+  it('returns nothing when the profile lists no skills', () => {
+    expect(findSkillGaps({ skills: '' }, jobText)).toEqual([]);
+    expect(findSkillGaps(null, jobText)).toEqual([]);
+  });
+
+  it('does not mistake java for javascript', () => {
+    expect(findSkillGaps({ skills: 'Python' }, 'We use JavaScript daily')).toEqual(['javascript']);
+  });
+
+  it('counts experience text as evidence of a skill', () => {
+    const gaps = findSkillGaps({ skills: 'React', experience: 'Deployed services on AWS for 3 years' }, jobText);
+
+    expect(gaps).not.toContain('aws');
+  });
+
+  it('is exposed on the job score result', () => {
+    const result = scoreJobForSeeker(
+      { skills: 'React' },
+      { title: 'Frontend Engineer', description: 'React and TypeScript', category: 'Engineering', type: 'Full-time', location: 'Remote' },
+    );
+
+    expect(result.skillGaps).toEqual(['typescript']);
   });
 });

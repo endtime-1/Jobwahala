@@ -293,6 +293,12 @@ export default function SeekerDashboard() {
                             {job.matchReasons.map((reason) => (<span key={`${job.id}-${reason}`} className="rounded-full border border-primary/10 bg-primary/5 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-primary">{reason}</span>))}
                           </div>
                         ) : null}
+                        {job.skillGaps?.length ? (
+                          <p className="mb-6 text-[11px] font-semibold leading-relaxed text-text-muted">
+                            <span className="font-black uppercase tracking-[0.14em] text-text-light">Skills to add: </span>
+                            {job.skillGaps.join(', ')}
+                          </p>
+                        ) : null}
                         <div className="flex justify-between items-center pt-6 border-t border-surface-border/50">
                           <span className="font-black text-sm text-text-main">{job.salary || 'Salary on request'}</span>
                           <div className="flex items-center gap-4">

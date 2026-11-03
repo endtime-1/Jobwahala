@@ -194,6 +194,35 @@ describe('SeekerDashboard application monitoring flow', () => {
     expect(screen.getByText('Remote-friendly role')).toBeInTheDocument()
   })
 
+  it('shows the skills a recommended job wants that the seeker has not listed', async () => {
+    apiGetDashboardMock.mockResolvedValue({
+      applications: [],
+      recommendedJobs: [
+        {
+          id: 'job-gap-1',
+          title: 'Platform Engineer',
+          location: 'Remote',
+          salary: '$7,000/month',
+          matchScore: 71,
+          matchReasons: ['Skill overlap: React'],
+          skillGaps: ['docker', 'aws'],
+          employer: { email: 'employer@example.com', employerProfile: { companyName: 'JobWahala Labs' } },
+        },
+      ],
+      unreadMessages: 0,
+      cvCount: 1,
+    })
+
+    render(
+      <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
+        <SeekerDashboard />
+      </MemoryRouter></QueryClientProvider>,
+    )
+
+    expect(await screen.findByText(/skills to add/i)).toBeInTheDocument()
+    expect(screen.getByText('docker, aws')).toBeInTheDocument()
+  })
+
   it('compares selected applied and recommended roles from the seeker dashboard', async () => {
     apiGetDashboardMock.mockResolvedValue({
       applications: [

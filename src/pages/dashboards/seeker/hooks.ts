@@ -26,6 +26,7 @@ export type RecommendedJob = {
   salary?: string | null
   matchScore?: number
   matchReasons?: string[]
+  skillGaps?: string[]
   employer: {
     email: string
     employerProfile?: { companyName?: string | null } | null
