@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { ChevronRight, Sparkles, X } from 'lucide-react'
+import { getErrorMessage } from '../lib/errors'
 
 export type ProposalDraft = {
   title: string
@@ -108,8 +109,8 @@ export default function ProposalComposerModal({
                           ...nextDraft,
                         }))
                       }
-                    } catch (nextError: any) {
-                      setAssistantError(nextError?.message || 'Unable to generate a proposal draft right now.')
+                    } catch (nextError) {
+                      setAssistantError(getErrorMessage(nextError, 'Unable to generate a proposal draft right now.'))
                     }
                   }}
                   disabled={isGenerating}

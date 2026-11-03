@@ -12,6 +12,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import { getErrorMessage } from '../lib/errors'
 
 const IdentityVerification = () => {
   const { user } = useAuth();
@@ -54,8 +55,8 @@ const IdentityVerification = () => {
       }
 
       setSuccess(true);
-    } catch (err: any) {
-      setError(err.message || 'An unexpected error occurred');
+    } catch (err) {
+      setError(getErrorMessage(err, 'An unexpected error occurred'));
     } finally {
       setIsLoading(false);
     }

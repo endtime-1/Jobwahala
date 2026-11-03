@@ -5,6 +5,7 @@ import {
   UploadCategory,
   UploadContentType,
 } from '../utils/uploads';
+import { getErrorMessage } from '../utils/errors';
 
 export const uploadEvidence = async (req: AuthRequest, res: Response) => {
   try {
@@ -31,8 +32,8 @@ export const uploadEvidence = async (req: AuthRequest, res: Response) => {
         sizeBytes: uploadedFile.sizeBytes,
       },
     });
-  } catch (error: any) {
-    const message = error?.message || 'Unable to upload evidence right now';
+  } catch (error) {
+    const message = getErrorMessage(error, 'Unable to upload evidence right now');
     const statusCode =
       message.includes('5 MB') || message.includes('empty') ? 400 : 500;
 

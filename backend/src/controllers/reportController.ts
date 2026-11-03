@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import prisma from '../config/prisma';
 import { AuthRequest } from '../middleware/auth';
+import { getErrorMessage } from '../utils/errors';
 
 export const createReport = async (req: AuthRequest, res: Response) => {
   try {
@@ -67,7 +68,7 @@ export const createReport = async (req: AuthRequest, res: Response) => {
     });
 
     return res.status(201).json({ success: true, report });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };

@@ -25,6 +25,7 @@ import {
   getFitScoreBadgeClass,
   getApplicantDecisionBadgeClass,
 } from './utils'
+import { getErrorMessage } from '../../../lib/errors'
 
 type Props = {
   jobs: EmployerJob[]
@@ -72,8 +73,8 @@ export default function EmployerApplicantsPanel({
     try {
       await apiUpdateApplicationStatus(applicationId, status)
       onRefresh()
-    } catch (err: any) {
-      setError(err.message || 'Unable to update application status right now.')
+    } catch (err) {
+      setError(getErrorMessage(err, 'Unable to update application status right now.'))
     } finally {
       setIsUpdatingApplication(false)
     }
@@ -89,8 +90,8 @@ export default function EmployerApplicantsPanel({
       setShortlistSummary(String(data.summary || ''))
       setShortlistSummaryJobId(selectedJobId)
       setShortlistSummaryCandidatesConsidered(Number(data.candidatesConsidered || 0))
-    } catch (err: any) {
-      setError(err.message || 'Unable to generate a shortlist brief right now.')
+    } catch (err) {
+      setError(getErrorMessage(err, 'Unable to generate a shortlist brief right now.'))
     } finally {
       setIsGeneratingShortlistSummary(false)
     }
@@ -106,8 +107,8 @@ export default function EmployerApplicantsPanel({
       setApplicantComparisonSummary(String(data.summary || ''))
       setApplicantComparisonJobId(selectedJobId)
       setApplicantComparisonCandidatesConsidered(Number(data.candidatesConsidered || 0))
-    } catch (err: any) {
-      setError(err.message || 'Unable to generate an applicant comparison right now.')
+    } catch (err) {
+      setError(getErrorMessage(err, 'Unable to generate an applicant comparison right now.'))
     } finally {
       setIsGeneratingApplicantComparison(false)
     }
@@ -122,8 +123,8 @@ export default function EmployerApplicantsPanel({
       const brief = (data.brief || null) as ApplicantDecisionBriefRecord | null
       if (!brief) throw new Error('Decision brief response was empty.')
       setApplicantDecisionBriefs((c) => ({ ...c, [applicationId]: brief }))
-    } catch (err: any) {
-      setApplicantDecisionErrors((c) => ({ ...c, [applicationId]: err.message || 'Unable to generate an applicant brief right now.' }))
+    } catch (err) {
+      setApplicantDecisionErrors((c) => ({ ...c, [applicationId]: getErrorMessage(err, 'Unable to generate an applicant brief right now.') }))
     } finally {
       setApplicantDecisionLoadingId((c) => (c === applicationId ? null : c))
     }
@@ -144,8 +145,8 @@ export default function EmployerApplicantsPanel({
       })
       setProposalTarget(null)
       onRefresh()
-    } catch (err: any) {
-      setError(err.message || 'Unable to send this proposal right now.')
+    } catch (err) {
+      setError(getErrorMessage(err, 'Unable to send this proposal right now.'))
     } finally {
       setIsSubmittingProposal(false)
     }
@@ -162,8 +163,8 @@ export default function EmployerApplicantsPanel({
         focus: draft.message || draft.summary || undefined,
       })
       return data.draft as Partial<ProposalDraft>
-    } catch (err: any) {
-      throw new Error(err.message || 'Unable to generate a proposal draft right now.')
+    } catch (err) {
+      throw new Error(getErrorMessage(err, 'Unable to generate a proposal draft right now.'))
     } finally {
       setIsGeneratingProposalDraft(false)
     }

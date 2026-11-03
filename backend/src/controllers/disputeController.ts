@@ -12,6 +12,7 @@ import {
   hasActiveAgreementDispute,
   isAgreementParticipant
 } from '../utils/agreementHelpers';
+import { getErrorMessage } from '../utils/errors';
 
 /**
  * Open a new dispute for an agreement milestone.
@@ -99,8 +100,8 @@ export const openDispute = async (req: AuthRequest, res: Response) => {
     });
 
     return res.status(201).json({ success: true, dispute });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -140,8 +141,8 @@ export const getDisputeDetails = async (req: AuthRequest, res: Response) => {
     }
 
     return res.json({ success: true, dispute });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -197,8 +198,8 @@ export const addDisputeMessage = async (req: AuthRequest, res: Response) => {
     }
 
     return res.status(201).json({ success: true, message });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -259,7 +260,7 @@ export const resolveDispute = async (req: AuthRequest, res: Response) => {
     });
 
     return res.json({ success: true, dispute: updatedDispute });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };

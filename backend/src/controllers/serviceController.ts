@@ -11,6 +11,7 @@ import {
   generateServiceRequestCoaching,
 } from '../services/ai';
 import { scoreServiceForClient } from '../utils/matching';
+import { getErrorMessage } from '../utils/errors';
 
 const serviceListInclude = {
   freelancer: {
@@ -149,8 +150,8 @@ export const createService = async (req: AuthRequest, res: Response) => {
       }
     });
     res.status(201).json({ success: true, service });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -168,8 +169,8 @@ export const getServices = async (req: Request, res: Response) => {
       success: true,
       services: services.map((service) => serializeServiceListItem(service)),
     });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -227,8 +228,8 @@ export const getRecommendedServices = async (req: AuthRequest, res: Response) =>
       personalized: true,
       services: scoredServices,
     });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -393,8 +394,8 @@ export const getFreelancerComparison = async (req: AuthRequest, res: Response) =
         },
       },
     });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -568,8 +569,8 @@ export const compareMarketplaceFreelancers = async (req: AuthRequest, res: Respo
         options: comparedOptions,
       },
     });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -604,8 +605,8 @@ export const generateServiceDraft = async (req: AuthRequest, res: Response) => {
       success: true,
       draft: coaching,
     });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -650,8 +651,8 @@ export const updateService = async (req: AuthRequest, res: Response) => {
     });
 
     res.json({ success: true, service });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -672,8 +673,8 @@ export const deleteService = async (req: AuthRequest, res: Response) => {
     await prisma.freelanceService.delete({ where: { id } });
 
     res.json({ success: true, message: 'Service successfully deleted' });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -759,8 +760,8 @@ export const getFreelancerDetails = async (req: Request, res: Response) => {
         averageRating,
       },
     });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -840,8 +841,8 @@ export const getServiceRequestCoaching = async (req: AuthRequest, res: Response)
       success: true,
       coaching,
     });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -902,8 +903,8 @@ export const createServiceRequest = async (req: AuthRequest, res: Response) => {
     });
 
     return res.status(201).json({ success: true, serviceRequest });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -954,8 +955,8 @@ export const getReceivedServiceRequests = async (req: AuthRequest, res: Response
     });
 
     return res.json({ success: true, requests });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -1000,8 +1001,8 @@ export const getSentServiceRequests = async (req: AuthRequest, res: Response) =>
     });
 
     return res.json({ success: true, requests });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -1130,8 +1131,8 @@ export const updateServiceRequestStatus = async (req: AuthRequest, res: Response
     });
 
     return res.json({ success: true, request: updatedRequest });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -1164,8 +1165,8 @@ export const deleteSentServiceRequest = async (req: AuthRequest, res: Response) 
     });
 
     return res.json({ success: true, message: 'Service request cancelled successfully' });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -1192,7 +1193,7 @@ export const updateOwnedServiceStatus = async (req: AuthRequest, res: Response) 
     });
 
     return res.json({ success: true, service: updatedService });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };

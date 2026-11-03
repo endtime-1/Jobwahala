@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import { Lock, Eye, EyeOff, ArrowLeft, ArrowRight, CheckCircle, XCircle, Briefcase, ShieldCheck } from 'lucide-react'
 import { apiResetPassword } from '../lib/api'
+import { getErrorMessage } from '../lib/errors'
 
 type ResetState = 'form' | 'success' | 'error'
 
@@ -59,8 +60,8 @@ export default function ResetPassword() {
     try {
       await apiResetPassword(token, password)
       setState('success')
-    } catch (err: any) {
-      setError(err?.message || 'Failed to reset password. The link may have expired.')
+    } catch (err) {
+      setError(getErrorMessage(err, 'Failed to reset password. The link may have expired.'))
     } finally {
       setIsLoading(false)
     }

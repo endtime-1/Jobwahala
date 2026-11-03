@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Mail, Lock, Eye, EyeOff, ArrowRight, Briefcase, Users, TrendingUp } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { isApiUnavailableMessage } from '../lib/apiStatus'
+import { getErrorMessage } from '../lib/errors'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -20,8 +21,8 @@ export default function Login() {
     try {
       await login(email, password)
       navigate('/dashboard')
-    } catch (err: any) {
-      const nextMessage = err?.message || 'Login failed. Please try again.'
+    } catch (err) {
+      const nextMessage = getErrorMessage(err, 'Login failed. Please try again.')
       setError(isApiUnavailableMessage(nextMessage) ? '' : nextMessage)
     } finally {
       setIsLoading(false)

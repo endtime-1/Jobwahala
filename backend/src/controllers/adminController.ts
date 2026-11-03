@@ -5,6 +5,7 @@ import { singleValue } from '../utils/request';
 import { createAgreementEvent } from '../utils/agreementEvents';
 import { createNotifications } from '../utils/notifications';
 import { emitAgreementRefresh } from '../utils/workflowRealtime';
+import { getErrorMessage } from '../utils/errors';
 
 // Moderation Lookups
 export const getReports = async (req: AuthRequest, res: Response) => {
@@ -19,8 +20,8 @@ export const getReports = async (req: AuthRequest, res: Response) => {
       orderBy: { createdAt: 'desc' }
     });
     res.json({ success: true, reports });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -41,8 +42,8 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
       }
     });
     res.json({ success: true, users });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -140,8 +141,8 @@ export const createAdminJob = async (req: AuthRequest, res: Response) => {
       message: `Job posted on behalf of ${companyName}`,
       job,
     });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -166,8 +167,8 @@ export const getAllJobs = async (req: AuthRequest, res: Response) => {
       orderBy: { createdAt: 'desc' }
     });
     res.json({ success: true, jobs });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -185,8 +186,8 @@ export const getAllServices = async (req: AuthRequest, res: Response) => {
       orderBy: { createdAt: 'desc' }
     });
     res.json({ success: true, services });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -233,8 +234,8 @@ export const getAgreementDisputes = async (req: AuthRequest, res: Response) => {
     });
 
     res.json({ success: true, disputes });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -252,8 +253,8 @@ export const updateUserStatus = async (req: AuthRequest, res: Response) => {
       data: { status }
     });
     res.json({ success: true, message: `User status updated to ${status}`, user });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -276,8 +277,8 @@ export const updateUsersStatusBulk = async (req: AuthRequest, res: Response) => 
       message: `${updated.count} users updated to ${status}`,
       updatedCount: updated.count,
     });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -295,8 +296,8 @@ export const updateReportStatus = async (req: AuthRequest, res: Response) => {
     });
 
     res.json({ success: true, message: `Report status updated to ${status}`, report });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -319,8 +320,8 @@ export const updateReportsStatusBulk = async (req: AuthRequest, res: Response) =
       message: `${updated.count} reports updated to ${status}`,
       updatedCount: updated.count,
     });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -337,8 +338,8 @@ export const updateJobStatus = async (req: AuthRequest, res: Response) => {
       data: { status }
     });
     res.json({ success: true, message: `Job status updated to ${status}`, job });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -361,8 +362,8 @@ export const updateJobsStatusBulk = async (req: AuthRequest, res: Response) => {
       message: `${updated.count} jobs updated to ${status}`,
       updatedCount: updated.count,
     });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -379,8 +380,8 @@ export const updateServiceStatus = async (req: AuthRequest, res: Response) => {
       data: { status }
     });
     res.json({ success: true, message: `Service status updated to ${status}`, service });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -403,8 +404,8 @@ export const updateServicesStatusBulk = async (req: AuthRequest, res: Response) 
       message: `${updated.count} services updated to ${status}`,
       updatedCount: updated.count,
     });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -520,8 +521,8 @@ export const updateAgreementDisputeStatus = async (req: AuthRequest, res: Respon
       message: `Dispute status updated to ${status}`,
       dispute: updatedDispute,
     });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -534,7 +535,7 @@ export const deleteUser = async (req: AuthRequest, res: Response) => {
 
     await prisma.user.delete({ where: { id: userId } });
     res.json({ success: true, message: 'User permanently removed' });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };

@@ -1,8 +1,8 @@
 import { Response } from 'express';
 import prisma from '../config/prisma';
 import { AuthRequest } from '../middleware/auth';
-import { deferRealtimeEvent, emitRealtimeEvent } from '../services/realtime';
 import { emitNotificationRefresh } from '../utils/workflowRealtime';
+import { getErrorMessage } from '../utils/errors';
 
 const notificationInclude = {
   user: {
@@ -43,8 +43,8 @@ export const getMyNotifications = async (req: AuthRequest, res: Response) => {
     ]);
 
     return res.json({ success: true, notifications, unreadCount });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -59,8 +59,8 @@ export const getMyNotificationSummary = async (req: AuthRequest, res: Response) 
     });
 
     return res.json({ success: true, unreadCount });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -121,8 +121,8 @@ export const markNotificationRead = async (req: AuthRequest, res: Response) => {
     });
 
     return res.json({ success: true, notification: updatedNotification, unreadCount });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -146,7 +146,7 @@ export const markAllNotificationsRead = async (req: AuthRequest, res: Response) 
     });
 
     return res.json({ success: true, unreadCount: 0 });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };

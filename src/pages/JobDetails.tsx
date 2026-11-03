@@ -11,6 +11,7 @@ import {
   getJobWorkModeLabel,
 } from '../lib/workMode'
 import { useAuth } from '../context/AuthContext'
+import { getErrorMessage } from '../lib/errors'
 
 type JobDetail = {
   id: string
@@ -102,9 +103,9 @@ export default function JobDetails() {
         setCoaching((coachingData.coaching || null) as JobApplicationCoaching | null)
         setCoachingError((coachingData as { error?: string }).error || '')
         setError('')
-      } catch (err: any) {
+      } catch (err) {
         if (cancelled) return
-        setError(err.message || 'Unable to load this job.')
+        setError(getErrorMessage(err, 'Unable to load this job.'))
       } finally {
         if (!cancelled) {
           setIsCoachingLoading(false)
@@ -149,8 +150,8 @@ export default function JobDetails() {
       setApplication(data.application as JobApplication)
       setCoverLetter('')
       window.scrollTo({ top: 0, behavior: 'smooth' })
-    } catch (err: any) {
-      if (err.message?.toLowerCase().includes('already applied')) {
+    } catch (err) {
+      if (getErrorMessage(err)?.toLowerCase().includes('already applied')) {
         try {
           const data = await apiGetMyJobApplication(job.id)
           setApplication((data.application || null) as JobApplication | null)
@@ -159,7 +160,7 @@ export default function JobDetails() {
         }
       }
 
-      setError(err.message || 'Unable to submit your application.')
+      setError(getErrorMessage(err, 'Unable to submit your application.'))
     } finally {
       setIsApplying(false)
     }
@@ -180,8 +181,8 @@ export default function JobDetails() {
     try {
       await apiDeleteApplication(application.id)
       setApplication(null)
-    } catch (err: any) {
-      setError(err.message || 'Unable to withdraw your application.')
+    } catch (err) {
+      setError(getErrorMessage(err, 'Unable to withdraw your application.'))
     } finally {
       setIsWithdrawing(false)
     }

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Landmark, Wallet, Plus, CheckCircle2, AlertCircle, Loader2, ChevronDown } from 'lucide-react'
 import { apiGetBanks, apiSavePayoutAccount, apiGetPayoutAccount } from '../lib/api'
+import { getErrorMessage } from '../lib/errors'
 
 interface Bank {
   id: number
@@ -62,8 +63,8 @@ export default function PayoutPanel() {
       })
       setPayoutAccount(res.payoutAccount)
       setShowForm(false)
-    } catch (err: any) {
-      setError(err.message || 'Failed to save payout account')
+    } catch (err) {
+      setError(getErrorMessage(err, 'Failed to save payout account'))
     } finally {
       setIsSaving(false)
     }

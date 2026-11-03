@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { saveCVGeneration, getMyCVs, getCVById } from '../controllers/cvController';
-import { authMiddleware, roleMiddleware } from '../middleware/auth';
+import { authMiddleware } from '../middleware/auth';
 
 const router = Router();
 

@@ -5,6 +5,7 @@ import { verificationService } from '../services/verificationService';
 import logger from '../config/logger';
 import { singleValue } from '../utils/request';
 import { getRequiredVerificationType, serializeVerificationStatus } from '../utils/verification';
+import { getErrorMessage } from '../utils/errors';
 
 export const getMyVerification = async (req: AuthRequest, res: Response) => {
   try {
@@ -28,8 +29,8 @@ export const getMyVerification = async (req: AuthRequest, res: Response) => {
       requiredType,
       ...serializeVerificationStatus(latestRequest, history),
     });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -74,14 +75,14 @@ export const initiateIdentityVerification = async (req: AuthRequest, res: Respon
         lastName,
         dob,
       });
-    } catch (apiError: any) {
-      logger.error('smile_id_api_failure', { userId, error: apiError.message });
+    } catch (apiError) {
+      logger.error('smile_id_api_failure', { userId, error: getErrorMessage(apiError) });
       
       await prisma.verificationRequest.update({
         where: { id: verificationRequest.id },
         data: { 
           status: 'REJECTED', 
-          reviewNote: `API Error: ${apiError.message}` 
+          reviewNote: `API Error: ${getErrorMessage(apiError)}` 
         },
       });
 
@@ -128,8 +129,8 @@ export const initiateIdentityVerification = async (req: AuthRequest, res: Respon
       });
     }
 
-  } catch (error: any) {
-    logger.error('initiate_identity_verification_fatal_error', { error: error.message });
+  } catch (error) {
+    logger.error('initiate_identity_verification_fatal_error', { error: getErrorMessage(error) });
     res.status(500).json({ success: false, message: 'Internal server error during verification.' });
   }
 };
@@ -156,8 +157,8 @@ export const createVerificationRequest = async (req: AuthRequest, res: Response)
     });
 
     return res.status(201).json({ success: true, message: 'Verification request submitted for review', verificationRequest });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -176,8 +177,8 @@ export const getVerificationRequests = async (req: AuthRequest, res: Response) =
       orderBy: { createdAt: 'desc' },
     });
     res.json({ success: true, verifications });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -231,7 +232,7 @@ export const updateVerificationRequestStatus = async (req: AuthRequest, res: Res
     });
 
     return res.json({ success: true, message: `Verification status updated to ${status}`, verification: updated });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };

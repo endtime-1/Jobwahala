@@ -12,6 +12,7 @@ import { subscribeToRealtimeEvents } from '../../lib/realtime'
 import WorkflowSidebar from './shared/WorkflowSidebar'
 import { getApplicationBadgeClass, getMatchScoreBadgeClass } from './shared/utils'
 import { useSeekerDashboard, useProfileOptimization } from './seeker/hooks'
+import { getErrorMessage } from '../../lib/errors'
 
 type ComparedJob = {
   id: string; title: string; description: string; location?: string | null; salary?: string | null
@@ -77,24 +78,24 @@ export default function SeekerDashboard() {
     try {
       const data = await apiCompareJobs(selectedJobIds)
       setJobComparison((data.comparison || null) as JobComparisonRecord | null)
-    } catch (err: any) { setComparisonError(err.message || 'Unable to compare.') } finally { setIsComparingJobs(false) }
+    } catch (err) { setComparisonError(getErrorMessage(err, 'Unable to compare.')) } finally { setIsComparingJobs(false) }
   }
 
   const handleWithdrawApplication = async (applicationId: string) => {
     if (!window.confirm('Withdraw this application?')) return
     setError(''); setIsActing(true)
-    try { await apiDeleteApplication(applicationId); refreshDashboard() } catch (err: any) { setError(err.message || 'Unable to withdraw.') } finally { setIsActing(false) }
+    try { await apiDeleteApplication(applicationId); refreshDashboard() } catch (err) { setError(getErrorMessage(err, 'Unable to withdraw.')) } finally { setIsActing(false) }
   }
 
   const handleCancelServiceRequest = async (requestId: string) => {
     if (!window.confirm('Cancel this service request?')) return
     setError(''); setIsActing(true)
-    try { await apiDeleteServiceRequest(requestId); refreshDashboard() } catch (err: any) { setError(err.message || 'Unable to cancel.') } finally { setIsActing(false) }
+    try { await apiDeleteServiceRequest(requestId); refreshDashboard() } catch (err) { setError(getErrorMessage(err, 'Unable to cancel.')) } finally { setIsActing(false) }
   }
 
   const handleSubmitVerification = async (payload: { details: string; documentUrl?: string }) => {
     setError(''); setIsActing(true)
-    try { await apiCreateVerificationRequest(payload); refreshDashboard() } catch (err: any) { setError(err.message || 'Unable to submit.') } finally { setIsActing(false) }
+    try { await apiCreateVerificationRequest(payload); refreshDashboard() } catch (err) { setError(getErrorMessage(err, 'Unable to submit.')) } finally { setIsActing(false) }
   }
 
   return (

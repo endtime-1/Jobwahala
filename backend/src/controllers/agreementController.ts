@@ -16,6 +16,7 @@ import {
 import { emitAgreementRefresh } from '../utils/workflowRealtime';
 
 import { paystackService } from '../services/paystackService';
+import { getErrorMessage } from '../utils/errors';
 const agreementUserSelect = {
   id: true,
   email: true,
@@ -206,8 +207,8 @@ export const processPayout = async (milestoneId: string) => {
       throw new Error(transferResponse.message || 'Paystack transfer failed');
     }
 
-  } catch (error: any) {
-    logger.error('process_payout_failed', { milestoneId, error: error.message });
+  } catch (error) {
+    logger.error('process_payout_failed', { milestoneId, error: getErrorMessage(error) });
     await prisma.payment.updateMany({
       where: { milestoneId, payoutStatus: 'PROCESSING' } as any,
       data: { payoutStatus: 'FAILED' } as any
@@ -384,8 +385,8 @@ export const getMyAgreements = async (req: AuthRequest, res: Response) => {
     });
 
     return res.json({ success: true, agreements });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -567,8 +568,8 @@ export const compareAgreements = async (req: AuthRequest, res: Response) => {
         }),
       },
     });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -704,8 +705,8 @@ export const generateAgreementDecisionSummary = async (req: AuthRequest, res: Re
     });
 
     return res.json({ success: true, brief });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -834,8 +835,8 @@ export const updateAgreementStatus = async (req: AuthRequest, res: Response) => 
     });
 
     return res.json({ success: true, agreement: updatedAgreement });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -909,8 +910,8 @@ export const createAgreementMilestone = async (req: AuthRequest, res: Response) 
     });
 
     return res.status(201).json({ success: true, milestone });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -1033,8 +1034,8 @@ export const createAgreementReview = async (req: AuthRequest, res: Response) => 
     });
 
     return res.status(201).json({ success: true, review });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -1153,8 +1154,8 @@ export const createAgreementDispute = async (req: AuthRequest, res: Response) =>
     });
 
     return res.status(201).json({ success: true, dispute });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -1268,8 +1269,8 @@ export const updateAgreementMilestoneStatus = async (req: AuthRequest, res: Resp
     }
 
     return res.json({ success: true, milestone: updatedMilestone });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -1509,8 +1510,8 @@ export const updateAgreementMilestonePaymentStatus = async (req: AuthRequest, re
     });
 
     return res.json({ success: true, milestone: paymentResult.milestone, payment: paymentResult.payment });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -1639,8 +1640,8 @@ export const createAgreementMilestonePaymentSession = async (req: AuthRequest, r
     });
 
     return res.status(201).json({ success: true, payment });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -1754,8 +1755,8 @@ export const updateAgreementPaymentStatus = async (req: AuthRequest, res: Respon
     });
 
     return res.json({ success: true, payment: updatedPayment });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -1895,7 +1896,7 @@ export const verifyAgreementPayment = async (req: AuthRequest, res: Response) =>
       paymentId,
       actorId: payment.payerId,
     });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };

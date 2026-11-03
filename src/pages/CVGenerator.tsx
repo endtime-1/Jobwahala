@@ -4,6 +4,7 @@ import { Sparkles, Download, Copy, RefreshCw, Layout, FileText, User, Briefcase,
 import { apiGetCVById, apiGetMyCVs, apiGetProfileOptimization, apiSaveCVGeneration } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
 import { formatRelativeTime } from '../lib/display'
+import { getErrorMessage } from '../lib/errors'
 
 type ExperienceEntry = {
   company: string
@@ -866,8 +867,8 @@ export default function CVGenerator() {
     try {
       const data = await apiGetMyCVs()
       setHistory((data.cvs || []) as CvHistoryRecord[])
-    } catch (err: any) {
-      setHistoryError(err.message || 'Unable to load your CV history right now.')
+    } catch (err) {
+      setHistoryError(getErrorMessage(err, 'Unable to load your CV history right now.'))
     } finally {
       setIsHistoryLoading(false)
     }
@@ -890,9 +891,9 @@ export default function CVGenerator() {
     try {
       const data = await apiGetProfileOptimization()
       setOptimization((data.optimization || null) as ProfileOptimization | null)
-    } catch (err: any) {
+    } catch (err) {
       setOptimization(null)
-      setOptimizationError(err.message || 'Unable to load your coaching suggestions right now.')
+      setOptimizationError(getErrorMessage(err, 'Unable to load your coaching suggestions right now.'))
     } finally {
       setIsOptimizationLoading(false)
     }
@@ -1136,8 +1137,8 @@ export default function CVGenerator() {
         setSelectedCvId(null)
         setSaveStatus('Generated locally. Sign in to save drafts and use AI generation.')
       }
-    } catch (err: any) {
-      setSaveStatus(err.message || 'Unable to generate your CV right now.')
+    } catch (err) {
+      setSaveStatus(getErrorMessage(err, 'Unable to generate your CV right now.'))
       setStep(1)
       return
     } finally {
@@ -1243,8 +1244,8 @@ export default function CVGenerator() {
       setIsEditing(false)
       setSaveStatus('Loaded a saved CV draft from your history.')
       setStep(3)
-    } catch (err: any) {
-      setHistoryError(err.message || 'Unable to load that saved CV draft right now.')
+    } catch (err) {
+      setHistoryError(getErrorMessage(err, 'Unable to load that saved CV draft right now.'))
     } finally {
       setHistoryLoadingId(null)
     }

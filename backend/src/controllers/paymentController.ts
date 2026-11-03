@@ -6,6 +6,7 @@ import { AuthRequest } from '../middleware/auth';
 import { paystackService } from '../services/paystackService';
 import { completeMilestonePayment, processPayout, TransactionClientLike } from './agreementController';
 import logger from '../config/logger';
+import { getErrorMessage } from '../utils/errors';
 
 const isPaystackSignatureValid = (payload: unknown, signature: string | undefined) => {
   if (!signature || !env.paystackSecretKey) {
@@ -115,9 +116,9 @@ export const initializeMilestonePayment = async (req: AuthRequest, res: Response
       reference: reference
     });
 
-  } catch (error: any) {
-    logger.error('initialize_milestone_payment_error', { error: error.message });
-    res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    logger.error('initialize_milestone_payment_error', { error: getErrorMessage(error) });
+    res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -187,8 +188,8 @@ export const handlePaystackWebhook = async (req: Request, res: Response) => {
     void processPayout(payment.milestone.id);
 
     return res.status(200).json({ success: true, processed: true });
-  } catch (error: any) {
-    logger.error('paystack_webhook_error', { error: error.message });
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    logger.error('paystack_webhook_error', { error: getErrorMessage(error) });
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };

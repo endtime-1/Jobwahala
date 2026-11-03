@@ -4,6 +4,7 @@ import { apiDeleteServiceRequest } from '../../../lib/api'
 import { emailHandle, formatRelativeTime, getDisplayName } from '../../../lib/display'
 import type { SentServiceRequest } from './types'
 import { getApplicationBadgeClass } from './utils'
+import { getErrorMessage } from '../../../lib/errors'
 
 type Props = {
   sentRequests: SentServiceRequest[]
@@ -21,8 +22,8 @@ export default function EmployerServiceRequests({ sentRequests, onRefresh }: Pro
     try {
       await apiDeleteServiceRequest(requestId)
       onRefresh()
-    } catch (err: any) {
-      setError(err.message || 'Unable to cancel this service request right now.')
+    } catch (err) {
+      setError(getErrorMessage(err, 'Unable to cancel this service request right now.'))
     } finally {
       setIsManagingRequests(false)
     }

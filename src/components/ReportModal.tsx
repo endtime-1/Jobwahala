@@ -2,6 +2,7 @@ import { X, Send, AlertTriangle } from 'lucide-react'
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { apiCreateReport } from '../lib/api'
+import { getErrorMessage } from '../lib/errors'
 
 interface ReportModalProps {
   isOpen: boolean
@@ -35,9 +36,9 @@ export default function ReportModal({ isOpen, onClose, type, targetId, targetNam
         setDetails('')
         onClose()
       }, 2000)
-    } catch (err: any) {
+    } catch (err) {
       setIsSubmitting(false)
-      setError(err.message || 'Unable to submit report right now.')
+      setError(getErrorMessage(err, 'Unable to submit report right now.'))
     }
   }
 

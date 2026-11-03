@@ -24,6 +24,7 @@ import {
   getDisputeBadgeClass,
   getFitScoreBadgeClass,
 } from './utils'
+import { getErrorMessage } from '../../../lib/errors'
 
 type Props = {
   jobs: EmployerJob[]
@@ -130,8 +131,8 @@ export default function EmployerSidebar({
     try {
       const data = await apiCompareProposals(selectedProposalIds)
       setProposalComparison((data.comparison || null) as ProposalComparisonRecord | null)
-    } catch (err: any) {
-      setProposalComparisonError(err.message || 'Unable to compare these proposal terms right now.')
+    } catch (err) {
+      setProposalComparisonError(getErrorMessage(err, 'Unable to compare these proposal terms right now.'))
     } finally {
       setIsComparingProposals(false)
     }
@@ -144,8 +145,8 @@ export default function EmployerSidebar({
     try {
       const data = await apiCompareAgreements(selectedAgreementIds)
       setAgreementComparison((data.comparison || null) as AgreementComparisonRecord | null)
-    } catch (err: any) {
-      setAgreementComparisonError(err.message || 'Unable to compare these agreements right now.')
+    } catch (err) {
+      setAgreementComparisonError(getErrorMessage(err, 'Unable to compare these agreements right now.'))
     } finally {
       setIsComparingAgreements(false)
     }
@@ -160,8 +161,8 @@ export default function EmployerSidebar({
       const brief = (data.brief || null) as AgreementDecisionBriefRecord | null
       if (!brief) throw new Error('Decision brief response was empty.')
       setAgreementDecisionBriefs((c) => ({ ...c, [agreementId]: brief }))
-    } catch (err: any) {
-      setAgreementDecisionBriefErrors((c) => ({ ...c, [agreementId]: err.message || 'Unable to generate an agreement brief right now.' }))
+    } catch (err) {
+      setAgreementDecisionBriefErrors((c) => ({ ...c, [agreementId]: getErrorMessage(err, 'Unable to generate an agreement brief right now.') }))
     } finally {
       setAgreementDecisionBriefLoadingId((c) => (c === agreementId ? null : c))
     }

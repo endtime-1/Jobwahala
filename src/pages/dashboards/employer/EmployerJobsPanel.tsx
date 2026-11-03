@@ -5,6 +5,7 @@ import { apiCreateJob, apiGenerateJobDraft, apiUpdateJobStatus } from '../../../
 import { emailHandle, formatRelativeTime } from '../../../lib/display'
 import type { EmployerJob, JobCopilotDraft } from './types'
 import { initialJobForm } from './utils'
+import { getErrorMessage } from '../../../lib/errors'
 
 type Props = {
   jobs: EmployerJob[]
@@ -39,8 +40,8 @@ export default function EmployerJobsPanel({
       setJobCopilotDraft(null)
       onToggleCreateForm()
       onJobCreated()
-    } catch (err: any) {
-      setError(err.message || 'Unable to create job right now.')
+    } catch (err) {
+      setError(getErrorMessage(err, 'Unable to create job right now.'))
     } finally {
       setIsCreatingJob(false)
     }
@@ -69,8 +70,8 @@ export default function EmployerJobsPanel({
         positioning: draft.positioning || '',
         hiringNote: draft.hiringNote || '',
       })
-    } catch (err: any) {
-      setError(err.message || 'Unable to generate a job draft right now.')
+    } catch (err) {
+      setError(getErrorMessage(err, 'Unable to generate a job draft right now.'))
     } finally {
       setIsGeneratingJobDraft(false)
     }
@@ -83,8 +84,8 @@ export default function EmployerJobsPanel({
     try {
       await apiUpdateJobStatus(jobId, status)
       onJobCreated() // triggers refetch
-    } catch (err: any) {
-      setError(err.message || 'Unable to update this job status right now.')
+    } catch (err) {
+      setError(getErrorMessage(err, 'Unable to update this job status right now.'))
     } finally {
       setIsUpdatingJobStatus(false)
     }

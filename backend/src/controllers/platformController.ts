@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import prisma from '../config/prisma';
+import { getErrorMessage } from '../utils/errors';
 
 // Cached stats to avoid hitting the DB on every page load
 let cachedStats: Record<string, unknown> | null = null;
@@ -131,7 +132,7 @@ export const getPlatformStats = async (_req: Request, res: Response) => {
     cacheExpiry = now + CACHE_TTL_MS;
 
     res.json({ success: true, stats });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };

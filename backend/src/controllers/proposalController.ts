@@ -12,6 +12,7 @@ import {
 } from '../services/ai';
 import { createNotification } from '../utils/notifications';
 import { emitAgreementRefresh, emitProposalRefresh } from '../utils/workflowRealtime';
+import { getErrorMessage } from '../utils/errors';
 
 const activeProposalStatuses = ['PENDING', 'COUNTERED'] as const;
 const allowedJobProposalApplicationStatuses = ['SUBMITTED', 'SHORTLISTED', 'INTERVIEW'] as const;
@@ -390,8 +391,8 @@ export const generateJobProposalDraft = async (req: AuthRequest, res: Response) 
     });
 
     return res.json({ success: true, draft });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -468,8 +469,8 @@ export const generateServiceProposalDraft = async (req: AuthRequest, res: Respon
     });
 
     return res.json({ success: true, draft });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -575,8 +576,8 @@ export const createJobProposal = async (req: AuthRequest, res: Response) => {
     });
 
     return res.status(201).json({ success: true, proposal });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -682,8 +683,8 @@ export const createServiceProposal = async (req: AuthRequest, res: Response) => 
     });
 
     return res.status(201).json({ success: true, proposal });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -702,8 +703,8 @@ export const getMyProposals = async (req: AuthRequest, res: Response) => {
     });
 
     return res.json({ success: true, proposals });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -789,8 +790,8 @@ export const compareProposals = async (req: AuthRequest, res: Response) => {
         }),
       },
     });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -843,8 +844,8 @@ export const generateProposalDecisionSummary = async (req: AuthRequest, res: Res
     });
 
     return res.json({ success: true, brief });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -868,8 +869,8 @@ export const getProposalById = async (req: AuthRequest, res: Response) => {
     }
 
     return res.json({ success: true, proposal });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -959,8 +960,8 @@ export const counterProposal = async (req: AuthRequest, res: Response) => {
     }
 
     return res.json({ success: true, proposal: updatedProposal });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -1117,7 +1118,7 @@ export const updateProposalStatus = async (req: AuthRequest, res: Response) => {
     }
 
     return res.json({ success: true, proposal: acceptedProposal });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };

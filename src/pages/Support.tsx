@@ -1,4 +1,4 @@
-import { Search, BookOpen, MessageSquare, Shield, CreditCard, User, HelpCircle, ArrowRight } from 'lucide-react'
+import { Search, BookOpen, Shield, CreditCard, HelpCircle, ArrowRight } from 'lucide-react'
 import { useState, useMemo } from 'react'
 import SEO from '../components/SEO'
 

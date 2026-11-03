@@ -1,4 +1,4 @@
-import { BookOpen, ArrowRight, Clock, User, Tag, Search } from 'lucide-react'
+import { BookOpen, ArrowRight, Clock, Search } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import SEO from '../components/SEO'
 import { blogPosts } from '../data/blogData'

@@ -5,6 +5,7 @@ import {
   type EvidenceUploadCategory,
   uploadEvidenceFile,
 } from '../lib/evidenceUpload'
+import { getErrorMessage } from '../lib/errors'
 
 type EvidenceUploadFieldProps = {
   category: EvidenceUploadCategory
@@ -60,8 +61,8 @@ export default function EvidenceUploadField({
       const response = await uploadEvidenceFile(category, file)
       onChange(response.file.url)
       setUploadedFileName(response.file.originalFileName || file.name)
-    } catch (error: any) {
-      setUploadError(error.message || 'Unable to upload evidence right now')
+    } catch (error) {
+      setUploadError(getErrorMessage(error, 'Unable to upload evidence right now'))
     } finally {
       setIsUploading(false)
     }

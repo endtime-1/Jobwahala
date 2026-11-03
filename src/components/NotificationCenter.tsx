@@ -5,6 +5,7 @@ import { apiGetMyNotifications, apiGetNotificationSummary, apiMarkAllNotificatio
 import { formatRelativeTime } from '../lib/display'
 import { subscribeToRealtimeEvents } from '../lib/realtime'
 import { useAuth } from '../context/AuthContext'
+import { getErrorMessage } from '../lib/errors'
 
 type NotificationCenterProps = {
   compact?: boolean
@@ -49,8 +50,8 @@ export default function NotificationCenter({ compact = false }: NotificationCent
       setNotifications((data.notifications || []) as NotificationRecord[])
       setUnreadCount(Number(data.unreadCount || 0))
       setError('')
-    } catch (err: any) {
-      setError(err.message || 'Unable to load notifications right now.')
+    } catch (err) {
+      setError(getErrorMessage(err, 'Unable to load notifications right now.'))
     } finally {
       setIsLoading(false)
     }
@@ -63,8 +64,8 @@ export default function NotificationCenter({ compact = false }: NotificationCent
       const data = await apiGetNotificationSummary()
       setUnreadCount(Number(data.unreadCount || 0))
       setError('')
-    } catch (err: any) {
-      setError(err.message || 'Unable to refresh notifications right now.')
+    } catch (err) {
+      setError(getErrorMessage(err, 'Unable to refresh notifications right now.'))
     }
   }
 
@@ -154,8 +155,8 @@ export default function NotificationCenter({ compact = false }: NotificationCent
           ),
         )
       }
-    } catch (err: any) {
-      setError(err.message || 'Unable to mark this notification as read.')
+    } catch (err) {
+      setError(getErrorMessage(err, 'Unable to mark this notification as read.'))
       return
     }
 
@@ -179,8 +180,8 @@ export default function NotificationCenter({ compact = false }: NotificationCent
         })),
       )
       setError('')
-    } catch (err: any) {
-      setError(err.message || 'Unable to mark notifications as read right now.')
+    } catch (err) {
+      setError(getErrorMessage(err, 'Unable to mark notifications as read right now.'))
     } finally {
       setIsMarkingAll(false)
     }

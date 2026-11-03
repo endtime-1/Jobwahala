@@ -3,6 +3,7 @@ import prisma from '../config/prisma';
 import { AuthRequest } from '../middleware/auth';
 import { paystackService } from '../services/paystackService';
 import logger from '../config/logger';
+import { getErrorMessage } from '../utils/errors';
 
 /**
  * Get the list of supported banks and MoMo providers in Ghana.
@@ -11,8 +12,8 @@ export const getBanks = async (req: AuthRequest, res: Response) => {
   try {
     const banks = await paystackService.listBanks('ghana');
     res.json({ success: true, banks: banks.data });
-  } catch (error: any) {
-    logger.error('get_banks_error', { error: error.message });
+  } catch (error) {
+    logger.error('get_banks_error', { error: getErrorMessage(error) });
     res.status(500).json({ success: false, message: 'Failed to fetch supported banks' });
   }
 };
@@ -65,9 +66,9 @@ export const savePayoutAccount = async (req: AuthRequest, res: Response) => {
     });
 
     res.json({ success: true, payoutAccount });
-  } catch (error: any) {
-    logger.error('save_payout_account_error', { error: error.message });
-    res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    logger.error('save_payout_account_error', { error: getErrorMessage(error) });
+    res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -82,7 +83,7 @@ export const getMyPayoutAccount = async (req: AuthRequest, res: Response) => {
     });
 
     res.json({ success: true, payoutAccount });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };

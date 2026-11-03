@@ -6,6 +6,7 @@ import { emailHandle, formatRelativeTime, getInitials } from '../lib/display'
 import { uploadEvidenceFile, evidenceUploadConstraints } from '../lib/evidenceUpload'
 import { subscribeToRealtimeEvents } from '../lib/realtime'
 import { useAuth } from '../context/AuthContext'
+import { getErrorMessage } from '../lib/errors'
 
 type ContactRecord = {
   id: string
@@ -409,8 +410,8 @@ export default function Messaging() {
               await apiMarkMessagesRead(conversationId)
               await loadConversations(preferredUserId)
             }
-          } catch (err: any) {
-            setError(err.message || 'Unable to refresh messages right now.')
+          } catch (err) {
+            setError(getErrorMessage(err, 'Unable to refresh messages right now.'))
           }
         })()
       },
@@ -482,8 +483,8 @@ export default function Messaging() {
         contentType: response.file.contentType || file.type,
         sizeBytes: response.file.sizeBytes || file.size,
       })
-    } catch (err: any) {
-      setError(err.message || 'Unable to upload this attachment right now.')
+    } catch (err) {
+      setError(getErrorMessage(err, 'Unable to upload this attachment right now.'))
     } finally {
       setIsUploadingAttachment(false)
     }
@@ -532,7 +533,7 @@ export default function Messaging() {
         setPendingRecipient(null)
         setSelectedId(serverMessage.conversationId)
       }
-    } catch (err: any) {
+    } catch (err) {
       setMessages((existing) =>
         existing.map((message) =>
           message.id === optimisticId ? { ...message, deliveryState: 'failed' } : message,
@@ -545,7 +546,7 @@ export default function Messaging() {
         // Keep the original send error visible if the recovery refresh also fails.
       }
 
-      setError(err.message || 'Unable to send this message right now.')
+      setError(getErrorMessage(err, 'Unable to send this message right now.'))
     }
   }
 

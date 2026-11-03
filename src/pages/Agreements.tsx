@@ -6,7 +6,6 @@ import {
   apiCreateAgreementDispute,
   apiCreateAgreementMilestone,
   apiCreateAgreementReview,
-  apiCreateAgreementMilestonePaymentSession,
   apiInitializeMilestonePayment,
   apiGenerateAgreementDecisionBrief,
   apiGetMyAgreements,
@@ -16,10 +15,11 @@ import {
   apiUpdateAgreementMilestoneStatus,
   apiUpdateAgreementStatus,
 } from '../lib/api'
-import { emailHandle, formatRelativeTime, getDisplayName } from '../lib/display'
+import { formatRelativeTime, getDisplayName } from '../lib/display'
 import { useAuth } from '../context/AuthContext'
 import EvidenceUploadField from '../components/EvidenceUploadField'
 import { subscribeToRealtimeEvents } from '../lib/realtime'
+import { getErrorMessage } from '../lib/errors'
 
 type AgreementUser = {
   id: string
@@ -295,8 +295,8 @@ export default function Agreements() {
       setDecisionBriefs({})
       setDecisionBriefErrors({})
       setDecisionBriefLoadingId(null)
-    } catch (err: any) {
-      setError(err.message || 'Unable to load agreements right now.')
+    } catch (err) {
+      setError(getErrorMessage(err, 'Unable to load agreements right now.'))
     } finally {
       setIsLoading(false)
     }
@@ -338,9 +338,9 @@ export default function Agreements() {
           await loadAgreements()
           navigate('/agreements', { replace: true })
         }
-      } catch (err: any) {
+      } catch (err) {
         if (!isCancelled) {
-          setError(err.message || 'Unable to verify this payment right now.')
+          setError(getErrorMessage(err, 'Unable to verify this payment right now.'))
         }
       } finally {
         if (!isCancelled) {
@@ -363,8 +363,8 @@ export default function Agreements() {
     try {
       await apiUpdateAgreementStatus(agreementId, status)
       await loadAgreements()
-    } catch (err: any) {
-      setError(err.message || 'Unable to update this agreement right now.')
+    } catch (err) {
+      setError(getErrorMessage(err, 'Unable to update this agreement right now.'))
     } finally {
       setIsActing(false)
     }
@@ -454,8 +454,8 @@ export default function Agreements() {
       })
       resetMilestoneDraft(agreementId)
       await loadAgreements()
-    } catch (err: any) {
-      setError(err.message || 'Unable to add this milestone right now.')
+    } catch (err) {
+      setError(getErrorMessage(err, 'Unable to add this milestone right now.'))
     } finally {
       setIsActing(false)
     }
@@ -478,8 +478,8 @@ export default function Agreements() {
       })
       resetReviewDraft(agreementId)
       await loadAgreements()
-    } catch (err: any) {
-      setError(err.message || 'Unable to submit this review right now.')
+    } catch (err) {
+      setError(getErrorMessage(err, 'Unable to submit this review right now.'))
     } finally {
       setIsActing(false)
     }
@@ -504,8 +504,8 @@ export default function Agreements() {
       })
       resetDisputeDraft(agreementId)
       await loadAgreements()
-    } catch (err: any) {
-      setError(err.message || 'Unable to open this dispute right now.')
+    } catch (err) {
+      setError(getErrorMessage(err, 'Unable to open this dispute right now.'))
     } finally {
       setIsActing(false)
     }
@@ -522,8 +522,8 @@ export default function Agreements() {
     try {
       await apiUpdateAgreementMilestoneStatus(agreementId, milestoneId, status)
       await loadAgreements()
-    } catch (err: any) {
-      setError(err.message || 'Unable to update this milestone right now.')
+    } catch (err) {
+      setError(getErrorMessage(err, 'Unable to update this milestone right now.'))
     } finally {
       setIsActing(false)
     }
@@ -540,8 +540,8 @@ export default function Agreements() {
     try {
       await apiUpdateAgreementMilestonePaymentStatus(agreementId, milestoneId, status)
       await loadAgreements()
-    } catch (err: any) {
-      setError(err.message || 'Unable to update this milestone payment right now.')
+    } catch (err) {
+      setError(getErrorMessage(err, 'Unable to update this milestone payment right now.'))
     } finally {
       setIsActing(false)
     }
@@ -558,8 +558,8 @@ export default function Agreements() {
         return
       }
       await loadAgreements()
-    } catch (err: any) {
-      setError(err.message || 'Unable to start this payment session right now.')
+    } catch (err) {
+      setError(getErrorMessage(err, 'Unable to start this payment session right now.'))
     } finally {
       setIsActing(false)
     }
@@ -572,8 +572,8 @@ export default function Agreements() {
     try {
       await apiVerifyAgreementPayment(agreementId, paymentId)
       await loadAgreements()
-    } catch (err: any) {
-      setError(err.message || 'Unable to verify this payment right now.')
+    } catch (err) {
+      setError(getErrorMessage(err, 'Unable to verify this payment right now.'))
     } finally {
       setIsActing(false)
     }
@@ -590,8 +590,8 @@ export default function Agreements() {
     try {
       await apiUpdateAgreementPaymentStatus(agreementId, paymentId, status)
       await loadAgreements()
-    } catch (err: any) {
-      setError(err.message || 'Unable to update this payment session right now.')
+    } catch (err) {
+      setError(getErrorMessage(err, 'Unable to update this payment session right now.'))
     } finally {
       setIsActing(false)
     }
@@ -624,8 +624,8 @@ export default function Agreements() {
     try {
       const data = await apiCompareAgreements(selectedAgreementIds)
       setComparison((data.comparison || null) as AgreementComparisonRecord | null)
-    } catch (err: any) {
-      setComparisonError(err.message || 'Unable to compare these agreements right now.')
+    } catch (err) {
+      setComparisonError(getErrorMessage(err, 'Unable to compare these agreements right now.'))
     } finally {
       setIsComparing(false)
     }
@@ -670,10 +670,10 @@ export default function Agreements() {
         ...current,
         [agreementId]: brief,
       }))
-    } catch (err: any) {
+    } catch (err) {
       setDecisionBriefErrors((current) => ({
         ...current,
-        [agreementId]: err.message || 'Unable to generate an agreement decision brief right now.',
+        [agreementId]: getErrorMessage(err, 'Unable to generate an agreement decision brief right now.'),
       }))
     } finally {
       setDecisionBriefLoadingId((current) => (current === agreementId ? null : current))

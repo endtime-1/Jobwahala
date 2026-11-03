@@ -4,6 +4,7 @@ import prisma from '../config/prisma';
 import { generateSeekerProfileOptimization } from '../services/ai';
 import { scoreApplicantForJob, scoreJobForSeeker } from '../utils/matching';
 import { getRequiredVerificationType, serializeVerificationStatus } from '../utils/verification';
+import { getErrorMessage } from '../utils/errors';
 
 type DashboardAgreementUser = {
   id: string;
@@ -893,8 +894,8 @@ export const getProfile = async (req: AuthRequest, res: Response) => {
         ...serializeVerificationStatus(latestVerificationRequest, verificationRequests),
       },
     });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -937,8 +938,8 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
     }
 
     res.json({ success: true, profile: updatedProfile });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -948,8 +949,8 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
       select: { id: true, email: true, role: true, createdAt: true }
     });
     res.json({ success: true, users });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -962,8 +963,8 @@ export const getWorkspaceSignals = async (req: AuthRequest, res: Response) => {
       success: true,
       ...signals,
     });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -976,8 +977,8 @@ export const getDashboardWorkflowSummary = async (req: AuthRequest, res: Respons
       success: true,
       ...workflowSummary,
     });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -992,8 +993,8 @@ export const getDashboardOverview = async (req: AuthRequest, res: Response) => {
       role,
       ...overview,
     });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -1086,8 +1087,8 @@ export const getProfileOptimization = async (req: AuthRequest, res: Response) =>
       success: true,
       optimization,
     });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -1136,7 +1137,7 @@ export const getDashboardData = async (req: AuthRequest, res: Response) => {
       ...roleOverview,
       ...(role === 'FREELANCER' && recentMessages ? { recentMessages } : {})
     });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };

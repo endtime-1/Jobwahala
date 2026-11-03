@@ -5,6 +5,7 @@ import logger from './config/logger';
 import prisma from './config/prisma';
 import { initSocket } from './services/socketService';
 import { processPayout } from './controllers/agreementController';
+import { getErrorMessage } from './utils/errors';
 
 const httpServer = createServer(app);
 initSocket(httpServer);
@@ -52,8 +53,8 @@ const payoutTask = setInterval(async () => {
          }
        }
      }
-  } catch (error: any) {
-    logger.error('payout_worker_error', { error: error.message });
+  } catch (error) {
+    logger.error('payout_worker_error', { error: getErrorMessage(error) });
   }
 }, payoutPollIntervalMs);
 
@@ -80,7 +81,7 @@ const shutdown = async (signal: string) => {
     } catch (disconnectError) {
       logger.error('shutdown_prisma_disconnect_failed', {
         signal,
-        error: disconnectError instanceof Error ? disconnectError.message : String(disconnectError),
+        error: disconnectError instanceof Error ? getErrorMessage(disconnectError) : String(disconnectError),
       });
       process.exit(1);
     }

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
-import { ClipboardList, Handshake, MessageSquare, RefreshCw, Sparkles } from 'lucide-react'
+import { ClipboardList, Handshake, RefreshCw, Sparkles } from 'lucide-react'
 import {
   apiCompareProposals,
   apiCounterProposal,
@@ -11,6 +11,7 @@ import {
 import { useAuth } from '../context/AuthContext'
 import { emailHandle, formatRelativeTime, getDisplayName } from '../lib/display'
 import { subscribeToRealtimeEvents } from '../lib/realtime'
+import { getErrorMessage } from '../lib/errors'
 
 type ProposalUser = {
   id: string
@@ -191,8 +192,8 @@ export default function Proposals() {
       setDecisionBriefs({})
       setDecisionBriefErrors({})
       setDecisionBriefLoadingId(null)
-    } catch (err: any) {
-      setError(err.message || 'Unable to load proposals right now.')
+    } catch (err) {
+      setError(getErrorMessage(err, 'Unable to load proposals right now.'))
     } finally {
       setIsLoading(false)
     }
@@ -249,8 +250,8 @@ export default function Proposals() {
     try {
       await apiUpdateProposalStatus(proposalId, status)
       await loadProposals()
-    } catch (err: any) {
-      setError(err.message || 'Unable to update this proposal right now.')
+    } catch (err) {
+      setError(getErrorMessage(err, 'Unable to update this proposal right now.'))
     } finally {
       setIsActing(false)
     }
@@ -283,8 +284,8 @@ export default function Proposals() {
     try {
       const data = await apiCompareProposals(selectedProposalIds)
       setComparison((data.comparison || null) as ProposalComparisonRecord | null)
-    } catch (err: any) {
-      setComparisonError(err.message || 'Unable to compare these proposals right now.')
+    } catch (err) {
+      setComparisonError(getErrorMessage(err, 'Unable to compare these proposals right now.'))
     } finally {
       setIsComparing(false)
     }
@@ -307,10 +308,10 @@ export default function Proposals() {
         ...current,
         [proposalId]: brief,
       }))
-    } catch (err: any) {
+    } catch (err) {
       setDecisionBriefErrors((current) => ({
         ...current,
-        [proposalId]: err.message || 'Unable to generate a decision brief right now.',
+        [proposalId]: getErrorMessage(err, 'Unable to generate a decision brief right now.'),
       }))
     } finally {
       setDecisionBriefLoadingId((current) => (current === proposalId ? null : current))
@@ -350,8 +351,8 @@ export default function Proposals() {
       })
       setExpandedCounters((current) => ({ ...current, [proposal.id]: false }))
       await loadProposals()
-    } catch (err: any) {
-      setError(err.message || 'Unable to counter this proposal right now.')
+    } catch (err) {
+      setError(getErrorMessage(err, 'Unable to counter this proposal right now.'))
     } finally {
       setIsActing(false)
     }

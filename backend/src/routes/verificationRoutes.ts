@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { initiateIdentityVerification, getMyVerification } from '../controllers/verificationController';
-import { authMiddleware, roleMiddleware } from '../middleware/auth';
+import { authMiddleware } from '../middleware/auth';
 
 const router = Router();
 

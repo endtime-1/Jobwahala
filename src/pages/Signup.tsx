@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Mail, Lock, User, Eye, EyeOff, ArrowRight, Briefcase, Laptop, Users } from 'lucide-react'
 import { useAuth, type UserRole } from '../context/AuthContext'
 import { isApiUnavailableMessage } from '../lib/apiStatus'
+import { getErrorMessage } from '../lib/errors'
 
 const ROLES: { value: UserRole; label: string; description: string; icon: typeof Briefcase }[] = [
   { value: 'SEEKER', label: 'Job Seeker', description: 'Find employment', icon: Users },
@@ -28,8 +29,8 @@ export default function Signup() {
     try {
       await signup(email, password, role)
       navigate('/onboarding')
-    } catch (err: any) {
-      const nextMessage = err?.message || 'Signup failed. Please try again.'
+    } catch (err) {
+      const nextMessage = getErrorMessage(err, 'Signup failed. Please try again.')
       setError(isApiUnavailableMessage(nextMessage) ? '' : nextMessage)
     } finally {
       setIsLoading(false)

@@ -8,6 +8,7 @@ import { AuthRequest } from '../middleware/auth';
 import { serializeVerificationStatus } from '../utils/verification';
 import { sendVerificationEmail, sendPasswordResetEmail } from '../services/emailService';
 import logger from '../config/logger';
+import { getErrorMessage } from '../utils/errors';
 
 const allowedRegistrationRoles = ['SEEKER', 'EMPLOYER', 'FREELANCER'] as const;
 
@@ -82,8 +83,8 @@ export const register = async (req: Request, res: Response) => {
       user: { id: user.id, email: user.email, role: user.role, emailVerified: false },
       message: 'Account created. Please check your email to verify your address.',
     });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -114,8 +115,8 @@ export const login = async (req: Request, res: Response) => {
       token,
       user: { id: user.id, email: user.email, role: user.role, emailVerified: user.emailVerified },
     });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -154,8 +155,8 @@ export const me = async (req: AuthRequest, res: Response) => {
         ...serializeVerificationStatus(latestVerificationRequest),
       },
     });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -191,8 +192,8 @@ export const verifyEmail = async (req: Request, res: Response) => {
     ]);
 
     res.json({ success: true, message: 'Email verified successfully' });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -236,8 +237,8 @@ export const resendVerification = async (req: Request, res: Response) => {
     });
 
     res.json({ success: true, message: 'If an account exists with that email and is unverified, a verification email has been sent.' });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -286,8 +287,8 @@ export const forgotPassword = async (req: Request, res: Response) => {
     });
 
     res.json({ success: true, message: 'If an account exists with that email, a password reset link has been sent.' });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -329,7 +330,7 @@ export const resetPassword = async (req: Request, res: Response) => {
     ]);
 
     res.json({ success: true, message: 'Password has been reset successfully. You can now log in.' });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };

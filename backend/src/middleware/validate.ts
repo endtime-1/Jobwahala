@@ -30,7 +30,7 @@ export const validate = (schema: ZodTypeAny) => {
 
       applyParsedRequest(req, parsed);
       return next();
-    } catch (error: any) {
+    } catch (error) {
       const issues = error instanceof ZodError ? error.issues : undefined;
       return res.status(400).json({
         success: false,
@@ -53,7 +53,7 @@ export const validateWith = (schemaFactory: (req: Request) => ZodTypeAny) => {
 
       applyParsedRequest(req, parsed);
       return next();
-    } catch (error: any) {
+    } catch (error) {
       const issues = error instanceof ZodError ? error.issues : undefined;
       return res.status(400).json({
         success: false,

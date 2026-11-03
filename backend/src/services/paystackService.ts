@@ -1,6 +1,7 @@
 import axios from 'axios';
 import env from '../config/env';
 import logger from '../config/logger';
+import { getErrorMessage } from '../utils/errors';
 
 const PAYSTACK_BASE_URL = 'https://api.paystack.co';
 
@@ -62,8 +63,8 @@ class PaystackService {
         { headers: this.headers }
       );
       return response.data;
-    } catch (error: any) {
-      logger.error('paystack_initialize_error', { error: error.response?.data || error.message });
+    } catch (error) {
+      logger.error('paystack_initialize_error', { error: (axios.isAxiosError(error) && error.response?.data) || getErrorMessage(error) });
       throw error;
     }
   }
@@ -78,8 +79,8 @@ class PaystackService {
         { headers: this.headers }
       );
       return response.data;
-    } catch (error: any) {
-      logger.error('paystack_verify_error', { error: error.response?.data || error.message });
+    } catch (error) {
+      logger.error('paystack_verify_error', { error: (axios.isAxiosError(error) && error.response?.data) || getErrorMessage(error) });
       throw error;
     }
   }
@@ -101,8 +102,8 @@ class PaystackService {
         { headers: this.headers }
       );
       return response.data;
-    } catch (error: any) {
-      logger.error('paystack_create_recipient_error', { error: error.response?.data || error.message });
+    } catch (error) {
+      logger.error('paystack_create_recipient_error', { error: (axios.isAxiosError(error) && error.response?.data) || getErrorMessage(error) });
       throw error;
     }
   }
@@ -117,8 +118,8 @@ class PaystackService {
         { headers: this.headers }
       );
       return response.data;
-    } catch (error: any) {
-      logger.error('paystack_list_banks_error', { error: error.response?.data || error.message });
+    } catch (error) {
+      logger.error('paystack_list_banks_error', { error: (axios.isAxiosError(error) && error.response?.data) || getErrorMessage(error) });
       throw error;
     }
   }
@@ -141,8 +142,8 @@ class PaystackService {
         { headers: this.headers }
       );
       return response.data;
-    } catch (error: any) {
-      logger.error('paystack_initiate_transfer_error', { error: error.response?.data || error.message });
+    } catch (error) {
+      logger.error('paystack_initiate_transfer_error', { error: (axios.isAxiosError(error) && error.response?.data) || getErrorMessage(error) });
       throw error;
     }
   }

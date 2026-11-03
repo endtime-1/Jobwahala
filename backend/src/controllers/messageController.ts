@@ -2,8 +2,8 @@ import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import prisma from '../config/prisma';
 import { singleValue } from '../utils/request';
-import { deferRealtimeEvent, emitRealtimeEventToUsers } from '../services/realtime';
 import { emitMessageRefresh } from '../utils/workflowRealtime';
+import { getErrorMessage } from '../utils/errors';
 
 const conversationSummaryInclude = {
   user1: { select: { id: true, email: true } },
@@ -132,8 +132,8 @@ export const getConversations = async (req: AuthRequest, res: Response) => {
     }));
 
     res.json({ success: true, conversations: mapped });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -143,8 +143,8 @@ export const getConversationSidebar = async (req: AuthRequest, res: Response) =>
     const conversations = await getConversationSidebarItems(userId);
 
     res.json({ success: true, conversations });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -157,8 +157,8 @@ export const getMessageSummary = async (req: AuthRequest, res: Response) => {
       success: true,
       ...summary,
     });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -182,8 +182,8 @@ export const getMessages = async (req: AuthRequest, res: Response) => {
     });
 
     res.json({ success: true, messages });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -222,8 +222,8 @@ export const getMessageDelta = async (req: AuthRequest, res: Response) => {
     });
 
     return res.json({ success: true, messages });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -307,8 +307,8 @@ export const sendMessage = async (req: AuthRequest, res: Response) => {
     );
 
     res.status(201).json({ success: true, message });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -345,7 +345,7 @@ export const markAsRead = async (req: AuthRequest, res: Response) => {
     );
 
     res.json({ success: true, message: 'Messages marked as read' });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };

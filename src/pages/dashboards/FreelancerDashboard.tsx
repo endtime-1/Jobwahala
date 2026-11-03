@@ -14,6 +14,7 @@ import WorkflowSidebar from './shared/WorkflowSidebar'
 import { getApplicationBadgeClass, getRequestBadgeClass, getProposalBadgeClass } from './shared/utils'
 import { useFreelancerDashboard } from './freelancer/hooks'
 import type { ProposalTarget, ServiceCopilotDraft } from './freelancer/hooks'
+import { getErrorMessage } from '../../lib/errors'
 
 const initialServiceForm = { title: '', description: '', price: '', deliveryTime: '', category: '' }
 const requestStatuses = ['PENDING', 'ACCEPTED', 'DECLINED', 'COMPLETED']
@@ -64,17 +65,17 @@ export default function FreelancerDashboard() {
 
   const handleCreateService = async (event: React.FormEvent) => {
     event.preventDefault(); setError(''); setIsSubmitting(true)
-    try { await apiCreateService(serviceForm); resetForm(); refreshDashboard() } catch (err: any) { setError(err.message || 'Unable to publish.') } finally { setIsSubmitting(false) }
+    try { await apiCreateService(serviceForm); resetForm(); refreshDashboard() } catch (err) { setError(getErrorMessage(err, 'Unable to publish.')) } finally { setIsSubmitting(false) }
   }
 
   const handleUpdateService = async (event: React.FormEvent) => {
     event.preventDefault(); if (!editingServiceId) return; setError(''); setIsSubmitting(true)
-    try { await apiUpdateService(editingServiceId, serviceForm); resetForm(); refreshDashboard() } catch (err: any) { setError(err.message || 'Unable to update.') } finally { setIsSubmitting(false) }
+    try { await apiUpdateService(editingServiceId, serviceForm); resetForm(); refreshDashboard() } catch (err) { setError(getErrorMessage(err, 'Unable to update.')) } finally { setIsSubmitting(false) }
   }
 
   const handleDeleteService = async (serviceId: string) => {
     if (!window.confirm('Delete this service?')) return; setError(''); setIsSubmitting(true)
-    try { await apiDeleteService(serviceId); if (editingServiceId === serviceId) resetForm(); refreshDashboard() } catch (err: any) { setError(err.message || 'Unable to delete.') } finally { setIsSubmitting(false) }
+    try { await apiDeleteService(serviceId); if (editingServiceId === serviceId) resetForm(); refreshDashboard() } catch (err) { setError(getErrorMessage(err, 'Unable to delete.')) } finally { setIsSubmitting(false) }
   }
 
   const startEditing = (service: { id: string; title: string; description: string; price: number; deliveryTime?: string | null; category?: string | null }) => {
@@ -89,22 +90,22 @@ export default function FreelancerDashboard() {
       const draft = (data.draft || {}) as Partial<typeof serviceForm> & ServiceCopilotDraft
       setServiceForm((c) => ({ ...c, title: draft.title || c.title, description: draft.description || c.description, price: draft.price || c.price, deliveryTime: draft.deliveryTime || c.deliveryTime, category: draft.category || c.category }))
       setServiceCopilotDraft({ positioning: draft.positioning || '', pricingNote: draft.pricingNote || '' })
-    } catch (err: any) { setError(err.message || 'Unable to generate draft.') } finally { setIsGeneratingServiceDraft(false) }
+    } catch (err) { setError(getErrorMessage(err, 'Unable to generate draft.')) } finally { setIsGeneratingServiceDraft(false) }
   }
 
   const handleRequestStatusUpdate = async (requestId: string, status: string) => {
     setError(''); setIsUpdatingRequest(true)
-    try { await apiUpdateServiceRequestStatus(requestId, status); refreshDashboard() } catch (err: any) { setError(err.message || 'Unable to update.') } finally { setIsUpdatingRequest(false) }
+    try { await apiUpdateServiceRequestStatus(requestId, status); refreshDashboard() } catch (err) { setError(getErrorMessage(err, 'Unable to update.')) } finally { setIsUpdatingRequest(false) }
   }
 
   const handleServiceStatusUpdate = async (serviceId: string, status: string) => {
     setError(''); setIsUpdatingServiceStatus(true)
-    try { await apiUpdateOwnedServiceStatus(serviceId, status); if (editingServiceId === serviceId) resetForm(); refreshDashboard() } catch (err: any) { setError(err.message || 'Unable to update.') } finally { setIsUpdatingServiceStatus(false) }
+    try { await apiUpdateOwnedServiceStatus(serviceId, status); if (editingServiceId === serviceId) resetForm(); refreshDashboard() } catch (err) { setError(getErrorMessage(err, 'Unable to update.')) } finally { setIsUpdatingServiceStatus(false) }
   }
 
   const handleSubmitVerification = async (payload: { details: string; documentUrl?: string }) => {
     setError(''); setIsUpdatingServiceStatus(true)
-    try { await apiCreateVerificationRequest(payload); refreshDashboard() } catch (err: any) { setError(err.message || 'Unable to submit.') } finally { setIsUpdatingServiceStatus(false) }
+    try { await apiCreateVerificationRequest(payload); refreshDashboard() } catch (err) { setError(getErrorMessage(err, 'Unable to submit.')) } finally { setIsUpdatingServiceStatus(false) }
   }
 
   const handleCreateProposal = async (draft: ProposalDraft) => {
@@ -112,7 +113,7 @@ export default function FreelancerDashboard() {
     try {
       await apiCreateServiceProposal(proposalTarget.requestId, { title: draft.title, summary: draft.summary, amount: draft.amount || undefined, timeline: draft.timeline || undefined, expiresAt: draft.expiresAt || undefined, message: draft.message || undefined })
       setProposalTarget(null); refreshDashboard()
-    } catch (err: any) { setError(err.message || 'Unable to send proposal.') } finally { setIsSubmittingProposal(false) }
+    } catch (err) { setError(getErrorMessage(err, 'Unable to send proposal.')) } finally { setIsSubmittingProposal(false) }
   }
 
   const handleGenerateProposalDraft = async (draft: ProposalDraft) => {
@@ -120,7 +121,7 @@ export default function FreelancerDashboard() {
     try {
       const data = await apiGenerateServiceProposalDraft(proposalTarget.requestId, { title: draft.title || undefined, amount: draft.amount || undefined, timeline: draft.timeline || undefined, focus: draft.message || draft.summary || undefined })
       return data.draft as Partial<ProposalDraft>
-    } catch (err: any) { throw new Error(err.message || 'Unable to generate draft.') } finally { setIsGeneratingProposalDraft(false) }
+    } catch (err) { throw new Error(getErrorMessage(err, 'Unable to generate draft.')) } finally { setIsGeneratingProposalDraft(false) }
   }
 
   return (

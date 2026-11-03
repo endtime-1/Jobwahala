@@ -13,6 +13,7 @@ import {
 } from '../lib/workMode'
 import { useAuth } from '../context/AuthContext'
 import SEO from '../components/SEO'
+import { getErrorMessage } from '../lib/errors'
 
 type JobRecord = {
   id: string
@@ -169,8 +170,8 @@ export default function JobListings() {
     try {
       const data = await apiCompareJobs(selectedJobIds)
       setComparison((data.comparison || null) as JobComparisonRecord | null)
-    } catch (err: any) {
-      setComparisonError(err.message || 'Unable to compare these job options right now.')
+    } catch (err) {
+      setComparisonError(getErrorMessage(err, 'Unable to compare these job options right now.'))
     } finally {
       setIsComparing(false)
     }

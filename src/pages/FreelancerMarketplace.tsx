@@ -2,10 +2,11 @@ import { Search, Filter, ArrowRight, Zap, BriefcaseBusiness, Sparkles } from 'lu
 import { Link } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
 import { apiCompareMarketplaceFreelancers, apiGetRecommendedServices, apiGetServices } from '../lib/api'
-import { emailHandle, formatMoney, getDisplayName, getInitials } from '../lib/display'
+import { formatMoney, getDisplayName, getInitials } from '../lib/display'
 import VerifiedBadge from '../components/VerifiedBadge'
 import { useAuth } from '../context/AuthContext'
 import SEO from '../components/SEO'
+import { getErrorMessage } from '../lib/errors'
 
 type ServiceRecord = {
   id: string
@@ -117,9 +118,9 @@ export default function FreelancerMarketplace() {
         setServices(data.services as ServiceRecord[])
         setIsPersonalized(false)
         setError('')
-      } catch (err: any) {
+      } catch (err) {
         if (cancelled) return
-        setError(err.message || 'Unable to load freelancer services right now.')
+        setError(getErrorMessage(err, 'Unable to load freelancer services right now.'))
       } finally {
         if (!cancelled) {
           setIsLoading(false)
@@ -288,8 +289,8 @@ export default function FreelancerMarketplace() {
     try {
       const data = await apiCompareMarketplaceFreelancers(selectedFreelancerIds)
       setComparison((data.comparison || null) as MarketplaceComparisonRecord | null)
-    } catch (err: any) {
-      setComparisonError(err.message || 'Unable to compare these freelancer options right now.')
+    } catch (err) {
+      setComparisonError(getErrorMessage(err, 'Unable to compare these freelancer options right now.'))
     } finally {
       setIsComparing(false)
     }

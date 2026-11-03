@@ -1,4 +1,3 @@
-import { Response } from 'express';
 
 export const agreementUserSelect = {
   id: true,

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Briefcase, ChevronRight, Rocket, Shield, User, Zap } from 'lucide-react'
 import { useAuth, type AuthUser, type UserRole } from '../context/AuthContext'
 import { apiUpdateProfile } from '../lib/api'
+import { getErrorMessage } from '../lib/errors'
 
 type ProfileFormState = {
   primary: string
@@ -119,8 +120,8 @@ export default function Onboarding() {
       await apiUpdateProfile(payload)
       await refreshUser()
       navigate('/dashboard')
-    } catch (err: any) {
-      setError(err.message || 'Unable to save your profile right now.')
+    } catch (err) {
+      setError(getErrorMessage(err, 'Unable to save your profile right now.'))
     } finally {
       setIsSubmitting(false)
     }

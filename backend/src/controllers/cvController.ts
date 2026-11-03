@@ -3,6 +3,7 @@ import { AuthRequest } from '../middleware/auth';
 import prisma from '../config/prisma';
 import { generateCVFromPrompt } from '../services/ai';
 import { singleValue } from '../utils/request';
+import { getErrorMessage } from '../utils/errors';
 
 export const saveCVGeneration = async (req: AuthRequest, res: Response) => {
   try {
@@ -19,8 +20,8 @@ export const saveCVGeneration = async (req: AuthRequest, res: Response) => {
       }
     });
     res.status(201).json({ success: true, cv });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -31,8 +32,8 @@ export const getMyCVs = async (req: AuthRequest, res: Response) => {
       orderBy: { createdAt: 'desc' }
     });
     res.json({ success: true, cvs });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -52,7 +53,7 @@ export const getCVById = async (req: AuthRequest, res: Response) => {
     }
 
     res.json({ success: true, cv });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };

@@ -1,5 +1,5 @@
 import { useParams, Link } from 'react-router-dom'
-import { ArrowLeft, Clock, User, Calendar, Share2 } from 'lucide-react'
+import { ArrowLeft, Calendar, Share2 } from 'lucide-react'
 import SEO from '../components/SEO'
 import { blogPosts } from '../data/blogData'
 

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { X, Send, BriefcaseBusiness, Sparkles } from 'lucide-react'
 import { apiCreateServiceRequest, apiGetServiceRequestCoaching } from '../lib/api'
+import { getErrorMessage } from '../lib/errors'
 
 interface ServiceRequestModalProps {
   isOpen: boolean
@@ -99,8 +100,8 @@ export default function ServiceRequestModal({
       setTimeout(() => {
         handleClose()
       }, 1800)
-    } catch (err: any) {
-      setError(err.message || 'Unable to send your service request right now.')
+    } catch (err) {
+      setError(getErrorMessage(err, 'Unable to send your service request right now.'))
       setIsSubmitting(false)
     }
   }

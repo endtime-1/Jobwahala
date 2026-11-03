@@ -13,6 +13,7 @@ import EmployerJobsPanel from './employer/EmployerJobsPanel'
 import EmployerApplicantsPanel from './employer/EmployerApplicantsPanel'
 import EmployerSidebar from './employer/EmployerSidebar'
 import EmployerServiceRequests from './employer/EmployerServiceRequests'
+import { getErrorMessage } from '../../lib/errors'
 
 export default function EmployerDashboard() {
   const queryClient = useQueryClient()
@@ -77,8 +78,8 @@ export default function EmployerDashboard() {
     try {
       await apiCreateVerificationRequest(payload)
       refreshDashboard()
-    } catch (err: any) {
-      setError(err.message || 'Unable to submit your verification request right now.')
+    } catch (err) {
+      setError(getErrorMessage(err, 'Unable to submit your verification request right now.'))
     } finally {
       setIsSubmittingVerification(false)
     }

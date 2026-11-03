@@ -7,6 +7,7 @@ import { createAgreementEvent } from '../utils/agreementEvents';
 import { generateEmployerApplicantComparisonSummary, generateEmployerApplicantDecisionBrief, generateEmployerShortlistSummary, generateJobApplicationCoaching, generateJobPostOptimization, generateSeekerJobComparisonSummary } from '../services/ai';
 import { scoreApplicantForJob, scoreJobForSeeker } from '../utils/matching';
 import { serializeVerificationStatus } from '../utils/verification';
+import { getErrorMessage } from '../utils/errors';
 
 const mapRankedApplications = <
   T extends {
@@ -61,8 +62,8 @@ export const createJob = async (req: AuthRequest, res: Response) => {
       }
     });
     res.status(201).json({ success: true, job });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -96,8 +97,8 @@ export const generateJobDraft = async (req: AuthRequest, res: Response) => {
       success: true,
       draft,
     });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -161,8 +162,8 @@ export const getJobs = async (req: AuthRequest, res: Response) => {
         },
       })),
     });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -271,8 +272,8 @@ export const compareJobsForSeeker = async (req: AuthRequest, res: Response) => {
         })),
       },
     });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -313,8 +314,8 @@ export const getJobById = async (req: AuthRequest, res: Response) => {
         },
       },
     });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -353,12 +354,12 @@ export const applyForJob = async (req: AuthRequest, res: Response) => {
       }
     });
     res.status(201).json({ success: true, application });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
       return res.status(409).json({ success: false, message: 'You have already applied to this job' });
     }
 
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -383,8 +384,8 @@ export const getMyJobApplication = async (req: AuthRequest, res: Response) => {
     });
 
     return res.json({ success: true, application });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -441,8 +442,8 @@ export const getJobApplicants = async (req: AuthRequest, res: Response) => {
     const rankedApplications = mapRankedApplications(applications, job);
 
     res.json({ success: true, applications: rankedApplications });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -534,8 +535,8 @@ export const generateJobApplicantDecisionBrief = async (req: AuthRequest, res: R
       success: true,
       brief,
     });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -602,8 +603,8 @@ export const generateJobShortlistSummary = async (req: AuthRequest, res: Respons
       summary,
       candidatesConsidered: rankedApplications.length,
     });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -670,8 +671,8 @@ export const generateJobApplicantComparison = async (req: AuthRequest, res: Resp
       summary,
       candidatesConsidered: Math.min(rankedApplications.length, 4),
     });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -742,8 +743,8 @@ export const getJobApplicationCoaching = async (req: AuthRequest, res: Response)
       success: true,
       coaching,
     });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -858,8 +859,8 @@ export const updateApplicationStatus = async (req: AuthRequest, res: Response) =
     });
 
     return res.json({ success: true, application: updatedApplication });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -892,8 +893,8 @@ export const deleteApplication = async (req: AuthRequest, res: Response) => {
     });
 
     return res.json({ success: true, message: 'Application withdrawn successfully' });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
 
@@ -920,7 +921,7 @@ export const updateOwnedJobStatus = async (req: AuthRequest, res: Response) => {
     });
 
     return res.json({ success: true, job: updatedJob });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
