@@ -28,3 +28,12 @@ backend/uploads
 *.njsproj
 *.sln
 *.sw?
+
+# Local databases and scratch output
+*.db
+*.db-journal
+backend/.tmp/
+build_errors.txt
+build_output.txt
+diff.txt
+recent_commits.txt

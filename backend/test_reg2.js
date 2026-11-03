@@ -1,1 +1,0 @@
-fetch("https://jobwahala-production.up.railway.app/api/auth/register", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: "test4@jobwahala.com", password: "password123", role: "SEEKER" }) }).then(async r => { const j = await r.json(); console.log("EXACT ERROR MESSAGE IS:", j.message); }).catch(console.error);
