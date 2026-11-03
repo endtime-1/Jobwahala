@@ -517,7 +517,7 @@ export default function Navbar() {
                       {link.icon}
                       {renderDockBadge(link.href)}
                     </span>
-                    <span className="text-[10px] font-black uppercase tracking-[0.16em]">{link.name}</span>
+                    <span className="text-xs font-bold">{link.name}</span>
                   </Link>
                 )
               })}
