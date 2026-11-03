@@ -68,7 +68,7 @@ export default function BlogPost() {
         <div className="mt-20 border-t border-surface-border pt-12">
            <div className="rounded-[2.5rem] bg-surface-alt p-10 text-center">
               <h3 className="text-2xl font-black text-text-main mb-4 tracking-tight">Was this helpful?</h3>
-              <p className="text-text-muted mb-8 font-medium">Join our newsletter for more insights on the Ghanaian job market.</p>
+              <p className="text-text-muted mb-8 font-medium">Create a free account to find jobs and hire talent across Africa.</p>
               <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
                 <input type="email" placeholder="Enter your email" className="flex-1 rounded-2xl border-none bg-white px-6 py-4 text-sm font-bold shadow-premium-sm" />
                 <button className="rounded-2xl bg-text-main px-8 py-4 text-[10px] font-black uppercase tracking-widest text-white hover:bg-neutral-800 transition-colors">Subscribe</button>

@@ -59,9 +59,9 @@ export default function Landing() {
   return (
     <div>
       <SEO
-        title="Jobs and freelance work in Ghana with escrow-protected payments"
-        description="Find jobs and freelance gigs in Ghana, or hire people you can trust. Payments are held in escrow until the work is approved, then paid to MoMo or bank."
-        keywords="jobs in ghana, freelance ghana, hire in accra, escrow payments ghana, mobile money freelance, jobs in kumasi, jobwahala"
+        title="Jobs and freelance work across Africa with escrow-protected payments"
+        description="Find jobs and freelance gigs across Africa, or hire people you can trust. Payments are held in escrow until the work is approved, then paid to mobile money or bank."
+        keywords="jobs in africa, freelance africa, hire freelancers africa, escrow payments, mobile money freelance, remote work africa, jobwahala"
       />
 
       <section className="relative overflow-hidden pb-12 pt-36 sm:pb-20 sm:pt-40 xl:pt-44">
@@ -75,7 +75,7 @@ export default function Landing() {
         </div>
       </section>
 
-      <div className="kente-strip" aria-hidden />
+      <div className="heritage-strip" aria-hidden />
 
       <Section
         eyebrow="Follow the money"

@@ -299,7 +299,7 @@ export default function FreelancerMarketplace() {
   return (
     <div className="container animate-in fade-in pt-32 pb-24 duration-1000 md:pt-32 xl:pt-36">
       <SEO 
-        title="Hire Elite Freelancers in Ghana | Tech & Design Talent"
+        title="Hire Skilled Freelancers Across Africa | Tech, Design & More"
         description="Connect with top-rated Ghanaian software engineers, UI/UX designers, and digital marketers. Verified talent for global high-growth projects."
         keywords="hire ghanaian developers, freelance designers accra, top talent ghana, jobwahala marketplace"
       />

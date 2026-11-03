@@ -41,8 +41,8 @@ const STEPS = [
   {
     icon: Banknote,
     label: 'Get paid',
-    title: 'Paid to your MoMo',
-    body: 'Payout goes to the MTN MoMo, Telecel Cash, AirtelTigo or bank account you added.',
+    title: 'Paid out to you',
+    body: 'Payout goes to the mobile money or bank account you added.',
     status: 'Paid out',
     where: 'In the freelancer wallet',
     escrow: 0,

@@ -7,9 +7,9 @@ export default function Blog() {
   return (
     <div className="fade-in pt-32 pb-20 md:pt-32 md:pb-24 xl:pt-36 xl:pb-32">
       <SEO 
-        title="Resource Center — Insights on Hiring & Remote Work in Ghana"
-        description="Your toolkit for the Ghanaian job market. Expert hiring guides for Accra-based teams and remote work playbooks for local freelancers."
-        keywords="hiring in ghana, accra tech careers, remote work ghana, jobwahala blog, african tech trends"
+        title="Resource Center — Insights on Hiring & Remote Work in Africa"
+        description="Your toolkit for the African job market. Hiring guides for growing teams and remote work playbooks for freelancers."
+        keywords="hiring in africa, african tech careers, remote work africa, jobwahala blog, african tech trends"
       />
       
       <div className="container">
@@ -20,10 +20,10 @@ export default function Blog() {
           </div>
           <h1 className="mb-8 text-5xl font-black tracking-tighter leading-[0.92] text-text-main sm:text-6xl md:text-7xl">
             Insights for the <br/>
-            <span className="text-primary italic">Ghanaian Frontier.</span>
+            <span className="text-primary italic">African Frontier.</span>
           </h1>
           <p className="text-lg font-medium leading-relaxed text-text-muted md:text-xl">
-            Your guide to navigating the future of work in Ghana. Whether you're building a team in Accra or scaling your freelance career globally.
+            Your guide to navigating the future of work across Africa. Whether you're building a team or scaling your freelance career globally.
           </p>
         </section>
 
@@ -111,7 +111,7 @@ export default function Blog() {
               <Sparkles className="h-10 w-10" />
             </div>
             <h3 className="text-2xl font-black tracking-tighter text-text-main mb-4">Your Success Story?</h3>
-            <p className="text-text-muted font-medium mb-8">Launch your career on JobWahala and become our next featured spotlight for the Ghana community.</p>
+            <p className="text-text-muted font-medium mb-8">Launch your career on JobWahala and become our next featured spotlight.</p>
             <Link to="/onboarding?role=seeker" className="btn btn-outline border-primary text-primary px-8">
               Join the Launch
             </Link>
@@ -125,15 +125,15 @@ export default function Blog() {
              <div className="absolute top-0 right-0 h-full w-1/2 bg-gradient-to-l from-primary/20 to-transparent z-0"></div>
               <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-12">
                 <div className="max-w-xl text-left">
-                  <h2 className="text-4xl md:text-5xl font-black text-white tracking-tighter leading-tight mb-6">Join the JobWahala Insider.</h2>
-                  <p className="text-white/70 text-lg font-medium leading-relaxed">Weekly insights on the Ghanaian tech landscape, exclusive remote engineering roles, and career playbooks for Accra's elite.</p>
+                  <h2 className="text-4xl md:text-5xl font-black text-white tracking-tighter leading-tight mb-6">Ready to work without the wahala?</h2>
+                  <p className="text-white/70 text-lg font-medium leading-relaxed">Find jobs, hire talent and get paid safely, with payments held in escrow until the work is approved.</p>
                 </div>
                 <div className="w-full lg:w-auto">
                   <div className="flex flex-col sm:flex-row gap-4">
-                    <input type="email" placeholder="Enter your email" className="bg-white/10 border border-white/20 text-white rounded-2xl px-8 py-4 w-full sm:w-80 focus:ring-2 focus:ring-primary/20 placeholder:text-white/30 font-bold" />
-                    <button className="btn btn-primary px-10 whitespace-nowrap">Subscribe Now</button>
+                    <Link to="/onboarding?role=seeker" className="btn btn-primary px-10 whitespace-nowrap">I want work</Link>
+                    <Link to="/onboarding?role=employer" className="btn btn-outline border-white/30 bg-white/10 px-10 whitespace-nowrap text-white">I want to hire</Link>
                   </div>
-                  <p className="text-[10px] text-white/40 font-bold uppercase tracking-[0.2em] mt-4">Join 2,000+ Ghanaian Professionals</p>
+                  <p className="text-[10px] text-white/40 font-bold uppercase tracking-[0.2em] mt-4">Free to join</p>
                 </div>
               </div>
           </div>

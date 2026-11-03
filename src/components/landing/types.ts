@@ -31,7 +31,7 @@ export const timeAgo = (iso?: string) => {
 
 export const buildWhatsAppInvite = (origin: string) =>
   `https://wa.me/?text=${encodeURIComponent(
-    `Found a Ghana jobs and freelance site where payments are held in escrow until the work is approved: ${origin}`,
+    `Found a jobs and freelance site for Africa where payments are held in escrow until the work is approved: ${origin}`,
   )}`
 
 // Only show an age for recent roles: "6mo ago" beside an "open" label undersells and confuses.

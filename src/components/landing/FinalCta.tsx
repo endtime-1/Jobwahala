@@ -35,7 +35,7 @@ export default function FinalCta() {
 
   return (
     <div className="overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-primary via-[#14306b] to-secondary-dark text-white shadow-premium-2xl">
-      <div className="kente-strip" aria-hidden />
+      <div className="heritage-strip" aria-hidden />
       <div className="px-6 py-12 text-center sm:px-12 sm:py-16">
         <h2 className="mx-auto max-w-2xl text-3xl font-black leading-tight tracking-tight sm:text-5xl">
           Your next job - or your next hire - shouldn&apos;t cost you sleep.

@@ -12,10 +12,10 @@ const COPY: Record<
   }
 > = {
   talent: {
-    sub: 'Find jobs and freelance gigs across Ghana. Every paid project is held in escrow before you start, then sent straight to your MoMo.',
+    sub: 'Find jobs and freelance gigs across Africa. Every paid project is held in escrow before you start, then paid out to your mobile money or bank.',
     points: [
       'Payment is secured before you lift a finger',
-      'Cash out to MTN MoMo, Telecel Cash, AirtelTigo or bank',
+      'Cash out to mobile money or your bank',
       'Free AI CV builder and proposal help',
     ],
     primary: { label: 'Create my free profile', to: '/onboarding?role=seeker' },
@@ -45,7 +45,7 @@ export default function Hero({ audience, onAudienceChange }: HeroProps) {
     <div>
       <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-surface-border bg-white/80 px-3 py-1.5 text-[11px] font-bold tracking-wide text-text-muted shadow-premium-sm">
         <span className="pulse-dot h-2 w-2 rounded-full bg-success" aria-hidden />
-        Ghana-first marketplace · escrow-protected payments
+        Built for Africa · escrow-protected payments
       </div>
 
       <h1 className="max-w-2xl text-[2.6rem] font-black leading-[1.02] tracking-tight text-text-main sm:text-6xl lg:text-[4.25rem]">

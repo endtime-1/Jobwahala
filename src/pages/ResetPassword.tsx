@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useSearchParams, useNavigate } from 'react-router-dom'
-import { Lock, Eye, EyeOff, ArrowLeft, ArrowRight, CheckCircle, XCircle, Briefcase, ShieldCheck } from 'lucide-react'
+import { Lock, Eye, EyeOff, ArrowLeft, ArrowRight, CheckCircle, XCircle, ShieldCheck } from 'lucide-react'
+import Logo from '../components/Logo'
 import { apiResetPassword } from '../lib/api'
 import { getErrorMessage } from '../lib/errors'
 
@@ -79,12 +80,7 @@ export default function ResetPassword() {
         />
 
         <Link to="/" className="relative z-10 flex items-center gap-2.5">
-          <div className="h-9 w-9 rounded-xl bg-[#2f6df6] flex items-center justify-center shadow-lg shadow-[#2f6df6]/30">
-            <Briefcase className="h-4 w-4 text-white" strokeWidth={2.5} />
-          </div>
-          <span className="text-xl font-bold tracking-tight text-white">
-            Job<span className="text-[#2f6df6]">Wahala</span>
-          </span>
+          <Logo tone="dark" size={36} />
         </Link>
 
         <div className="relative z-10">
@@ -120,7 +116,7 @@ export default function ResetPassword() {
       <div className="flex flex-1 flex-col bg-[#f7f9fc]">
         <div className="lg:hidden flex items-center px-4 pt-6 pb-2">
           <Link to="/" className="text-xl font-bold tracking-tight text-[#101a2b]">
-            Job<span className="text-[#2f6df6]">Wahala</span>
+            <Logo size={32} />
           </Link>
         </div>
 

@@ -16,6 +16,7 @@ import {
   BookOpen,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import { LogoMark } from './Logo'
 import { apiGetWorkspaceSignals } from '../lib/api'
 import { getInitials } from '../lib/display'
 import { subscribeToRealtimeEvents } from '../lib/realtime'
@@ -265,7 +266,7 @@ export default function Navbar() {
     <>
       <div className="fixed inset-x-0 top-0 z-[60]">
         <div className="bg-primary px-4 py-2 text-center text-[10px] font-black uppercase tracking-[0.25em] text-white">
-          <span className="opacity-70">🇬🇭 Escrow-protected payments · MoMo payouts.</span>{' '}
+          <span className="opacity-70">Escrow-protected payments · Mobile money payouts.</span>{' '}
           <Link to="/onboarding?role=seeker" className="ml-2 underline hover:text-white/80 transition-colors">Join free</Link>
         </div>
       </div>
@@ -275,9 +276,7 @@ export default function Navbar() {
             <div className="flex items-center justify-between gap-3">
               <div className="flex shrink-0 items-center gap-3 overflow-hidden">
                 <Link to="/" className="flex min-w-0 shrink-0 items-center gap-3 group">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#101a2b_0%,#2f6df6_100%)] text-white shadow-premium-md transition-transform group-hover:-rotate-6">
-                    <Rocket className="h-5 w-5" />
-                  </div>
+                  <LogoMark size={44} className="shadow-premium-md transition-transform group-hover:scale-105" />
                   <div className="min-w-0">
                     <p className="whitespace-nowrap text-base font-black tracking-tight text-text-main md:text-lg">
                       Job<span className="text-secondary">Wahala</span>
@@ -430,9 +429,7 @@ export default function Navbar() {
                   {initials}
                 </div>
               ) : (
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-light text-secondary">
-                  <Rocket className="h-5 w-5" />
-                </div>
+                <LogoMark size={48} />
               )}
             </div>
 

@@ -535,7 +535,7 @@ button {
   }
 }
 
-/* Landing: scroll reveal, Ghana-inspired divider, hero accents */
+/* Landing: scroll reveal, pan-African colour divider, hero accents */
 .reveal {
   opacity: 0;
   transform: translateY(16px);
@@ -549,7 +549,7 @@ button {
   transform: none;
 }
 
-.kente-strip {
+.heritage-strip {
   height: 6px;
   background: repeating-linear-gradient(
     90deg,

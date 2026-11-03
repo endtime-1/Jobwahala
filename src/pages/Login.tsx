@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Mail, Lock, Eye, EyeOff, ArrowRight, Briefcase, Users, TrendingUp } from 'lucide-react'
+import Logo from '../components/Logo'
 import { useAuth } from '../context/AuthContext'
 import { isApiUnavailableMessage } from '../lib/apiStatus'
 import { getErrorMessage } from '../lib/errors'
@@ -43,18 +44,13 @@ export default function Login() {
         />
 
         <Link to="/" className="relative z-10 flex items-center gap-2.5">
-          <div className="h-9 w-9 rounded-xl bg-[#2f6df6] flex items-center justify-center shadow-lg shadow-[#2f6df6]/30">
-            <Briefcase className="h-4.5 w-4.5 text-white" strokeWidth={2.5} />
-          </div>
-          <span className="text-xl font-bold tracking-tight text-white">
-            Job<span className="text-[#2f6df6]">Wahala</span>
-          </span>
+          <Logo tone="dark" size={36} />
         </Link>
 
         <div className="relative z-10">
           <div className="inline-flex items-center gap-2 rounded-full bg-[#2f6df6]/15 border border-[#2f6df6]/20 px-3.5 py-1.5 mb-6">
             <span className="h-1.5 w-1.5 rounded-full bg-[#2f6df6] animate-pulse" />
-            <span className="text-xs font-semibold text-[#2f6df6]">Ghana's #1 Job Platform</span>
+            <span className="text-xs font-semibold text-[#2f6df6]">Jobs and gigs across Africa</span>
           </div>
           <h2 className="text-[42px] font-bold leading-[1.15] text-white mb-4">
             Your next big<br />
@@ -63,14 +59,14 @@ export default function Login() {
             </span>
           </h2>
           <p className="text-[#7a8fa8] text-base leading-relaxed max-w-xs">
-            Connect with top employers, find freelance gigs, or hire skilled professionals across Ghana and beyond.
+            Connect with employers, find freelance gigs, or hire skilled professionals across Africa and beyond.
           </p>
 
           <div className="mt-10 grid grid-cols-3 gap-3">
             {[
-              { icon: Briefcase, label: 'Jobs', value: '1,200+' },
-              { icon: Users, label: 'Professionals', value: '8,500+' },
-              { icon: TrendingUp, label: 'Placements', value: '3,400+' },
+              { icon: Briefcase, label: 'Protected payments', value: 'Escrow' },
+              { icon: Users, label: 'Trusted profiles', value: 'Verified' },
+              { icon: TrendingUp, label: 'Smart fit scores', value: 'Matched' },
             ].map(({ icon: Icon, label, value }) => (
               <div key={label} className="rounded-2xl bg-white/[0.04] border border-white/[0.07] p-4 hover:bg-white/[0.07] transition-colors">
                 <Icon className="h-4 w-4 text-[#2f6df6] mb-3" />
@@ -89,7 +85,7 @@ export default function Login() {
         {/* Mobile header */}
         <div className="lg:hidden flex items-center justify-between px-4 pt-6 pb-2">
           <Link to="/" className="text-xl font-bold tracking-tight text-[#101a2b]">
-            Job<span className="text-[#2f6df6]">Wahala</span>
+            <Logo size={32} />
           </Link>
           <Link to="/signup" className="text-sm text-[#2f6df6] font-semibold">
             Sign up

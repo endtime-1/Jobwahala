@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Mail, Lock, User, Eye, EyeOff, ArrowRight, Briefcase, Laptop, Users } from 'lucide-react'
+import Logo from '../components/Logo'
 import { useAuth, type UserRole } from '../context/AuthContext'
 import { isApiUnavailableMessage } from '../lib/apiStatus'
 import { getErrorMessage } from '../lib/errors'
@@ -51,12 +52,7 @@ export default function Signup() {
         />
 
         <Link to="/" className="relative z-10 flex items-center gap-2.5">
-          <div className="h-9 w-9 rounded-xl bg-[#2f6df6] flex items-center justify-center shadow-lg shadow-[#2f6df6]/30">
-            <Briefcase className="h-4 w-4 text-white" strokeWidth={2.5} />
-          </div>
-          <span className="text-xl font-bold tracking-tight text-white">
-            Job<span className="text-[#2f6df6]">Wahala</span>
-          </span>
+          <Logo tone="dark" size={36} />
         </Link>
 
         <div className="relative z-10">
@@ -71,7 +67,7 @@ export default function Signup() {
             </span>
           </h2>
           <p className="text-[#7a8fa8] text-base leading-relaxed max-w-xs">
-            Join thousands of professionals and employers already using JobWahala to find work, hire talent, and grow their careers.
+            Join JobWahala to find work, hire talent and get paid safely, with payments held in escrow until the work is approved.
           </p>
 
           <div className="mt-10 space-y-3">
@@ -79,7 +75,7 @@ export default function Signup() {
               'Verified employers and freelancers',
               'Secure payments via Paystack',
               'Post jobs and services for free',
-              'Built for Ghana, open to the world',
+              'Built for Africa, open to the world',
             ].map((item) => (
               <div key={item} className="flex items-center gap-3 text-sm text-[#7a8fa8]">
                 <div className="h-5 w-5 rounded-full bg-[#2f6df6]/15 border border-[#2f6df6]/25 flex items-center justify-center shrink-0">
@@ -99,7 +95,7 @@ export default function Signup() {
         {/* Mobile header */}
         <div className="lg:hidden flex items-center justify-between px-4 pt-6 pb-2">
           <Link to="/" className="text-xl font-bold tracking-tight text-[#101a2b]">
-            Job<span className="text-[#2f6df6]">Wahala</span>
+            <Logo size={32} />
           </Link>
           <Link to="/login" className="text-sm text-[#2f6df6] font-semibold">
             Sign in

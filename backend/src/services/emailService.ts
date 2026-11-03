@@ -24,14 +24,14 @@ const wrapHtml = (body: string) => `
   <style>
     body { margin: 0; padding: 0; background: #0f0f0f; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
     .container { max-width: 560px; margin: 40px auto; background: #1a1a1a; border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); }
-    .header { background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%); padding: 32px 40px; text-align: center; }
+    .header { background: linear-gradient(135deg, #14306b 0%, #2f6df6 100%); padding: 32px 40px; text-align: center; }
     .header h1 { margin: 0; color: #fff; font-size: 28px; font-weight: 800; letter-spacing: -0.5px; }
     .header p { margin: 8px 0 0; color: rgba(255,255,255,0.8); font-size: 14px; }
     .body { padding: 40px; color: #e0e0e0; line-height: 1.7; font-size: 15px; }
     .body p { margin: 0 0 16px; }
-    .btn { display: inline-block; padding: 14px 32px; background: #6c5ce7; color: #fff !important; text-decoration: none; border-radius: 12px; font-weight: 700; font-size: 14px; letter-spacing: 0.5px; text-transform: uppercase; }
-    .btn:hover { background: #5a4bd1; }
-    .code { display: inline-block; padding: 12px 24px; background: rgba(108,92,231,0.15); border: 1px solid rgba(108,92,231,0.3); border-radius: 8px; font-family: monospace; font-size: 18px; font-weight: 700; color: #a29bfe; letter-spacing: 2px; }
+    .btn { display: inline-block; padding: 14px 32px; background: #2f6df6; color: #fff !important; text-decoration: none; border-radius: 12px; font-weight: 700; font-size: 14px; letter-spacing: 0.5px; text-transform: uppercase; }
+    .btn:hover { background: #1e4fd6; }
+    .code { display: inline-block; padding: 12px 24px; background: rgba(47,109,246,0.15); border: 1px solid rgba(47,109,246,0.3); border-radius: 8px; font-family: monospace; font-size: 18px; font-weight: 700; color: #7aa2ff; letter-spacing: 2px; }
     .footer { padding: 24px 40px; background: #141414; text-align: center; color: #666; font-size: 12px; border-top: 1px solid rgba(255,255,255,0.05); }
     .muted { color: #888; font-size: 13px; }
   </style>
@@ -49,7 +49,7 @@ export const sendVerificationEmail = async (email: string, token: string) => {
 
   const html = wrapHtml(`
     <div class="header">
-      <h1>🚀 ${APP_NAME}</h1>
+      <h1>${APP_NAME}</h1>
       <p>Verify Your Email</p>
     </div>
     <div class="body">
@@ -79,7 +79,7 @@ export const sendPasswordResetEmail = async (email: string, token: string) => {
 
   const html = wrapHtml(`
     <div class="header">
-      <h1>🔐 ${APP_NAME}</h1>
+      <h1>${APP_NAME}</h1>
       <p>Reset Your Password</p>
     </div>
     <div class="body">
@@ -113,7 +113,7 @@ export const sendJobAlertEmail = async (
 
   const html = wrapHtml(`
     <div class="header">
-      <h1>🚀 ${APP_NAME}</h1>
+      <h1>${APP_NAME}</h1>
       <p>New job for your alert</p>
     </div>
     <div class="body">

@@ -1,4 +1,4 @@
-import { Rocket } from 'lucide-react'
+import { LogoMark } from './Logo'
 import { Link } from 'react-router-dom'
 
 const footerColumns = [
@@ -38,9 +38,7 @@ export default function Footer() {
           <div className="grid grid-cols-1 gap-12 xl:grid-cols-[1.4fr_repeat(3,1fr)]">
             <div className="max-w-sm">
               <Link to="/" className="inline-flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#101a2b_0%,#2f6df6_100%)] text-white shadow-premium-sm">
-                  <Rocket className="h-5 w-5" />
-                </div>
+                <LogoMark size={48} />
                 <div>
                   <p className="text-lg font-black tracking-tight text-text-main">
                     Job<span className="text-secondary">Wahala</span>

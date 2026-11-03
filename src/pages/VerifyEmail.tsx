@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { Rocket, CheckCircle, XCircle, Loader2, Mail, Zap } from 'lucide-react'
+import { CheckCircle, XCircle, Loader2, Mail, Zap } from 'lucide-react'
+import { LogoMark } from '../components/Logo'
 import { apiVerifyEmail, apiResendVerification } from '../lib/api'
 
 type VerifyState = 'loading' | 'success' | 'expired' | 'invalid' | 'error'
@@ -54,9 +55,7 @@ export default function VerifyEmail() {
       <div className="relative z-10 w-full max-w-md animate-in slide-in-from-bottom duration-700">
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-3 group">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-primary/30 bg-primary/20 shadow-primary/20 transition-all group-hover:-rotate-12 group-hover:bg-primary">
-              <Rocket className="h-6 w-6 text-white" />
-            </div>
+            <LogoMark size={48} />
             <span className="text-3xl font-black tracking-tighter text-white">Job<span className="text-primary drop-shadow-[0_0_15px_rgba(var(--color-primary),0.5)]">Wahala</span></span>
           </Link>
         </div>
