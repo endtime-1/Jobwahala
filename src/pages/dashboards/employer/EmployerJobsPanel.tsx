@@ -100,71 +100,101 @@ export default function EmployerJobsPanel({
       ) : null}
 
       {showCreateForm ? (
-        <form onSubmit={handleCreateJob} className="dashboard-panel p-5 sm:p-7 lg:p-8 space-y-6">
-          <div className="flex justify-between items-center pb-6 border-b border-surface-border/50">
-            <h2 className="font-black text-xs uppercase tracking-[0.2em] text-text-main">Create Job Posting</h2>
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Goes live instantly</span>
-          </div>
-          <div className="rounded-[28px] border border-primary/15 bg-primary/5 p-5 sm:p-6">
-            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-              <div>
-                <p className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.24em] text-primary">
-                  <Sparkles className="h-4 w-4" /> Hiring Copilot
-                </p>
-                <h3 className="mt-3 text-lg font-black text-text-main">
-                  Generate a sharper role summary, clearer positioning, and stronger hiring signal.
-                </h3>
-                <p className="mt-2 max-w-2xl text-sm font-medium leading-relaxed text-text-muted">
-                  Use your company profile and current inputs to draft a tighter job post before you publish.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={handleGenerateJobDraft}
-                disabled={isGeneratingJobDraft}
-                className="btn btn-secondary btn-sm rounded-2xl px-5 text-[10px] font-black uppercase tracking-widest disabled:opacity-60"
-              >
-                {isGeneratingJobDraft ? 'Generating...' : 'Generate AI Job Draft'}
-              </button>
+        <form onSubmit={handleCreateJob} className="space-y-6 rounded-2xl border border-secondary/30 bg-white p-5 sm:p-8">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-surface-border pb-5">
+            <div>
+              <h2 className="text-2xl font-black tracking-tight text-text-main">Create Job Posting</h2>
+              <p className="mt-1 text-sm font-medium text-text-muted">Fill in the basics. Your job goes live as soon as you publish.</p>
             </div>
-            {jobCopilotDraft ? (
-              <div className="mt-5 grid gap-3 md:grid-cols-2">
-                <div className="rounded-2xl border border-surface-border bg-white/80 p-4">
-                  <p className="text-[10px] font-black uppercase tracking-[0.22em] text-text-light">Positioning</p>
-                  <p className="mt-2 text-sm font-semibold leading-relaxed text-text-main">
-                    {jobCopilotDraft.positioning || 'No positioning note yet.'}
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-surface-border bg-white/80 p-4">
-                  <p className="text-[10px] font-black uppercase tracking-[0.22em] text-text-light">Hiring note</p>
-                  <p className="mt-2 text-sm font-semibold leading-relaxed text-text-main">
-                    {jobCopilotDraft.hiringNote || 'No hiring note yet.'}
-                  </p>
-                </div>
+            <span className="rounded-full bg-success/15 px-3 py-1 text-sm font-extrabold text-success">Goes live instantly</span>
+          </div>
+
+          <div className="flex flex-col gap-4 rounded-xl bg-secondary/5 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+            <div className="flex items-start gap-3">
+              <span className="flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-secondary/10 text-secondary">
+                <Sparkles className="h-5 w-5" />
+              </span>
+              <div>
+                <p className="font-extrabold text-text-main">Hiring Copilot</p>
+                <p className="text-sm font-medium text-text-muted">
+                  Type a few words about the role, then let AI write a clear job post you can edit.
+                </p>
               </div>
-            ) : null}
+            </div>
+            <button
+              type="button"
+              onClick={handleGenerateJobDraft}
+              disabled={isGeneratingJobDraft}
+              className="btn btn-secondary btn-sm flex-none px-5 disabled:opacity-60"
+            >
+              {isGeneratingJobDraft ? 'Generating...' : 'Generate AI Job Draft'}
+            </button>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <input type="text" placeholder="Job title" value={jobForm.title} onChange={(e) => setJobForm((c) => ({ ...c, title: e.target.value }))} className="h-14 font-bold" required />
-            <input type="text" placeholder="Location or work mode (Remote, Hybrid, Accra)" value={jobForm.location} onChange={(e) => setJobForm((c) => ({ ...c, location: e.target.value }))} className="h-14 font-bold" />
-            <select value={jobForm.type} onChange={(e) => setJobForm((c) => ({ ...c, type: e.target.value }))} className="h-14 font-bold">
-              <option>Full-time</option>
-              <option>Part-time</option>
-              <option>Contract</option>
-              <option>Freelance</option>
-            </select>
-            <input type="text" placeholder="Salary" value={jobForm.salary} onChange={(e) => setJobForm((c) => ({ ...c, salary: e.target.value }))} className="h-14 font-bold" />
-            <input type="text" placeholder="Category" value={jobForm.category} onChange={(e) => setJobForm((c) => ({ ...c, category: e.target.value }))} className="h-14 font-bold md:col-span-2" />
+          {jobCopilotDraft ? (
+            <div className="grid gap-3 md:grid-cols-2">
+              <div className="rounded-xl border border-surface-border bg-surface-alt/40 p-4">
+                <p className="text-sm font-bold text-text-muted">Positioning</p>
+                <p className="mt-1 text-sm font-semibold leading-relaxed text-text-main">
+                  {jobCopilotDraft.positioning || 'No positioning note yet.'}
+                </p>
+              </div>
+              <div className="rounded-xl border border-surface-border bg-surface-alt/40 p-4">
+                <p className="text-sm font-bold text-text-muted">Hiring note</p>
+                <p className="mt-1 text-sm font-semibold leading-relaxed text-text-main">
+                  {jobCopilotDraft.hiringNote || 'No hiring note yet.'}
+                </p>
+              </div>
+            </div>
+          ) : null}
+
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+            <div className="space-y-1.5">
+              <label htmlFor="job-title" className="block text-base font-bold text-text-main">Job title</label>
+              <input id="job-title" type="text" placeholder="Job title" value={jobForm.title} onChange={(e) => setJobForm((c) => ({ ...c, title: e.target.value }))} className="h-14 text-base font-semibold" required />
+              <p className="text-sm text-text-muted">For example: Customer support agent</p>
+            </div>
+            <div className="space-y-1.5">
+              <label htmlFor="job-location" className="block text-base font-bold text-text-main">Where is the job?</label>
+              <input id="job-location" type="text" placeholder="Location or work mode (Remote, Hybrid, Accra)" value={jobForm.location} onChange={(e) => setJobForm((c) => ({ ...c, location: e.target.value }))} className="h-14 text-base font-semibold" />
+              <p className="text-sm text-text-muted">A town, or Remote. Applicants filter by this.</p>
+            </div>
+            <div className="space-y-1.5">
+              <label htmlFor="job-type" className="block text-base font-bold text-text-main">Type of work</label>
+              <select id="job-type" value={jobForm.type} onChange={(e) => setJobForm((c) => ({ ...c, type: e.target.value }))} className="h-14 text-base font-semibold">
+                <option>Full-time</option>
+                <option>Part-time</option>
+                <option>Contract</option>
+                <option>Freelance</option>
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label htmlFor="job-salary" className="block text-base font-bold text-text-main">Pay</label>
+              <input id="job-salary" type="text" placeholder="Salary" value={jobForm.salary} onChange={(e) => setJobForm((c) => ({ ...c, salary: e.target.value }))} className="h-14 text-base font-semibold" />
+              <p className="text-sm text-text-muted">Include the currency, e.g. GHS 3,000 - 4,500 a month.</p>
+            </div>
+            <div className="space-y-1.5 md:col-span-2">
+              <label htmlFor="job-category" className="block text-base font-bold text-text-main">Field</label>
+              <input id="job-category" type="text" placeholder="Category" value={jobForm.category} onChange={(e) => setJobForm((c) => ({ ...c, category: e.target.value }))} className="h-14 text-base font-semibold" />
+              <p className="text-sm text-text-muted">For example: Sales, Design, Finance or Technology.</p>
+            </div>
           </div>
-          <textarea
-            placeholder="Describe the role, responsibilities, and expectations..."
-            value={jobForm.description}
-            onChange={(e) => setJobForm((c) => ({ ...c, description: e.target.value }))}
-            className="min-h-[180px] font-bold py-4"
-            required
-          />
-          <div className="flex justify-end">
-            <button type="submit" disabled={isCreatingJob} className="btn btn-primary btn-lg px-8 rounded-2xl font-black uppercase tracking-widest disabled:opacity-60">
+
+          <div className="space-y-1.5">
+            <label htmlFor="job-description" className="block text-base font-bold text-text-main">About the job</label>
+            <textarea
+              id="job-description"
+              placeholder="Describe the role, responsibilities, and expectations..."
+              value={jobForm.description}
+              onChange={(e) => setJobForm((c) => ({ ...c, description: e.target.value }))}
+              className="min-h-[180px] py-4 text-base font-semibold"
+              required
+            />
+            <p className="text-sm text-text-muted">What will the person do each day, and what do they need to know or have done before?</p>
+          </div>
+
+          <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm font-medium text-text-muted">Clear pay and location help the right people apply.</p>
+            <button type="submit" disabled={isCreatingJob} className="btn btn-gold btn-lg px-8 disabled:opacity-60">
               {isCreatingJob ? 'Publishing...' : 'Publish Job'}
             </button>
           </div>
@@ -180,7 +210,17 @@ export default function EmployerJobsPanel({
         </div>
 
         {jobs.length === 0 ? (
-          <p className="text-sm font-semibold text-text-light">No jobs posted yet.</p>
+          <div className="rounded-xl border border-dashed border-surface-border p-8 text-center">
+            <p className="text-lg font-extrabold text-text-main">No jobs posted yet.</p>
+            <p className="mx-auto mt-1 max-w-md text-sm font-medium text-text-muted">
+              Post your first job in a few minutes. People across Africa can apply as soon as it is live.
+            </p>
+            {showCreateForm ? null : (
+              <button type="button" onClick={onToggleCreateForm} className="btn btn-gold mt-5 px-6">
+                Post your first job
+              </button>
+            )}
+          </div>
         ) : (
           <div className="space-y-4">
             {jobs.map((job) => (
