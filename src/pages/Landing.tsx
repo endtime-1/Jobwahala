@@ -8,6 +8,7 @@ import Hero from '../components/landing/Hero'
 import MarketPulse from '../components/landing/MarketPulse'
 import MatchLab from '../components/landing/MatchLab'
 import MoneyPath from '../components/landing/MoneyPath'
+import PeopleBand from '../components/landing/PeopleBand'
 import Reveal from '../components/landing/Reveal'
 import TrustGrid from '../components/landing/TrustGrid'
 import type { Audience, HiringCompany, LandingCounts, LandingJob } from '../components/landing/types'
@@ -18,7 +19,10 @@ function Section({ eyebrow, title, intro, children }: { eyebrow: string; title: 
     <section className="py-14 [contain-intrinsic-size:auto_640px] [content-visibility:auto] sm:py-20">
       <div className="container">
         <Reveal className="mb-8 max-w-2xl sm:mb-12">
-          <p className="text-[11px] font-black uppercase tracking-[0.2em] text-secondary">{eyebrow}</p>
+          <p className="flex items-center gap-2 text-[12px] font-black uppercase tracking-[0.2em] text-secondary">
+            <span className="h-1 w-6 rounded-full bg-gold" aria-hidden />
+            {eyebrow}
+          </p>
           <h2 className="mt-2 text-3xl font-black leading-tight tracking-tight text-text-main sm:text-4xl">{title}</h2>
           {intro && <p className="mt-3 text-base font-medium leading-relaxed text-text-muted">{intro}</p>}
         </Reveal>
@@ -83,7 +87,7 @@ export default function Landing() {
         </div>
       </section>
 
-      <div className="heritage-strip" aria-hidden />
+      <PeopleBand />
 
       <Section
         eyebrow="Follow the money"

@@ -100,7 +100,7 @@ export default function Hero({ audience, onAudienceChange }: HeroProps) {
       </ul>
 
       <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-        <Link to={copy.primary.to} className="btn btn-primary btn-lg justify-center px-8">
+        <Link to={copy.primary.to} className="btn btn-gold btn-lg justify-center px-8">
           {copy.primary.label} <ArrowRight className="h-5 w-5" />
         </Link>
         <Link to={copy.secondary.to} className="btn btn-outline btn-lg justify-center px-8">

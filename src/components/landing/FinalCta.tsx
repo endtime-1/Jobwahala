@@ -47,7 +47,7 @@ export default function FinalCta() {
         <div className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
           <Link
             to="/onboarding?role=seeker"
-            className="btn btn-lg justify-center bg-white px-8 text-primary shadow-premium-lg hover:bg-white/90"
+            className="btn btn-gold btn-lg justify-center px-8"
           >
             I want work <ArrowRight className="h-5 w-5" />
           </Link>
