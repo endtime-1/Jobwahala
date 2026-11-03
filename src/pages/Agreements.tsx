@@ -16,7 +16,7 @@ import {
   apiUpdateAgreementMilestoneStatus,
   apiUpdateAgreementStatus,
 } from '../lib/api'
-import { formatRelativeTime, getDisplayName } from '../lib/display'
+import { formatMoney, formatRelativeTime, getDisplayName } from '../lib/display'
 import { useAuth } from '../context/AuthContext'
 import EvidenceUploadField from '../components/EvidenceUploadField'
 import { subscribeToRealtimeEvents } from '../lib/realtime'
@@ -119,6 +119,7 @@ type AgreementRecord = {
   title: string
   summary?: string | null
   amount?: string | null
+  currency?: string | null
   status: 'ACTIVE' | 'COMPLETED' | 'CANCELLED'
   createdAt: string
   updatedAt: string
@@ -710,6 +711,19 @@ export default function Agreements() {
     const paidMilestones = milestones.filter(
       (milestone) => !milestone.amount || milestone.paymentStatus === 'PAID',
     ).length
+    const amountOf = (value?: string | null) => {
+      const match = String(value ?? '').replace(/,/g, '').match(/\d+(\.\d+)?/)
+      return match ? parseFloat(match[0]) : 0
+    }
+    const totalValue = milestones.reduce((sum, milestone) => sum + amountOf(milestone.amount), 0)
+    const paidValue = milestones
+      .filter((milestone) => milestone.paymentStatus === 'PAID')
+      .reduce((sum, milestone) => sum + amountOf(milestone.amount), 0)
+    const awaitingValue = milestones
+      .filter((milestone) => milestone.paymentStatus === 'REQUESTED')
+      .reduce((sum, milestone) => sum + amountOf(milestone.amount), 0)
+    const remainingValue = Math.max(totalValue - paidValue - awaitingValue, 0)
+    const summaryCurrency = agreement.currency || 'GHS'
     const hasIncompleteWork = milestones.some((milestone) => milestone.status !== 'COMPLETED')
     const hasOutstandingPayouts = milestones.some(
       (milestone) => Boolean(milestone.amount) && milestone.paymentStatus !== 'PAID',
@@ -777,6 +791,48 @@ export default function Agreements() {
                 </Link>
               ) : null}
             </div>
+
+            {totalValue > 0 ? (
+              <div className="rounded-2xl border border-surface-border bg-white p-5">
+                <div className="flex flex-wrap items-end justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-bold text-text-muted">Project value</p>
+                    <p className="text-3xl font-black tracking-tight text-text-main">{formatMoney(totalValue, summaryCurrency)}</p>
+                  </div>
+                  <p className="text-sm font-semibold text-text-muted">
+                    {completedMilestones} of {milestones.length} milestones done
+                  </p>
+                </div>
+                <div
+                  className="mt-4 flex h-3 w-full overflow-hidden rounded-full bg-surface-alt"
+                  role="img"
+                  aria-label={`${formatMoney(paidValue, summaryCurrency)} paid out of ${formatMoney(totalValue, summaryCurrency)}`}
+                >
+                  <div className="bg-success" style={{ width: `${(paidValue / totalValue) * 100}%` }} />
+                  <div className="bg-gold" style={{ width: `${(awaitingValue / totalValue) * 100}%` }} />
+                </div>
+                <dl className="mt-4 grid grid-cols-1 gap-3 text-sm sm:grid-cols-3">
+                  <div>
+                    <dt className="flex items-center gap-2 font-semibold text-text-muted">
+                      <span className="h-2.5 w-2.5 rounded-full bg-success" /> Paid out
+                    </dt>
+                    <dd className="mt-0.5 text-lg font-extrabold text-text-main">{formatMoney(paidValue, summaryCurrency)}</dd>
+                  </div>
+                  <div>
+                    <dt className="flex items-center gap-2 font-semibold text-text-muted">
+                      <span className="h-2.5 w-2.5 rounded-full bg-gold" /> Awaiting release
+                    </dt>
+                    <dd className="mt-0.5 text-lg font-extrabold text-text-main">{formatMoney(awaitingValue, summaryCurrency)}</dd>
+                  </div>
+                  <div>
+                    <dt className="flex items-center gap-2 font-semibold text-text-muted">
+                      <span className="h-2.5 w-2.5 rounded-full bg-surface-border" /> Still to come
+                    </dt>
+                    <dd className="mt-0.5 text-lg font-extrabold text-text-main">{formatMoney(remainingValue, summaryCurrency)}</dd>
+                  </div>
+                </dl>
+              </div>
+            ) : null}
 
             {agreement.status === 'ACTIVE' || decisionBrief || decisionBriefError ? (
               <div className="rounded-[1.5rem] border border-primary/10 bg-primary/5 p-5">
@@ -1143,10 +1199,14 @@ export default function Agreements() {
               ) : null}
 
               {agreement.status === 'ACTIVE' ? (
-                <form
-                  onSubmit={(event) => void handleCreateMilestone(event, agreement.id)}
-                  className="mt-5 rounded-2xl border border-dashed border-surface-border bg-white p-4 space-y-4"
-                >
+                <details className="mt-5 rounded-2xl border border-surface-border bg-white">
+                  <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-3 font-extrabold text-secondary">
+                    <PlusCircle className="h-5 w-5" /> Add another milestone
+                  </summary>
+                  <form
+                    onSubmit={(event) => void handleCreateMilestone(event, agreement.id)}
+                    className="space-y-4 border-t border-surface-border p-4"
+                  >
                   <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-secondary">
                     <PlusCircle className="h-4 w-4" /> Add Milestone
                   </div>
@@ -1196,7 +1256,8 @@ export default function Agreements() {
                       Add Milestone
                     </button>
                   </div>
-                </form>
+                  </form>
+                </details>
               ) : null}
               </div>
 
@@ -1271,10 +1332,14 @@ export default function Agreements() {
                 )}
 
                 {canOpenDispute ? (
-                  <form
-                    onSubmit={(event) => void handleCreateDispute(event, agreement.id)}
-                    className="mt-5 rounded-2xl border border-dashed border-error/20 bg-white p-4 space-y-4"
-                  >
+                  <details className="mt-5 rounded-2xl border border-error/20 bg-white">
+                    <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-3 font-extrabold text-error">
+                      <AlertTriangle className="h-5 w-5" /> Report a problem with this agreement
+                    </summary>
+                    <form
+                      onSubmit={(event) => void handleCreateDispute(event, agreement.id)}
+                      className="space-y-4 border-t border-error/15 p-4"
+                    >
                     <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-error">
                       <AlertTriangle className="h-4 w-4" /> Open Dispute
                     </div>
@@ -1335,7 +1400,8 @@ export default function Agreements() {
                         Submit Dispute
                       </button>
                     </div>
-                  </form>
+                    </form>
+                  </details>
                 ) : hasActiveDispute ? (
                   <p className="mt-4 text-xs font-semibold text-error">
                     This agreement already has an active dispute. Admin must resolve it before another case can be opened or the agreement can be closed.
@@ -1569,7 +1635,43 @@ export default function Agreements() {
         </div>
       ) : null}
 
-      <section className="dashboard-panel mb-8 p-5 sm:p-7 lg:p-8">
+      {isLoading ? (
+        <div className="dashboard-panel p-6 sm:p-10">
+          <p className="text-sm font-black uppercase tracking-[0.2em] text-text-light">Loading agreements...</p>
+        </div>
+      ) : (
+        <div className="space-y-12">
+          <section>
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-xs font-black uppercase tracking-[0.2em] text-text-light">Active Agreements</h2>
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">{activeAgreements.length}</span>
+            </div>
+            {activeAgreements.length === 0 ? (
+              <div className="dashboard-panel p-6 sm:p-8">
+                <p className="text-sm font-semibold text-text-light">No active agreements yet.</p>
+              </div>
+            ) : (
+              <div className="space-y-6">{activeAgreements.map(renderAgreementCard)}</div>
+            )}
+          </section>
+
+          <section>
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-xs font-black uppercase tracking-[0.2em] text-text-light">Agreement History</h2>
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-text-light">{closedAgreements.length}</span>
+            </div>
+            {closedAgreements.length === 0 ? (
+              <div className="dashboard-panel p-6 sm:p-8">
+                <p className="text-sm font-semibold text-text-light">No completed or cancelled agreements yet.</p>
+              </div>
+            ) : (
+              <div className="space-y-6">{closedAgreements.map(renderAgreementCard)}</div>
+            )}
+          </section>
+        </div>
+      )}
+
+      <section className="dashboard-panel mt-10 p-5 sm:p-7 lg:p-8">
         <div className="mb-6 flex flex-col gap-3 border-b border-surface-border/50 pb-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">AI Agreement Comparison</p>
@@ -1723,41 +1825,6 @@ export default function Agreements() {
         </div>
       </div>
 
-      {isLoading ? (
-        <div className="dashboard-panel p-6 sm:p-10">
-          <p className="text-sm font-black uppercase tracking-[0.2em] text-text-light">Loading agreements...</p>
-        </div>
-      ) : (
-        <div className="space-y-12">
-          <section>
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="text-xs font-black uppercase tracking-[0.2em] text-text-light">Active Agreements</h2>
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">{activeAgreements.length}</span>
-            </div>
-            {activeAgreements.length === 0 ? (
-              <div className="dashboard-panel p-6 sm:p-8">
-                <p className="text-sm font-semibold text-text-light">No active agreements yet.</p>
-              </div>
-            ) : (
-              <div className="space-y-6">{activeAgreements.map(renderAgreementCard)}</div>
-            )}
-          </section>
-
-          <section>
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="text-xs font-black uppercase tracking-[0.2em] text-text-light">Agreement History</h2>
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-text-light">{closedAgreements.length}</span>
-            </div>
-            {closedAgreements.length === 0 ? (
-              <div className="dashboard-panel p-6 sm:p-8">
-                <p className="text-sm font-semibold text-text-light">No completed or cancelled agreements yet.</p>
-              </div>
-            ) : (
-              <div className="space-y-6">{closedAgreements.map(renderAgreementCard)}</div>
-            )}
-          </section>
-        </div>
-      )}
     </div>
   )
 }
