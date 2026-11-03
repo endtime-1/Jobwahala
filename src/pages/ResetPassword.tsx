@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import { Lock, Eye, EyeOff, ArrowLeft, ArrowRight, CheckCircle, XCircle, ShieldCheck } from 'lucide-react'
-import Logo from '../components/Logo'
+import { AuthAside, AuthMobileBanner } from '../components/AuthShell'
 import { apiResetPassword } from '../lib/api'
 import { getErrorMessage } from '../lib/errors'
 
@@ -69,56 +69,15 @@ export default function ResetPassword() {
   }
 
   return (
-    <div className="flex min-h-screen">
-      {/* Left panel */}
-      <div className="hidden lg:flex lg:w-[52%] flex-col justify-between p-14 relative overflow-hidden bg-[#0d1829]">
-        <div className="absolute top-[-120px] right-[-80px] w-[400px] h-[400px] rounded-full bg-[#2f6df6]/20 blur-[80px] pointer-events-none" />
-        <div className="absolute bottom-[-80px] left-[-60px] w-[300px] h-[300px] rounded-full bg-[#2f6df6]/10 blur-[60px] pointer-events-none" />
-        <div
-          className="absolute inset-0 opacity-[0.04] pointer-events-none"
-          style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '28px 28px' }}
-        />
-
-        <Link to="/" className="relative z-10 flex items-center gap-2.5">
-          <Logo tone="dark" size={36} />
-        </Link>
-
-        <div className="relative z-10">
-          <h2 className="text-[38px] font-bold leading-[1.15] text-white mb-4">
-            Choose a strong<br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#2f6df6] to-[#6fa0ff]">
-              new password.
-            </span>
-          </h2>
-          <p className="text-[#7a8fa8] text-base leading-relaxed max-w-xs">
-            Pick something unique that you don't use on other sites to keep your account secure.
-          </p>
-          <div className="mt-8 space-y-3">
-            {[
-              'At least 8 characters',
-              'Mix letters, numbers & symbols',
-              'Don\'t reuse old passwords',
-            ].map((item) => (
-              <div key={item} className="flex items-center gap-3 text-sm text-[#7a8fa8]">
-                <div className="h-5 w-5 rounded-full bg-[#2f6df6]/15 border border-[#2f6df6]/25 flex items-center justify-center shrink-0">
-                  <div className="h-1.5 w-1.5 rounded-full bg-[#2f6df6]" />
-                </div>
-                {item}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <p className="relative z-10 text-xs text-[#3d4f63]">© {new Date().getFullYear()} JobWahala. All rights reserved.</p>
-      </div>
-
+    <div className="v2 flex min-h-screen">
+      <AuthAside
+        headline="Choose a new password and"
+        accent="get back to work."
+        points={['Free to join, no hidden fees', 'Payment held until the work is approved', 'Built for Africa, open to the world']}
+      />
       {/* Right panel */}
       <div className="flex flex-1 flex-col bg-[#f7f9fc]">
-        <div className="lg:hidden flex items-center px-4 pt-6 pb-2">
-          <Link to="/" className="text-xl font-bold tracking-tight text-[#101a2b]">
-            <Logo size={32} />
-          </Link>
-        </div>
+        <AuthMobileBanner linkTo="/login" linkLabel="Sign in" tagline="Set a new password." />
 
         <div className="flex flex-1 flex-col justify-center px-4 py-6 sm:px-10 sm:py-12 overflow-y-auto">
           <div className="w-full max-w-[400px] mx-auto">

@@ -1,15 +1,15 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Mail, Lock, User, Eye, EyeOff, ArrowRight, Briefcase, Laptop, Users } from 'lucide-react'
-import Logo from '../components/Logo'
+import { AuthAside, AuthMobileBanner } from '../components/AuthShell'
 import { useAuth, type UserRole } from '../context/AuthContext'
 import { isApiUnavailableMessage } from '../lib/apiStatus'
 import { getErrorMessage } from '../lib/errors'
 
 const ROLES: { value: UserRole; label: string; description: string; icon: typeof Briefcase }[] = [
-  { value: 'SEEKER', label: 'Job Seeker', description: 'Find employment', icon: Users },
-  { value: 'EMPLOYER', label: 'Employer', description: 'Hire talent', icon: Briefcase },
-  { value: 'FREELANCER', label: 'Freelancer', description: 'Offer services', icon: Laptop },
+  { value: 'SEEKER', label: 'Job Seeker', description: 'I am looking for a job', icon: Users },
+  { value: 'EMPLOYER', label: 'Employer', description: 'I want to hire people', icon: Briefcase },
+  { value: 'FREELANCER', label: 'Freelancer', description: 'I sell my skills and services', icon: Laptop },
 ]
 
 export default function Signup() {
@@ -39,82 +39,29 @@ export default function Signup() {
   }
 
   return (
-    <div className="flex min-h-screen">
-      {/* Left panel */}
-      <div className="hidden lg:flex lg:w-[52%] flex-col justify-between p-14 relative overflow-hidden bg-[#0d1829]">
-        {/* Gradient orbs */}
-        <div className="absolute top-[-100px] left-[-60px] w-[380px] h-[380px] rounded-full bg-[#2f6df6]/20 blur-[80px] pointer-events-none" />
-        <div className="absolute bottom-[-60px] right-[-80px] w-[320px] h-[320px] rounded-full bg-[#2f6df6]/10 blur-[60px] pointer-events-none" />
-        {/* Dot grid */}
-        <div
-          className="absolute inset-0 opacity-[0.04] pointer-events-none"
-          style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '28px 28px' }}
-        />
-
-        <Link to="/" className="relative z-10 flex items-center gap-2.5">
-          <Logo tone="dark" size={36} />
-        </Link>
-
-        <div className="relative z-10">
-          <div className="inline-flex items-center gap-2 rounded-full bg-[#2f6df6]/15 border border-[#2f6df6]/20 px-3.5 py-1.5 mb-6">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#2f6df6] animate-pulse" />
-            <span className="text-xs font-semibold text-[#2f6df6]">Free to join — no hidden fees</span>
-          </div>
-          <h2 className="text-[42px] font-bold leading-[1.15] text-white mb-4">
-            Start your journey<br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#2f6df6] to-[#6fa0ff]">
-              today.
-            </span>
-          </h2>
-          <p className="text-[#7a8fa8] text-base leading-relaxed max-w-xs">
-            Join JobWahala to find work, hire talent and get paid safely, with payments held in escrow until the work is approved.
-          </p>
-
-          <div className="mt-10 space-y-3">
-            {[
-              'Verified employers and freelancers',
-              'Secure payments via Paystack',
-              'Post jobs and services for free',
-              'Built for Africa, open to the world',
-            ].map((item) => (
-              <div key={item} className="flex items-center gap-3 text-sm text-[#7a8fa8]">
-                <div className="h-5 w-5 rounded-full bg-[#2f6df6]/15 border border-[#2f6df6]/25 flex items-center justify-center shrink-0">
-                  <div className="h-1.5 w-1.5 rounded-full bg-[#2f6df6]" />
-                </div>
-                {item}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <p className="relative z-10 text-xs text-[#3d4f63]">© {new Date().getFullYear()} JobWahala. All rights reserved.</p>
-      </div>
-
+    <div className="v2 flex min-h-screen">
+      <AuthAside
+        headline="Join free and"
+        accent="get paid safely."
+        points={['Free to join, no hidden fees', 'Verified employers and freelancers', 'Payment held until the work is approved', 'Built for Africa, open to the world']}
+      />
       {/* Right panel */}
       <div className="flex flex-1 flex-col bg-[#f7f9fc]">
-        {/* Mobile header */}
-        <div className="lg:hidden flex items-center justify-between px-4 pt-6 pb-2">
-          <Link to="/" className="text-xl font-bold tracking-tight text-[#101a2b]">
-            <Logo size={32} />
-          </Link>
-          <Link to="/login" className="text-sm text-[#2f6df6] font-semibold">
-            Sign in
-          </Link>
-        </div>
+        <AuthMobileBanner linkTo="/login" linkLabel="Sign in" tagline="Join free. Get paid safely." />
 
-        <div className="flex flex-1 flex-col justify-start sm:justify-center px-4 py-6 sm:px-10 sm:py-12 overflow-y-auto">
+        <div className="flex flex-1 flex-col justify-start px-4 py-8 sm:justify-center sm:px-10 sm:py-12">
           <div className="w-full max-w-[400px] mx-auto">
             {/* Card */}
             <div className="bg-white rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.06)] border border-[#e8eef5] p-5 sm:p-8">
               <div className="mb-7">
-                <h1 className="text-[22px] font-bold text-[#111c2d] mb-1">Create your account</h1>
-                <p className="text-sm text-[#6b7a8d]">Get started — it only takes a minute</p>
+                <h1 className="text-3xl font-black tracking-tight text-[#111c2d] mb-1">Create your account</h1>
+                <p className="text-base text-[#6b7a8d]">Get started — it only takes a minute</p>
               </div>
 
               <form onSubmit={handleSignup} className="space-y-4">
                 {/* Full name */}
                 <div>
-                  <label className="block text-[13px] font-semibold text-[#374151] mb-1.5">Full name</label>
+                  <label className="block text-sm font-bold text-[#374151] mb-1.5">Full name</label>
                   <div className="relative">
                     <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9caab8]" />
                     <input
@@ -122,7 +69,7 @@ export default function Signup() {
                       placeholder="Kwame Mensah"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="w-full h-[44px] pl-10 pr-4 rounded-xl border border-[#dde3ec] bg-[#f7f9fc] text-sm text-[#111c2d] placeholder:text-[#9caab8] outline-none transition-all focus:bg-white focus:border-[#2f6df6] focus:ring-3 focus:ring-[#2f6df6]/10"
+                      className="w-full h-[50px] pl-10 pr-4 rounded-xl border border-[#dde3ec] bg-[#f7f9fc] text-base text-[#111c2d] placeholder:text-[#9caab8] outline-none transition-all focus:bg-white focus:border-[#2f6df6] focus:ring-3 focus:ring-[#2f6df6]/10"
                       required
                       autoComplete="name"
                     />
@@ -131,7 +78,7 @@ export default function Signup() {
 
                 {/* Email */}
                 <div>
-                  <label className="block text-[13px] font-semibold text-[#374151] mb-1.5">Email address</label>
+                  <label className="block text-sm font-bold text-[#374151] mb-1.5">Email address</label>
                   <div className="relative">
                     <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9caab8]" />
                     <input
@@ -139,7 +86,7 @@ export default function Signup() {
                       placeholder="you@example.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full h-[44px] pl-10 pr-4 rounded-xl border border-[#dde3ec] bg-[#f7f9fc] text-sm text-[#111c2d] placeholder:text-[#9caab8] outline-none transition-all focus:bg-white focus:border-[#2f6df6] focus:ring-3 focus:ring-[#2f6df6]/10"
+                      className="w-full h-[50px] pl-10 pr-4 rounded-xl border border-[#dde3ec] bg-[#f7f9fc] text-base text-[#111c2d] placeholder:text-[#9caab8] outline-none transition-all focus:bg-white focus:border-[#2f6df6] focus:ring-3 focus:ring-[#2f6df6]/10"
                       required
                       autoComplete="email"
                     />
@@ -148,7 +95,7 @@ export default function Signup() {
 
                 {/* Password */}
                 <div>
-                  <label className="block text-[13px] font-semibold text-[#374151] mb-1.5">Password</label>
+                  <label className="block text-sm font-bold text-[#374151] mb-1.5">Password</label>
                   <div className="relative">
                     <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9caab8]" />
                     <input
@@ -156,7 +103,7 @@ export default function Signup() {
                       placeholder="At least 8 characters"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full h-[44px] pl-10 pr-10 rounded-xl border border-[#dde3ec] bg-[#f7f9fc] text-sm text-[#111c2d] placeholder:text-[#9caab8] outline-none transition-all focus:bg-white focus:border-[#2f6df6] focus:ring-3 focus:ring-[#2f6df6]/10"
+                      className="w-full h-[50px] pl-10 pr-10 rounded-xl border border-[#dde3ec] bg-[#f7f9fc] text-base text-[#111c2d] placeholder:text-[#9caab8] outline-none transition-all focus:bg-white focus:border-[#2f6df6] focus:ring-3 focus:ring-[#2f6df6]/10"
                       required
                       minLength={8}
                       autoComplete="new-password"
@@ -174,29 +121,28 @@ export default function Signup() {
 
                 {/* Role selector */}
                 <div>
-                  <label className="block text-[13px] font-semibold text-[#374151] mb-2">I am a…</label>
-                  <div className="grid grid-cols-3 gap-2">
+                  <label className="block text-sm font-bold text-[#374151] mb-2">I am a…</label>
+                  <div className="space-y-2.5">
                     {ROLES.map(({ value, label, description, icon: Icon }) => (
                       <button
                         key={value}
                         type="button"
                         onClick={() => setRole(value)}
-                        className={`relative flex flex-col items-center gap-2 rounded-xl border p-3.5 text-center transition-all ${
+                        aria-pressed={role === value}
+                        className={`flex w-full items-center gap-3.5 rounded-xl border-2 p-3.5 text-left transition-all ${
                           role === value
-                            ? 'border-[#2f6df6] bg-[#edf4ff] shadow-sm shadow-[#2f6df6]/10'
+                            ? 'border-[#2f6df6] bg-[#edf4ff]'
                             : 'border-[#dde3ec] bg-[#f7f9fc] hover:border-[#b8c8dc] hover:bg-white'
                         }`}
                       >
-                        {role === value && (
-                          <div className="absolute top-2 right-2 h-2 w-2 rounded-full bg-[#2f6df6]" />
-                        )}
-                        <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${role === value ? 'bg-[#2f6df6]/15' : 'bg-[#eaeff5]'}`}>
-                          <Icon className={`h-4 w-4 ${role === value ? 'text-[#2f6df6]' : 'text-[#6b7a8d]'}`} />
-                        </div>
-                        <div>
-                          <p className={`text-[12px] font-semibold leading-tight ${role === value ? 'text-[#2f6df6]' : 'text-[#374151]'}`}>{label}</p>
-                          <p className="text-[10px] text-[#9caab8] mt-0.5 leading-tight">{description}</p>
-                        </div>
+                        <span className={`flex h-10 w-10 flex-none items-center justify-center rounded-lg ${role === value ? 'bg-[#2f6df6] text-white' : 'bg-[#eaeff5] text-[#6b7a8d]'}`}>
+                          <Icon className="h-5 w-5" />
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className={`block text-base font-bold leading-tight ${role === value ? 'text-[#1e4fd6]' : 'text-[#111c2d]'}`}>{label}</span>
+                          <span className="mt-0.5 block text-sm text-[#6b7a8d]">{description}</span>
+                        </span>
+                        <span className={`h-5 w-5 flex-none rounded-full border-2 ${role === value ? 'border-[#2f6df6] bg-[#2f6df6] shadow-[inset_0_0_0_3px_#edf4ff]' : 'border-[#c4cfdd]'}`} />
                       </button>
                     ))}
                   </div>
@@ -212,7 +158,7 @@ export default function Signup() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full h-[44px] mt-1 rounded-xl bg-gradient-to-r from-[#2f6df6] to-[#4d85ff] text-white text-sm font-semibold flex items-center justify-center gap-2 shadow-md shadow-[#2f6df6]/20 hover:shadow-lg hover:shadow-[#2f6df6]/30 hover:brightness-105 transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="btn btn-gold btn-lg mt-1 w-full justify-center disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {isLoading ? (
                     <span className="flex items-center gap-2">
