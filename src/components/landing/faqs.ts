@@ -17,7 +17,7 @@ export const FAQS = [
   },
   {
     q: 'How is my ID used?',
-    a: 'Verification evidence is used only to review your request, and access is limited to the people involved and administrators. See our Privacy Policy for details.',
+    a: 'Verification evidence is used only to review your request. It is stored under private, unguessable addresses and only shown to you and administrators. See our Privacy Policy for details.',
   },
   {
     q: 'Which currencies are supported?',

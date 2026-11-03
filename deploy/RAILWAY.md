@@ -76,7 +76,7 @@ BACKEND_UPSTREAM=api.railway.internal:5000
 
 Notes:
 
-- Leave `VITE_API_URL` unset for this layout.
+- Leave `VITE_API_URL` unset for this layout (the Docker build now defaults to same-origin `/api`). If the service already has `VITE_API_URL` set, for example to a public API domain, that value is used instead.
 - The frontend will use same-origin `/api`, and Nginx will proxy that traffic to the private backend service.
 - If you prefer a separate public backend URL instead of the proxy model, set `VITE_API_URL=https://your-api-domain.up.railway.app/api` at build time and remove the need for `BACKEND_UPSTREAM`.
 

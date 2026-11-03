@@ -7,7 +7,9 @@ RUN npm ci --legacy-peer-deps
 
 COPY . .
 
-ARG VITE_API_URL=https://api.jobwahala.com
+# Same-origin by default: nginx proxies /api to the backend (see docker/nginx.conf). Set this build
+# argument only when the API lives on its own public domain.
+ARG VITE_API_URL=/api
 ENV VITE_API_URL=$VITE_API_URL
 
 RUN npm run build

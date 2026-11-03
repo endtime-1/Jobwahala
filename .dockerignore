@@ -6,3 +6,10 @@ backend/.env
 backend/*.log
 frontend*.log
 backend/dev.db
+
+# Local environment files must never be baked into an image (they would point the app at a dev API)
+.env
+.env.*
+!.env.example
+!.env.production.example
+!.env.vps.example

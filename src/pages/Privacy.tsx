@@ -51,8 +51,8 @@ export default function Privacy() {
           heading: 'Retention and security',
           body: (
             <p>
-              We keep data while your account is active and as needed for payments, disputes and legal obligations. Traffic is encrypted in transit and
-              access to evidence files is restricted to the people involved and administrators.
+              We keep data while your account is active and as needed for payments, disputes and legal obligations. Traffic is encrypted in transit. Evidence
+              files are stored under private, unguessable addresses and are only shown to the people involved and administrators.
             </p>
           ),
         },
