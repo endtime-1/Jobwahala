@@ -1,4 +1,5 @@
 import { Response } from 'express';
+import { notifyJobAlerts } from '../services/jobAlertService';
 import { AuthRequest } from '../middleware/auth';
 import prisma from '../config/prisma';
 import { singleValue } from '../utils/request';
@@ -135,6 +136,8 @@ export const createAdminJob = async (req: AuthRequest, res: Response) => {
 
       return createdJob;
     });
+
+    void notifyJobAlerts(job);
 
     return res.status(201).json({
       success: true,

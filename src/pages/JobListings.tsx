@@ -13,6 +13,8 @@ import {
 } from '../lib/workMode'
 import { useAuth } from '../context/AuthContext'
 import SEO from '../components/SEO'
+import JobAlerts from '../components/JobAlerts'
+import { alertCriteriaFromFilters } from '../lib/jobAlerts'
 import { getErrorMessage } from '../lib/errors'
 
 type JobRecord = {
@@ -271,6 +273,11 @@ export default function JobListings() {
         </aside>
 
         <main className="lg:col-span-3 space-y-6">
+          <JobAlerts
+            criteria={alertCriteriaFromFilters({ search, selectedTypes, allTypes: jobTypes, selectedLocation })}
+            isSignedIn={Boolean(user)}
+            isSeeker={user?.role === 'SEEKER'}
+          />
           <section className="dashboard-panel space-y-5 p-4 sm:p-5 lg:hidden">
             <div className="relative group">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-text-light transition-colors group-focus-within:text-primary" />

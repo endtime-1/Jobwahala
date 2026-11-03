@@ -45,6 +45,7 @@ model User {
   proposalsReceived   Proposal[] @relation("ProposalRecipient")
   proposalRevisions   ProposalRevision[] @relation("ProposalRevisionAuthor")
   notifications       Notification[]
+  savedSearches       SavedSearch[]
   paymentsSent        Payment[] @relation("PaymentPayer")
   paymentsReceived    Payment[] @relation("PaymentPayee")
   reviewsWritten      Review[]  @relation("ReviewAuthor")
@@ -535,6 +536,22 @@ model Notification {
 
   @@index([userId, read, createdAt])
   @@index([type])
+}
+
+model SavedSearch {
+  id            String    @id @default(uuid())
+  userId        String
+  query         String?
+  location      String?
+  jobType       String?
+  emailAlerts   Boolean   @default(true)
+  lastAlertedAt DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model PayoutAccount {

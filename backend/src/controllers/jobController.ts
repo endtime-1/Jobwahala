@@ -1,4 +1,5 @@
 import { Prisma } from '@prisma/client';
+import { notifyJobAlerts } from '../services/jobAlertService';
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import prisma from '../config/prisma';
@@ -61,6 +62,7 @@ export const createJob = async (req: AuthRequest, res: Response) => {
         employerId: req.user!.id
       }
     });
+    void notifyJobAlerts(job);
     res.status(201).json({ success: true, job });
   } catch (error) {
     res.status(500).json({ success: false, message: getErrorMessage(error) });

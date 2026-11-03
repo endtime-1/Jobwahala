@@ -96,6 +96,27 @@ export const apiResetPassword = (token: string, password: string) =>
 export const apiGetPlatformStats = () =>
   fetch(`${BASE_URL}/platform/stats`, { headers: headers() }).then(handleResponse);
 
+// Job alerts (saved searches)
+export const apiGetSavedSearches = () =>
+  fetch(`${BASE_URL}/saved-searches`, { headers: headers(true) }).then(handleResponse);
+
+export const apiCreateSavedSearch = (data: { query?: string; location?: string; jobType?: string; emailAlerts?: boolean }) =>
+  fetch(`${BASE_URL}/saved-searches`, {
+    method: 'POST',
+    headers: headers(true),
+    body: JSON.stringify(data),
+  }).then(handleResponse);
+
+export const apiUpdateSavedSearch = (id: string, data: { emailAlerts: boolean }) =>
+  fetch(`${BASE_URL}/saved-searches/${id}`, {
+    method: 'PATCH',
+    headers: headers(true),
+    body: JSON.stringify(data),
+  }).then(handleResponse);
+
+export const apiDeleteSavedSearch = (id: string) =>
+  fetch(`${BASE_URL}/saved-searches/${id}`, { method: 'DELETE', headers: headers(true) }).then(handleResponse);
+
 // Jobs
 export const apiGetJobs = (params?: Record<string, string>) => {
   const query = params ? '?' + new URLSearchParams(params).toString() : '';

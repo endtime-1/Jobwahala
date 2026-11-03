@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
 import env from '../config/env';
+import { escapeHtml } from '../utils/sharePage';
 
 const transporter = nodemailer.createTransport({
   host: env.smtpHost,
@@ -99,6 +100,40 @@ export const sendPasswordResetEmail = async (email: string, token: string) => {
     from: env.smtpFrom,
     to: email,
     subject: `Reset your ${APP_NAME} password`,
+    html,
+  });
+};
+
+export const sendJobAlertEmail = async (
+  email: string,
+  alert: { alertName: string; jobTitle: string; company: string; location?: string | null; jobId: string },
+) => {
+  const jobUrl = `${env.frontendBaseUrl}/jobs/${alert.jobId}`;
+  const e = escapeHtml;
+
+  const html = wrapHtml(`
+    <div class="header">
+      <h1>🚀 ${APP_NAME}</h1>
+      <p>New job for your alert</p>
+    </div>
+    <div class="body">
+      <p>A new role matches your saved search <strong>${e(alert.alertName)}</strong>:</p>
+      <p style="font-size: 18px; font-weight: 700; margin-bottom: 4px;">${e(alert.jobTitle)}</p>
+      <p class="muted" style="margin-top: 0;">${e(alert.company)}${alert.location ? ` · ${e(alert.location)}` : ''}</p>
+      <p style="text-align: center; margin: 32px 0;">
+        <a href="${jobUrl}" class="btn">View the job</a>
+      </p>
+      <p class="muted">You can pause or delete this alert any time from the Jobs page.</p>
+    </div>
+    <div class="footer">
+      &copy; ${new Date().getFullYear()} ${APP_NAME}. All rights reserved.
+    </div>
+  `);
+
+  await transporter.sendMail({
+    from: env.smtpFrom,
+    to: email,
+    subject: `New job: ${alert.jobTitle}`,
     html,
   });
 };

@@ -1271,6 +1271,96 @@ async function main() {
     assert.equal(createRecommendedJob.status, 201, 'Second job creation should succeed for recommendation scoring');
     const recommendedJobId = createRecommendedJob.json.job.id;
 
+    // Job alerts: saved searches notify seekers when a matching job is posted.
+    const alertSearchBad = await requestJson(baseUrl, '/api/saved-searches', {
+      method: 'POST',
+      token: activeSeekerToken,
+      body: {},
+    });
+    assert.equal(alertSearchBad.status, 400, 'A saved search needs at least one criterion');
+
+    const alertSearchAsEmployer = await requestJson(baseUrl, '/api/saved-searches', {
+      method: 'POST',
+      token: employerToken,
+      body: { query: 'zebraquest' },
+    });
+    assert.equal(alertSearchAsEmployer.status, 403, 'Only seekers can create job alerts');
+
+    const alertSearch = await requestJson(baseUrl, '/api/saved-searches', {
+      method: 'POST',
+      token: activeSeekerToken,
+      body: { query: 'zebraquest', emailAlerts: false },
+    });
+    assert.equal(alertSearch.status, 201, 'Seekers should be able to save a search');
+    const alertSearchId = alertSearch.json.savedSearch.id;
+
+    const alertSearchDuplicate = await requestJson(baseUrl, '/api/saved-searches', {
+      method: 'POST',
+      token: activeSeekerToken,
+      body: { query: '  ZebraQuest ' },
+    });
+    assert.equal(alertSearchDuplicate.status, 409, 'The same search cannot be saved twice');
+
+    const postAlertJob = async (title) => {
+      const response = await requestJson(baseUrl, '/api/jobs', {
+        method: 'POST',
+        token: employerToken,
+        body: {
+          title,
+          description: 'Smoke test role used to exercise job alerts.',
+          location: 'Accra',
+          type: 'Full-time',
+          category: 'Testing',
+        },
+      });
+      assert.equal(response.status, 201, 'Alert test job creation should succeed');
+      return response.json.job.id;
+    };
+    const readAlertNotifications = async () => {
+      const response = await requestJson(baseUrl, '/api/notifications?limit=50', { token: activeSeekerToken });
+      assert.equal(response.status, 200);
+      return response.json.notifications.filter((notification) => notification.type === 'JOB_ALERT');
+    };
+
+    const matchingAlertJobId = await postAlertJob('ZebraQuest Coordinator');
+    let jobAlerts = [];
+    for (let attempt = 0; attempt < 30 && jobAlerts.length === 0; attempt += 1) {
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      jobAlerts = await readAlertNotifications();
+    }
+    assert.equal(jobAlerts.length, 1, 'A matching job should alert the seeker');
+    assert.equal(jobAlerts[0].actionUrl, `/jobs/${matchingAlertJobId}`, 'The alert should link to the job');
+
+    await postAlertJob('Welding Supervisor');
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    assert.equal((await readAlertNotifications()).length, 1, 'A non-matching job must not alert');
+
+    const alertEmailToggle = await requestJson(baseUrl, `/api/saved-searches/${alertSearchId}`, {
+      method: 'PATCH',
+      token: activeSeekerToken,
+      body: { emailAlerts: true },
+    });
+    assert.equal(alertEmailToggle.status, 200, 'Seekers can turn email alerts on and off');
+
+    const alertList = await requestJson(baseUrl, '/api/saved-searches', { token: activeSeekerToken });
+    assert.equal(alertList.json.savedSearches.length, 1);
+    assert.equal(alertList.json.savedSearches[0].emailAlerts, true);
+
+    const alertDelete = await requestJson(baseUrl, `/api/saved-searches/${alertSearchId}`, {
+      method: 'DELETE',
+      token: activeSeekerToken,
+    });
+    assert.equal(alertDelete.status, 200, 'Seekers can delete an alert');
+    const alertDeleteAgain = await requestJson(baseUrl, `/api/saved-searches/${alertSearchId}`, {
+      method: 'DELETE',
+      token: activeSeekerToken,
+    });
+    assert.equal(alertDeleteAgain.status, 404, 'A deleted alert is gone');
+
+    // Leave no trace so later assertions about jobs and notifications are unaffected.
+    await prisma.job.deleteMany({ where: { title: { in: ['ZebraQuest Coordinator', 'Welding Supervisor'] } } });
+    await prisma.notification.deleteMany({ where: { type: 'JOB_ALERT' } });
+
     const seekerJobComparison = await requestJson(baseUrl, '/api/jobs/compare', {
       method: 'POST',
       token: activeSeekerToken,
