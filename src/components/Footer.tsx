@@ -1,4 +1,4 @@
-import { Github, Linkedin, Rocket, Twitter } from 'lucide-react'
+import { Rocket } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 const footerColumns = [
@@ -13,7 +13,7 @@ const footerColumns = [
   {
     title: 'For Employers',
     links: [
-      ['Post a Job', '/jobs'],
+      ['Post a Job', '/onboarding?role=employer'],
       ['Find Freelancers', '/freelancers'],
       ['Hiring Hub', '/dashboard'],
     ],
@@ -23,7 +23,9 @@ const footerColumns = [
     links: [
       ['Agreements', '/agreements'],
       ['Messages', '/messaging'],
-      ['Security Notes', '#'],
+      ['Help and Support', '/support'],
+      ['Terms of Service', '/terms'],
+      ['Privacy Policy', '/privacy'],
     ],
   },
 ]
@@ -52,18 +54,6 @@ export default function Footer() {
               <p className="mt-6 text-sm font-medium leading-relaxed text-text-muted">
                 A calmer, smarter workspace for jobs, freelance projects, agreements, and the teams building across the continent.
               </p>
-
-              <div className="mt-8 flex items-center gap-3">
-                {[Twitter, Linkedin, Github].map((Icon, index) => (
-                  <button
-                    key={index}
-                    type="button"
-                    className="flex h-11 w-11 items-center justify-center rounded-2xl border border-surface-border bg-white/86 text-text-muted shadow-premium-sm transition-all hover:-translate-y-0.5 hover:text-secondary"
-                  >
-                    <Icon className="h-4 w-4" />
-                  </button>
-                ))}
-              </div>
             </div>
 
             {footerColumns.map((column) => (
@@ -89,9 +79,9 @@ export default function Footer() {
           <div className="mt-12 flex flex-col gap-4 border-t border-surface-border pt-6 text-xs font-medium text-text-light md:flex-row md:items-center md:justify-between">
             <p>Copyright {new Date().getFullYear()} JobWahala. Built for modern mobile-first work.</p>
             <div className="flex flex-wrap items-center gap-6 uppercase tracking-[0.18em]">
-              <span>Privacy</span>
-              <span>Terms</span>
-              <span>Security</span>
+              <Link to="/privacy" className="hover:text-text-main">Privacy</Link>
+              <Link to="/terms" className="hover:text-text-main">Terms</Link>
+              <Link to="/support" className="hover:text-text-main">Support</Link>
             </div>
           </div>
         </div>

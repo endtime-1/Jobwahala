@@ -534,3 +534,57 @@ button {
     -webkit-backdrop-filter: none !important;
   }
 }
+
+/* Landing: scroll reveal, Ghana-inspired divider, hero accents */
+.reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity 0.6s ease,
+    transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+.kente-strip {
+  height: 6px;
+  background: repeating-linear-gradient(
+    90deg,
+    #ce1126 0 28px,
+    #fcd116 28px 56px,
+    #006b3f 56px 84px,
+    #101a2b 84px 94px
+  );
+}
+
+.wahala-underline {
+  background-image: linear-gradient(transparent 62%, rgba(252, 209, 22, 0.55) 62% 92%, transparent 92%);
+}
+
+@keyframes pulseRing {
+  0% {
+    box-shadow: 0 0 0 0 rgba(24, 184, 122, 0.45);
+  }
+  100% {
+    box-shadow: 0 0 0 12px rgba(24, 184, 122, 0);
+  }
+}
+
+.pulse-dot {
+  animation: pulseRing 1.8s ease-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .pulse-dot {
+    animation: none;
+  }
+}

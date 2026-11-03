@@ -1,5 +1,5 @@
 import { Search, MapPin, Clock, Filter, ChevronRight, Flag, Sparkles } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
 import ReportModal from '../components/ReportModal'
 import VerifiedBadge from '../components/VerifiedBadge'
@@ -53,7 +53,8 @@ export default function JobListings() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
   const [reportTarget, setReportTarget] = useState<{ id: string; name: string } | null>(null)
-  const [search, setSearch] = useState('')
+  const [searchParams] = useSearchParams()
+  const [search, setSearch] = useState(() => searchParams.get('search') ?? '')
   const [selectedTypes, setSelectedTypes] = useState<string[]>(jobTypes)
   const [selectedLocation, setSelectedLocation] = useState('All of Africa')
   const [selectedJobIds, setSelectedJobIds] = useState<string[]>([])
