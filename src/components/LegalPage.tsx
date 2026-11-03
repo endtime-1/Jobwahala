@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import SEO from './SEO'
+import PageHero from './PageHero'
 
 export type LegalSection = { heading: string; body: ReactNode }
 
@@ -14,13 +15,13 @@ type LegalPageProps = {
 
 export default function LegalPage({ title, description, updated, intro, sections }: LegalPageProps) {
   return (
-    <div className="py-16 md:py-24">
+    <div className="pb-20 pt-32 xl:pt-36">
       <SEO title={title} description={description} />
-      <div className="container max-w-3xl">
-        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Legal</p>
-        <h1 className="mt-3 text-4xl font-black tracking-tight text-text-main md:text-5xl">{title}</h1>
-        <p className="mt-3 text-xs font-bold uppercase tracking-widest text-text-light">Last updated {updated}</p>
-        <p className="mt-8 text-base leading-8 text-text-muted">{intro}</p>
+      <div className="container max-w-4xl">
+        <PageHero eyebrow="Legal" title={title}>
+          <p className="mt-4 text-sm font-semibold text-white/60">Last updated {updated}</p>
+        </PageHero>
+        <p className="mt-8 text-lg leading-8 text-text-muted">{intro}</p>
 
         <nav aria-label="Sections" className="mt-10 rounded-2xl border border-surface-border bg-surface-alt/30 p-5">
           <ol className="grid gap-2 text-sm font-semibold text-primary sm:grid-cols-2">
@@ -37,10 +38,10 @@ export default function LegalPage({ title, description, updated, intro, sections
         <div className="mt-12 space-y-10">
           {sections.map((section, index) => (
             <section key={section.heading} id={`section-${index + 1}`} className="scroll-mt-24">
-              <h2 className="text-xl font-black text-text-main">
+              <h2 className="text-2xl font-black text-text-main">
                 {index + 1}. {section.heading}
               </h2>
-              <div className="mt-3 space-y-3 text-sm leading-7 text-text-muted">{section.body}</div>
+              <div className="mt-3 space-y-3 text-base leading-8 text-text-muted">{section.body}</div>
             </section>
           ))}
         </div>

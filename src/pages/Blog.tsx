@@ -1,11 +1,12 @@
-import { BookOpen, ArrowRight, Clock, Search } from 'lucide-react'
+import { ArrowRight, Clock, Search } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import SEO from '../components/SEO'
+import PageHero from '../components/PageHero'
 import { blogPosts } from '../data/blogData'
 
 export default function Blog() {
   return (
-    <div className="fade-in pt-32 pb-20 md:pt-32 md:pb-24 xl:pt-36 xl:pb-32">
+    <div className="pt-32 pb-20 md:pb-24 xl:pt-36 xl:pb-32">
       <SEO 
         title="Resource Center — Insights on Hiring & Remote Work in Africa"
         description="Your toolkit for the African job market. Hiring guides for growing teams and remote work playbooks for freelancers."
@@ -13,25 +14,17 @@ export default function Blog() {
       />
       
       <div className="container">
-        {/* Header */}
-        <section className="mb-16 md:mb-24 text-center max-w-3xl mx-auto">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/10 bg-white/80 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-primary shadow-premium-sm backdrop-blur-xl">
-            <BookOpen className="h-4 w-4" /> The JobWahala Gazette
-          </div>
-          <h1 className="mb-8 text-5xl font-black tracking-tighter leading-[0.92] text-text-main sm:text-6xl md:text-7xl">
-            Insights for the <br/>
-            <span className="text-primary italic">African Frontier.</span>
-          </h1>
-          <p className="text-lg font-medium leading-relaxed text-text-muted md:text-xl">
-            Your guide to navigating the future of work across Africa. Whether you're building a team or scaling your freelance career globally.
+        <PageHero eyebrow="Resources" title="Guides for work and hiring" accent="in Africa." className="mb-10">
+          <p className="mt-4 max-w-2xl text-base font-medium text-white/75 sm:text-lg">
+            Practical advice for people building a team, finding a job or growing a freelance career.
           </p>
-        </section>
+        </PageHero>
 
         {/* Search & Filter (Placeholder UI) */}
         <div className="mb-12 flex flex-col md:flex-row items-center justify-between gap-6 border-b border-surface-border pb-8">
           <div className="flex flex-wrap gap-3">
             {['All', 'Hiring Guide', 'Success Stories', 'Career Tips', 'Market Trends'].map((cat) => (
-              <button key={cat} className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${cat === 'All' ? 'bg-primary text-white' : 'bg-surface-alt text-text-muted hover:bg-surface-border'}`}>
+              <button key={cat} className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${cat === 'All' ? 'bg-primary text-white' : 'bg-surface-alt text-text-muted hover:bg-surface-border'}`}>
                 {cat}
               </button>
             ))}

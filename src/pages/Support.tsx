@@ -1,6 +1,7 @@
-import { Search, BookOpen, Shield, CreditCard, HelpCircle, ArrowRight } from 'lucide-react'
+import { Search, BookOpen, Shield, CreditCard, ArrowRight } from 'lucide-react'
 import { useState, useMemo } from 'react'
 import SEO from '../components/SEO'
+import PageHero from '../components/PageHero'
 
 const supportCategories = [
   {
@@ -50,33 +51,26 @@ export default function Support() {
   }, [searchQuery])
 
   return (
-    <div className="fade-in pt-32 pb-20 md:pt-32 md:pb-24 xl:pt-36 xl:pb-32">
+    <div className="pt-32 pb-20 md:pb-24 xl:pt-36 xl:pb-32">
       <SEO 
         title="Support Hub — JobWahala Help Center" 
         description="Find answers to common questions about hiring, payments, and disputes on JobWahala."
       />
 
       <div className="container">
-        {/* Hero Section */}
-        <div className="mb-16 text-center max-w-3xl mx-auto">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/10 bg-white/80 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-primary shadow-premium-sm backdrop-blur-xl">
-            <HelpCircle className="h-4 w-4" /> Support Center
-          </div>
-          <h1 className="mb-8 text-5xl font-black tracking-tighter leading-[0.92] text-text-main sm:text-6xl">
-            How can we <span className="text-primary italic">help you?</span>
-          </h1>
-          
-          <div className="relative group max-w-xl mx-auto">
-            <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-text-light group-focus-within:text-primary transition-colors" />
-            <input 
-              type="text" 
-              placeholder="Search for articles, guides, or questions..." 
+        <PageHero eyebrow="Help centre" title="How can we" accent="help you?" className="mb-10">
+          <div className="relative mt-7 max-w-2xl rounded-2xl bg-white p-2 shadow-premium-xl">
+            <Search className="pointer-events-none absolute left-5 top-1/2 h-5 w-5 -translate-y-1/2 text-text-light" />
+            <input
+              type="text"
+              aria-label="Search the help centre"
+              placeholder="Search for articles, guides, or questions..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-surface-alt border-none rounded-[2rem] py-5 pl-14 pr-6 text-base font-bold shadow-premium-lg ring-1 ring-surface-border focus:ring-2 focus:ring-primary/20 transition-all" 
+              className="w-full rounded-xl border-none bg-transparent py-4 pl-12 pr-4 text-base font-semibold text-text-main focus:ring-2 focus:ring-secondary/25"
             />
           </div>
-        </div>
+        </PageHero>
 
         {/* Categories Grid */}
         {!searchQuery && (
@@ -88,7 +82,7 @@ export default function Support() {
                 </div>
                 <h3 className="text-xl font-black text-text-main mb-2">{cat.title}</h3>
                 <p className="text-sm text-text-muted font-medium mb-6">{cat.description}</p>
-                <div className="flex items-center text-[10px] font-black uppercase tracking-widest text-primary group-hover:translate-x-1 transition-transform">
+                <div className="flex items-center text-sm font-bold text-primary group-hover:translate-x-1 transition-transform">
                   View Articles <ArrowRight className="ml-2 h-3.5 w-3.5" />
                 </div>
               </div>

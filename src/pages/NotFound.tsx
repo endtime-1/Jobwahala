@@ -1,52 +1,44 @@
 import { Link } from 'react-router-dom'
-import { ArrowLeft, Compass } from 'lucide-react'
+import { ArrowRight, Briefcase, LifeBuoy, Users } from 'lucide-react'
 import SEO from '../components/SEO'
+import PageHero from '../components/PageHero'
+
+const SHORTCUTS = [
+  { to: '/jobs', label: 'Browse jobs', icon: Briefcase },
+  { to: '/freelancers', label: 'Find freelancers', icon: Users },
+  { to: '/support', label: 'Get help', icon: LifeBuoy },
+]
 
 export default function NotFound() {
   return (
-    <div className="min-h-[70vh] flex items-center justify-center px-4 fade-in">
+    <div className="container pb-24 pt-32 xl:pt-36">
       <SEO
         title="Page Not Found — JobWahala"
-        description="The page you're looking for doesn't exist. Navigate back to the JobWahala workspace."
+        description="The page you're looking for doesn't exist. Navigate back to JobWahala."
       />
-      <div className="text-center max-w-lg">
-        {/* Animated icon */}
-        <div className="relative mx-auto mb-10 h-28 w-28">
-          <div className="absolute inset-0 rounded-[2rem] bg-primary/10 animate-pulse" />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Compass className="h-14 w-14 text-primary animate-[spin_8s_linear_infinite]" />
-          </div>
-        </div>
-
-        {/* Title & Description */}
-        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-4">
-          404 — Page Not Found
+      <PageHero eyebrow="Error 404" title="We can't find that" accent="page.">
+        <p className="mt-4 max-w-xl text-base font-medium text-white/75 sm:text-lg">
+          The link may be old, or the page may have moved. Here is where most people go next.
         </p>
-        <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-text-main mb-6 leading-tight">
-          This page doesn't <br />
-          <span className="text-primary italic">exist yet.</span>
-        </h1>
-        <p className="text-text-muted text-lg leading-relaxed mb-10 max-w-md mx-auto">
-          You may have followed an outdated link, or the page has been moved. 
-          Let's get you back on track.
-        </p>
+        <Link to="/" className="btn btn-gold btn-lg mt-7 px-8">
+          Back to the home page <ArrowRight className="h-5 w-5" />
+        </Link>
+      </PageHero>
 
-        {/* Actions */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+      <div className="mt-6 grid gap-4 sm:grid-cols-3">
+        {SHORTCUTS.map(({ to, label, icon: Icon }) => (
           <Link
-            to="/"
-            className="btn btn-primary btn-lg px-8 flex items-center gap-2"
+            key={to}
+            to={to}
+            className="group flex items-center gap-4 rounded-2xl border border-surface-border bg-white p-5 transition-all hover:-translate-y-0.5 hover:border-secondary/40 hover:shadow-premium-md"
           >
-            <ArrowLeft className="h-5 w-5" />
-            Back to Home
+            <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-secondary/10 text-secondary">
+              <Icon className="h-6 w-6" />
+            </span>
+            <span className="flex-1 text-lg font-extrabold text-text-main">{label}</span>
+            <ArrowRight className="h-5 w-5 text-text-light transition-transform group-hover:translate-x-1" />
           </Link>
-          <Link
-            to="/jobs"
-            className="btn btn-outline btn-lg px-8"
-          >
-            Browse Jobs
-          </Link>
-        </div>
+        ))}
       </div>
     </div>
   )

@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { ArrowRight, BadgeCheck, Briefcase, Calendar, Clock, Globe, MapPin } from 'lucide-react'
 import CompanyLogo from '../components/CompanyLogo'
+import { heroBackground } from '../components/PageHero'
 import SEO from '../components/SEO'
 import { apiGetCompany } from '../lib/api'
 import { formatRelativeTime } from '../lib/display'
@@ -109,14 +110,15 @@ export default function CompanyProfile() {
         </Helmet>
       )}
 
-      <section className="dashboard-hero px-5 py-7 sm:px-8 sm:py-9">
+      <section className="relative overflow-hidden rounded-[2rem] px-5 py-8 text-white sm:px-9 sm:py-11" style={{ background: heroBackground }}>
+        <div className="heritage-strip absolute inset-x-0 top-0" aria-hidden />
         <div className="relative z-10 flex flex-col gap-6 sm:flex-row sm:items-center">
           <CompanyLogo name={company.companyName} logoUrl={company.logoUrl} className="h-24 w-24 rounded-3xl text-3xl" />
           <div className="min-w-0">
-            <h1 className="text-3xl font-black tracking-tight text-text-main sm:text-4xl">{company.companyName}</h1>
-            <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm font-semibold text-text-muted">
+            <h1 className="text-3xl font-black tracking-tight text-white sm:text-5xl">{company.companyName}</h1>
+            <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-base font-semibold text-white/80">
               {company.isVerified && (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-success/12 px-3 py-1 font-black text-success">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-success px-3 py-1 font-black text-white">
                   <BadgeCheck className="h-4 w-4" /> Verified business
                 </span>
               )}
@@ -134,7 +136,7 @@ export default function CompanyProfile() {
                   href={company.website}
                   target="_blank"
                   rel="noopener noreferrer nofollow"
-                  className="inline-flex items-center gap-1.5 font-bold text-secondary hover:underline"
+                  className="inline-flex items-center gap-1.5 font-bold text-gold hover:underline"
                 >
                   <Globe className="h-4 w-4" /> Website
                 </a>
