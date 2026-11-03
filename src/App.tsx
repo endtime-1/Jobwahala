@@ -24,6 +24,8 @@ const Blog = lazy(() => import('./pages/Blog'))
 const BlogPost = lazy(() => import('./pages/BlogPost'))
 const Support = lazy(() => import('./pages/Support'))
 const IdentityVerification = lazy(() => import('./pages/IdentityVerification'))
+const Terms = lazy(() => import('./pages/Terms'))
+const Privacy = lazy(() => import('./pages/Privacy'))
 const NotFound = lazy(() => import('./pages/NotFound'))
 
 function RouteFallback() {
@@ -82,6 +84,8 @@ function App() {
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/:id" element={<BlogPost />} />
           <Route path="/support" element={<Support />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
           <Route path="/verify-identity" element={renderProtected(<IdentityVerification />)} />
           <Route path="*" element={<NotFound />} />
         </Route>
