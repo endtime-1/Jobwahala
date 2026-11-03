@@ -284,7 +284,7 @@ export default function Navbar() {
                       Job<span className="text-secondary">Wahala</span>
                     </p>
                     <p className="hidden whitespace-nowrap text-[10px] font-black uppercase tracking-[0.24em] text-text-light sm:block">
-                      {user ? (isOnboarded ? roleLabel : 'Setup in progress') : 'AI talent workspace'}
+                      {user ? (isOnboarded ? roleLabel : 'Setup in progress') : 'Jobs and gigs across Africa'}
                     </p>
                   </div>
                 </Link>

@@ -1,0 +1,93 @@
+/*
+ * "v2" look for every page except the home page: flat white cards, readable sentence-case labels
+ * and buttons, no frosted glass. Scoped under .v2 (set in Layout) so the home page keeps its own design.
+ */
+
+.v2 {
+  min-height: 100vh;
+  background: #f5f6fa;
+}
+
+/* Readable labels: the old design shouted in tiny, wide-spaced capitals. */
+.v2 .uppercase {
+  text-transform: none;
+}
+
+.v2 [class*='tracking-['],
+.v2 .tracking-widest,
+.v2 .tracking-wider {
+  letter-spacing: 0.005em;
+}
+
+/* Buttons read like actions, not warnings. */
+.v2 .btn {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  border-radius: 0.9rem;
+}
+
+.v2 .btn-sm {
+  font-size: 0.85rem;
+  min-height: 2.6rem;
+}
+
+.v2 .btn-lg {
+  font-size: 1.05rem;
+  min-height: 3.4rem;
+}
+
+.v2 .nav-link {
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+/* Flat, crisp surfaces. */
+.v2 .card {
+  background: #fff;
+  border: 1px solid #e3e7ef;
+  border-radius: 1.25rem;
+  box-shadow: 0 1px 2px rgba(16, 26, 43, 0.04), 0 10px 28px -20px rgba(16, 26, 43, 0.22);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.v2 .card:hover {
+  border-color: #c9d6f5;
+  box-shadow: 0 1px 2px rgba(16, 26, 43, 0.04), 0 16px 36px -22px rgba(47, 109, 246, 0.35);
+}
+
+.v2 [class*='rounded-[2'] {
+  border-radius: 1.4rem !important;
+}
+
+.v2 [class*='backdrop-blur'] {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.v2 .glass {
+  background: #fff;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+/* Section heading used by the new page headers. */
+.v2 .page-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--color-gold);
+  letter-spacing: 0.04em;
+}
+
+.v2 .page-eyebrow::before {
+  content: '';
+  width: 1.5rem;
+  height: 0.25rem;
+  border-radius: 999px;
+  background: var(--color-gold);
+}
