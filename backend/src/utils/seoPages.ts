@@ -15,6 +15,8 @@ export type SeoJob = {
   category?: string | null;
   salary?: string | null;
   createdAt: Date;
+  /** Last day to apply; becomes validThrough in the JobPosting data. */
+  closesAt?: Date;
   employerName: string;
   employerLogoUrl?: string | null;
   employerWebsite?: string | null;
@@ -87,6 +89,7 @@ export const buildJobPostingJsonLd = (job: SeoJob, siteUrl: string) => {
     title: job.title,
     description: paragraphs(job.description) || `<p>${e(job.title)}</p>`,
     datePosted: job.createdAt.toISOString(),
+    ...(job.closesAt ? { validThrough: job.closesAt.toISOString() } : {}),
     employmentType: mapEmploymentType(job.type),
     url: `${siteUrl}/jobs/${job.id}`,
     hiringOrganization: {

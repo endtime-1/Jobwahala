@@ -6,6 +6,7 @@ import prisma from './config/prisma';
 import { initSocket } from './services/socketService';
 import { processPayout } from './controllers/agreementController';
 import { getErrorMessage } from './utils/errors';
+import { JOB_SWEEP_INTERVAL_MS, runJobLifecycleSweepSafely } from './services/jobLifecycleService';
 
 const httpServer = createServer(app);
 initSocket(httpServer);
@@ -58,6 +59,11 @@ const payoutTask = setInterval(async () => {
   }
 }, payoutPollIntervalMs);
 
+// --- Task Scheduling: job lifecycle (expire jobs past their closing date, warn employers 3 days before) ---
+// Runs once a day, and once shortly after every start so a restart never skips a day. It is idempotent.
+const jobSweepFirstRun = setTimeout(() => void runJobLifecycleSweepSafely(), 60 * 1000);
+const jobSweepTask = setInterval(() => void runJobLifecycleSweepSafely(), JOB_SWEEP_INTERVAL_MS);
+
 let isShuttingDown = false;
 
 const shutdown = async (signal: string) => {
@@ -65,6 +71,8 @@ const shutdown = async (signal: string) => {
   isShuttingDown = true;
 
   clearInterval(payoutTask);
+  clearTimeout(jobSweepFirstRun);
+  clearInterval(jobSweepTask);
   logger.info('shutdown_started', { signal });
 
   server.close(async (error) => {

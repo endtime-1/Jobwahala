@@ -5,6 +5,7 @@ import { generateSeekerProfileOptimization } from '../services/ai';
 import { scoreApplicantForJob, scoreJobForSeeker } from '../utils/matching';
 import { getRequiredVerificationType, serializeVerificationStatus } from '../utils/verification';
 import { getErrorMessage } from '../utils/errors';
+import { publicJobWhere } from '../utils/jobLifecycle';
 
 type DashboardAgreementUser = {
   id: string;
@@ -683,7 +684,7 @@ const getDashboardOverviewData = async (userId: string, role: string) => {
       }),
       prisma.job.findMany({
         where: {
-          status: 'ACTIVE',
+          ...publicJobWhere(),
           NOT: {
             applications: {
               some: { seekerId: userId }
@@ -1034,7 +1035,7 @@ export const getProfileOptimization = async (req: AuthRequest, res: Response) =>
       }),
       prisma.job.findMany({
         where: {
-          status: 'ACTIVE',
+          ...publicJobWhere(),
           NOT: {
             applications: {
               some: { seekerId: userId }

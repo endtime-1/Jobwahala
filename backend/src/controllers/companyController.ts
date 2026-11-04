@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { approvedBusinessVerificationQuery, isVerifiedEmployer } from '../utils/verification';
+import { publicJobWhere } from '../utils/jobLifecycle';
 import prisma from '../config/prisma';
 import { getErrorMessage } from '../utils/errors';
 import { singleValue } from '../utils/request';
@@ -27,7 +28,7 @@ export const getCompany = async (req: Request, res: Response) => {
             employerProfile: { select: publicProfileFields },
             verificationRequests: approvedBusinessVerificationQuery,
             jobsPosted: {
-              where: { status: 'ACTIVE' },
+              where: publicJobWhere(),
               orderBy: { createdAt: 'desc' },
               take: 50,
               select: {
@@ -72,14 +73,14 @@ export const listHiringCompanies = async (_req: Request, res: Response) => {
         role: 'EMPLOYER',
         status: 'ACTIVE',
         employerProfile: { isNot: null },
-        jobsPosted: { some: { status: 'ACTIVE' } },
+        jobsPosted: { some: publicJobWhere() },
       },
       select: {
         id: true,
         employerProfile: { select: { companyName: true, industry: true, logoUrl: true } },
         verificationRequests: approvedBusinessVerificationQuery,
-        _count: { select: { jobsPosted: { where: { status: 'ACTIVE' } } } },
-        jobsPosted: { where: { status: 'ACTIVE' }, orderBy: { createdAt: 'desc' }, take: 1, select: { createdAt: true } },
+        _count: { select: { jobsPosted: { where: publicJobWhere() } } },
+        jobsPosted: { where: publicJobWhere(), orderBy: { createdAt: 'desc' }, take: 1, select: { createdAt: true } },
       },
       take: 60,
     });

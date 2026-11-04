@@ -111,3 +111,15 @@ describe('renderJobListPage', () => {
     expect(html).not.toContain('ItemList');
   });
 });
+
+describe('JobPosting closing date', () => {
+  it('tells Google when the job stops taking applications', () => {
+    const data = buildJobPostingJsonLd({ ...job, closesAt: new Date('2026-12-01T23:59:59.999Z') }, 'https://www.jobwahala.com');
+
+    expect(data.validThrough).toBe('2026-12-01T23:59:59.999Z');
+  });
+
+  it('leaves validThrough out when there is no closing date', () => {
+    expect(buildJobPostingJsonLd(job, 'https://www.jobwahala.com')).not.toHaveProperty('validThrough');
+  });
+});

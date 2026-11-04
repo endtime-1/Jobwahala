@@ -1,10 +1,10 @@
 import { Router } from 'express';
 import { maskPublicEmails } from '../middleware/privacy';
-import { compareJobsForSeeker, createJob, generateJobApplicantComparison, generateJobApplicantDecisionBrief, generateJobDraft, getJobs, getJobById, applyForJob, getJobApplicants, updateApplicationStatus, deleteApplication, updateOwnedJobStatus, getMyJobApplication, generateJobShortlistSummary, getJobApplicationCoaching } from '../controllers/jobController';
+import { compareJobsForSeeker, createJob, generateJobApplicantComparison, generateJobApplicantDecisionBrief, generateJobDraft, getJobs, getJobById, applyForJob, getJobApplicants, updateApplicationStatus, deleteApplication, updateOwnedJobStatus, getMyJobApplication, generateJobShortlistSummary, getJobApplicationCoaching, updateOwnedJob, duplicateOwnedJob, extendOwnedJob } from '../controllers/jobController';
 import { authMiddleware, roleMiddleware } from '../middleware/auth';
 import { validate } from '../middleware/validate';
 import { strictAiRateLimit } from '../middleware/security';
-import { applyForJobSchema, compareJobsSchema, createJobSchema, generateApplicantComparisonSchema, generateApplicantDecisionBriefSchema, generateJobDraftSchema, generateShortlistSummarySchema, jobIdParamSchema, updateApplicationStatusSchema, updateJobStatusSchema } from '../validation/jobSchemas';
+import { applyForJobSchema, compareJobsSchema, createJobSchema, generateApplicantComparisonSchema, generateApplicantDecisionBriefSchema, generateJobDraftSchema, generateShortlistSummarySchema, jobIdParamSchema, updateApplicationStatusSchema, updateJobStatusSchema, updateJobSchema, extendJobSchema } from '../validation/jobSchemas';
 
 const router = Router();
 
@@ -17,6 +17,9 @@ router.get('/:id', maskPublicEmails, getJobById);
 
 // Protected routes
 router.post('/', authMiddleware, roleMiddleware(['EMPLOYER']), validate(createJobSchema), createJob);
+router.patch('/:id', authMiddleware, roleMiddleware(['EMPLOYER']), validate(updateJobSchema), updateOwnedJob);
+router.post('/:id/duplicate', authMiddleware, roleMiddleware(['EMPLOYER']), validate(jobIdParamSchema), duplicateOwnedJob);
+router.post('/:id/extend', authMiddleware, roleMiddleware(['EMPLOYER']), validate(extendJobSchema), extendOwnedJob);
 router.patch('/:id/status', authMiddleware, roleMiddleware(['EMPLOYER']), validate(updateJobStatusSchema), updateOwnedJobStatus);
 router.post('/:id/apply', authMiddleware, roleMiddleware(['SEEKER']), validate(applyForJobSchema), applyForJob);
 router.get('/:id/applicants', authMiddleware, roleMiddleware(['EMPLOYER']), getJobApplicants);

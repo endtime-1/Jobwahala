@@ -173,3 +173,32 @@ describe('JobDetails application flow', () => {
     ).toBeInTheDocument()
   })
 })
+
+describe('JobDetails closing date', () => {
+  it('shows when the job closes', async () => {
+    const closesAt = new Date(Date.now() + 5 * 86_400_000).toISOString()
+    useAuthMock.mockReturnValue({ user: null, role: null })
+    apiGetMyJobApplicationMock.mockResolvedValue({ application: null })
+    apiGetJobByIdMock.mockResolvedValue({
+      job: {
+        id: 'job-1',
+        title: 'Frontend Engineer',
+        description: 'Build things.',
+        type: 'Full-time',
+        createdAt: '2026-03-21T00:00:00.000Z',
+        closesAt,
+        employer: { id: 'employer-1', email: 'employer@example.com', employerProfile: { companyName: 'JobWahala Labs' } },
+      },
+    })
+
+    render(
+      <MemoryRouter initialEntries={['/jobs/job-1']}>
+        <Routes>
+          <Route path="/jobs/:id" element={<JobDetails />} />
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(await screen.findByTestId('job-closing')).toHaveTextContent(/closes .* \(5 days left\)/i)
+  })
+})

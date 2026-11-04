@@ -1,13 +1,17 @@
 import type { PaymentActionItem, ApplicantDecisionBriefRecord, AgreementDecisionBriefRecord } from './types'
 
-export const initialJobForm = {
+import { defaultClosingDate } from '../../../lib/jobLifecycle'
+
+// A function, so the default closing date is always 30 days from today, even on a page left open for days.
+export const makeInitialJobForm = () => ({
   title: '',
   description: '',
   location: '',
   type: 'Full-time',
   salary: '',
   category: '',
-}
+  closesAt: defaultClosingDate(),
+})
 
 export const applicationStatuses = ['SUBMITTED', 'SHORTLISTED', 'INTERVIEW', 'REJECTED', 'HIRED']
 

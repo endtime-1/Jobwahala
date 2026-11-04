@@ -104,6 +104,40 @@ export const sendPasswordResetEmail = async (email: string, token: string) => {
   });
 };
 
+export const sendJobExpiryWarningEmail = async (
+  email: string,
+  job: { title: string; closesAt: Date; extendUrl: string; company?: string | null },
+) => {
+  const e = escapeHtml;
+  const closing = job.closesAt.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+
+  const html = wrapHtml(`
+    <div class="header">
+      <h1>${APP_NAME}</h1>
+      <p>Your job is about to close</p>
+    </div>
+    <div class="body">
+      <p><strong>${e(job.title)}</strong>${job.company ? ` at ${e(job.company)}` : ''} stops taking applications on <strong>${e(closing)}</strong>.</p>
+      <p>Still hiring? Extend it and it stays on the board. Everyone who has already applied stays on your applicant board either way.</p>
+      <p style="text-align: center; margin: 32px 0;">
+        <a href="${job.extendUrl}" class="btn">Extend this job</a>
+      </p>
+      <p class="muted">Or copy this link into your browser:</p>
+      <p class="muted" style="word-break: break-all;">${job.extendUrl}</p>
+    </div>
+    <div class="footer">
+      &copy; ${new Date().getFullYear()} ${APP_NAME}. All rights reserved.
+    </div>
+  `);
+
+  await transporter.sendMail({
+    from: env.smtpFrom,
+    to: email,
+    subject: `Your job "${job.title}" closes soon`,
+    html,
+  });
+};
+
 export const sendJobAlertEmail = async (
   email: string,
   alert: { alertName: string; jobTitle: string; company: string; location?: string | null; jobId: string },

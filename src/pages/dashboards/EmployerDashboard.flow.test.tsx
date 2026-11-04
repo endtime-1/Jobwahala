@@ -5,6 +5,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import EmployerDashboard from './EmployerDashboard'
 import { setFeaturesForTests } from '../../lib/features'
+import { defaultClosingDate } from '../../lib/jobLifecycle'
 
 // These tests cover the freelance screens, which exist only while FREELANCE_ENABLED is on.
 setFeaturesForTests({ freelanceEnabled: true })
@@ -178,6 +179,7 @@ describe('EmployerDashboard job posting flow', () => {
         type: 'Contract',
         salary: '$3,000/month',
         category: 'Design',
+        closesAt: defaultClosingDate(),
       })
     })
     await waitFor(() => {

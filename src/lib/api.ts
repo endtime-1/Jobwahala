@@ -182,6 +182,23 @@ export const apiUpdateJobStatus = (id: string, status: string) =>
     body: JSON.stringify({ status }),
   }).then(handleResponse);
 
+export const apiUpdateJob = (id: string, data: Record<string, unknown>) =>
+  fetch(`${BASE_URL}/jobs/${id}`, {
+    method: 'PATCH',
+    headers: headers(true),
+    body: JSON.stringify(data),
+  }).then(handleResponse);
+
+export const apiDuplicateJob = (id: string) =>
+  fetch(`${BASE_URL}/jobs/${id}/duplicate`, { method: 'POST', headers: headers(true) }).then(handleResponse);
+
+export const apiExtendJob = (id: string, days?: number) =>
+  fetch(`${BASE_URL}/jobs/${id}/extend`, {
+    method: 'POST',
+    headers: headers(true),
+    body: JSON.stringify(days ? { days } : {}),
+  }).then(handleResponse);
+
 export const apiGetJobApplicants = (jobId: string) =>
   fetch(`${BASE_URL}/jobs/${jobId}/applicants`, {
     headers: headers(true),

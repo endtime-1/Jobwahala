@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const applicationStatusValues = ['SUBMITTED', 'SHORTLISTED', 'INTERVIEW', 'REJECTED', 'HIRED'] as const;
-export const ownerJobStatusValues = ['ACTIVE', 'CLOSED'] as const;
+export const ownerJobStatusValues = ['ACTIVE', 'PAUSED', 'CLOSED'] as const;
 
 const trimmedOptionalString = (max: number) =>
   z.preprocess(
@@ -22,8 +22,33 @@ export const createJobSchema = z.object({
       type: z.string().trim().min(1).max(80),
       salary: trimmedOptionalString(120),
       category: trimmedOptionalString(120),
+      // A date (2026-12-01) or date-time. Left out means 30 days from now; the most is 90 days.
+      closesAt: trimmedOptionalString(40),
+      // Save without publishing.
+      status: z.enum(['DRAFT', 'ACTIVE']).optional(),
     })
     .strict(),
+});
+
+export const updateJobSchema = z.object({
+  params: z.object({ id: z.string().min(1) }),
+  body: z
+    .object({
+      title: z.string().trim().min(1).max(160).optional(),
+      description: z.string().trim().min(1).max(5000).optional(),
+      location: trimmedOptionalString(160),
+      type: z.string().trim().min(1).max(80).optional(),
+      salary: trimmedOptionalString(120),
+      category: trimmedOptionalString(120),
+      closesAt: trimmedOptionalString(40),
+    })
+    .strict()
+    .refine((body) => Object.values(body).some((value) => value !== undefined), { message: 'Nothing to change' }),
+});
+
+export const extendJobSchema = z.object({
+  params: z.object({ id: z.string().min(1) }),
+  body: z.object({ days: z.number().int().min(1).max(90).optional() }).strict(),
 });
 
 export const applyForJobSchema = z.object({

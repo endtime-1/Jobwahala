@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
-import { MapPin, CheckCircle, ChevronLeft, Send, Clock, Share2, Bookmark, AlertTriangle, Building2, Globe, ChevronRight, BriefcaseBusiness, Sparkles, ShieldCheck, MessageCircle } from 'lucide-react'
+import { CalendarClock, MapPin, CheckCircle, ChevronLeft, Send, Clock, Share2, Bookmark, AlertTriangle, Building2, Globe, ChevronRight, BriefcaseBusiness, Sparkles, ShieldCheck, MessageCircle } from 'lucide-react'
 import ReportModal from '../components/ReportModal'
 import CompanyLogo from '../components/CompanyLogo'
 import VerifiedBadge from '../components/VerifiedBadge'
 import { apiApplyForJob, apiDeleteApplication, apiGetJobApplicationCoaching, apiGetJobById, apiGetMyJobApplication } from '../lib/api'
 import { emailHandle, formatRelativeTime } from '../lib/display'
+import { closingSummary } from '../lib/jobLifecycle'
 import {
   formatJobLocationWithWorkMode,
   getJobWorkModeLabel,
@@ -22,6 +23,7 @@ type JobDetail = {
   type: string
   category?: string | null
   createdAt: string
+  closesAt?: string | null
   employer: {
     id: string
     email: string
@@ -289,6 +291,11 @@ export default function JobDetails() {
                   <span className="inline-flex items-center gap-2">
                     <Clock className="h-4 w-4 text-gold" /> Posted {formatRelativeTime(job.createdAt)}
                   </span>
+                  {job.closesAt ? (
+                    <span className="inline-flex items-center gap-2" data-testid="job-closing">
+                      <CalendarClock className="h-4 w-4 text-gold" /> {closingSummary(job.closesAt)}
+                    </span>
+                  ) : null}
                 </div>
                 <div className="mt-6 flex flex-wrap items-center gap-3">
                   <span className="rounded-full bg-gold px-4 py-2 text-base font-extrabold text-primary">{job.salary || 'Salary on request'}</span>

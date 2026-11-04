@@ -1,10 +1,11 @@
-import { useState } from 'react'
-import { ChevronRight, Clock, Sparkles } from 'lucide-react'
-import { Link } from 'react-router-dom'
-import { apiCreateJob, apiGenerateJobDraft, apiUpdateJobStatus } from '../../../lib/api'
-import { emailHandle, formatRelativeTime } from '../../../lib/display'
+import { useEffect, useRef, useState } from 'react'
+import { ChevronRight, Sparkles } from 'lucide-react'
+import { Link, useSearchParams } from 'react-router-dom'
+import { apiCreateJob, apiGenerateJobDraft } from '../../../lib/api'
+import { latestClosingDate, toDateInputValue } from '../../../lib/jobLifecycle'
+import EmployerJobCard from './EmployerJobCard'
 import type { EmployerJob, JobCopilotDraft } from './types'
-import { initialJobForm } from './utils'
+import { makeInitialJobForm } from './utils'
 import { getErrorMessage } from '../../../lib/errors'
 
 type Props = {
@@ -22,21 +23,27 @@ export default function EmployerJobsPanel({
   onJobCreated,
   onReviewApplicants,
 }: Props) {
-  const [jobForm, setJobForm] = useState(initialJobForm)
+  const [jobForm, setJobForm] = useState(makeInitialJobForm)
+  const formRef = useRef<HTMLFormElement>(null)
+  // The expiry email links to /dashboard?extend=<job id>: show that job with its Extend control open.
+  const [searchParams] = useSearchParams()
+  const extendJobId = searchParams.get('extend')
   const [jobCopilotDraft, setJobCopilotDraft] = useState<JobCopilotDraft | null>(null)
   const [isCreatingJob, setIsCreatingJob] = useState(false)
   const [isGeneratingJobDraft, setIsGeneratingJobDraft] = useState(false)
-  const [isUpdatingJobStatus, setIsUpdatingJobStatus] = useState(false)
   const [error, setError] = useState('')
 
-  const handleCreateJob = async (event: React.FormEvent) => {
-    event.preventDefault()
+  useEffect(() => {
+    if (extendJobId) document.getElementById(`job-${extendJobId}`)?.scrollIntoView?.({ block: 'center' })
+  }, [extendJobId, jobs.length])
+
+  const createJob = async (asDraft: boolean) => {
     setError('')
     setIsCreatingJob(true)
 
     try {
-      await apiCreateJob(jobForm)
-      setJobForm(initialJobForm)
+      await apiCreateJob(asDraft ? { ...jobForm, status: 'DRAFT' } : jobForm)
+      setJobForm(makeInitialJobForm())
       setJobCopilotDraft(null)
       onToggleCreateForm()
       onJobCreated()
@@ -47,13 +54,25 @@ export default function EmployerJobsPanel({
     }
   }
 
+  const handleCreateJob = (event: React.FormEvent) => {
+    event.preventDefault()
+    void createJob(false)
+  }
+
+  const handleSaveDraft = () => {
+    if (formRef.current && !formRef.current.reportValidity()) return
+    void createJob(true)
+  }
+
   const handleGenerateJobDraft = async () => {
     setError('')
     setIsGeneratingJobDraft(true)
 
     try {
+      // The closing date is not part of the writing help.
+      const { closesAt: _closesAt, ...draftInput } = jobForm
       const data = await apiGenerateJobDraft({
-        ...jobForm,
+        ...draftInput,
         focus: jobForm.description || undefined,
       })
       const draft = (data.draft || {}) as Partial<typeof jobForm> & JobCopilotDraft
@@ -77,20 +96,6 @@ export default function EmployerJobsPanel({
     }
   }
 
-  const handleJobStatusUpdate = async (jobId: string, status: string) => {
-    setError('')
-    setIsUpdatingJobStatus(true)
-
-    try {
-      await apiUpdateJobStatus(jobId, status)
-      onJobCreated() // triggers refetch
-    } catch (err) {
-      setError(getErrorMessage(err, 'Unable to update this job status right now.'))
-    } finally {
-      setIsUpdatingJobStatus(false)
-    }
-  }
-
   return (
     <>
       {error ? (
@@ -100,11 +105,11 @@ export default function EmployerJobsPanel({
       ) : null}
 
       {showCreateForm ? (
-        <form onSubmit={handleCreateJob} className="space-y-6 rounded-2xl border border-secondary/30 bg-white p-5 sm:p-8">
+        <form ref={formRef} onSubmit={handleCreateJob} className="space-y-6 rounded-2xl border border-secondary/30 bg-white p-5 sm:p-8">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-surface-border pb-5">
             <div>
               <h2 className="text-2xl font-black tracking-tight text-text-main">Create Job Posting</h2>
-              <p className="mt-1 text-sm font-medium text-text-muted">Fill in the basics. Your job goes live as soon as you publish.</p>
+              <p className="mt-1 text-sm font-medium text-text-muted">Fill in the basics. Your job goes live as soon as you publish, or save it as a draft first.</p>
             </div>
             <span className="rounded-full bg-success/15 px-3 py-1 text-sm font-extrabold text-success">Goes live instantly</span>
           </div>
@@ -172,7 +177,21 @@ export default function EmployerJobsPanel({
               <input id="job-salary" type="text" placeholder="Salary" value={jobForm.salary} onChange={(e) => setJobForm((c) => ({ ...c, salary: e.target.value }))} className="h-14 text-base font-semibold" />
               <p className="text-sm text-text-muted">Include the currency, e.g. GHS 3,000 - 4,500 a month.</p>
             </div>
-            <div className="space-y-1.5 md:col-span-2">
+            <div className="space-y-1.5">
+              <label htmlFor="job-closes" className="block text-base font-bold text-text-main">Closing date</label>
+              <input
+                id="job-closes"
+                type="date"
+                value={jobForm.closesAt}
+                min={toDateInputValue(new Date())}
+                max={latestClosingDate()}
+                onChange={(e) => setJobForm((c) => ({ ...c, closesAt: e.target.value }))}
+                className="h-14 text-base font-semibold"
+                required
+              />
+              <p className="text-sm text-text-muted">The last day people can apply. Up to 90 days from today; we suggest 30.</p>
+            </div>
+            <div className="space-y-1.5">
               <label htmlFor="job-category" className="block text-base font-bold text-text-main">Field</label>
               <input id="job-category" type="text" placeholder="Category" value={jobForm.category} onChange={(e) => setJobForm((c) => ({ ...c, category: e.target.value }))} className="h-14 text-base font-semibold" />
               <p className="text-sm text-text-muted">For example: Sales, Design, Finance or Technology.</p>
@@ -194,9 +213,14 @@ export default function EmployerJobsPanel({
 
           <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm font-medium text-text-muted">Clear pay and location help the right people apply.</p>
-            <button type="submit" disabled={isCreatingJob} className="btn btn-gold btn-lg px-8 disabled:opacity-60">
-              {isCreatingJob ? 'Publishing...' : 'Publish Job'}
-            </button>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <button type="button" onClick={handleSaveDraft} disabled={isCreatingJob} className="btn btn-outline btn-lg bg-white px-6 disabled:opacity-60">
+                Save as draft
+              </button>
+              <button type="submit" disabled={isCreatingJob} className="btn btn-gold btn-lg px-8 disabled:opacity-60">
+                {isCreatingJob ? 'Publishing...' : 'Publish Job'}
+              </button>
+            </div>
           </div>
         </form>
       ) : null}
@@ -224,60 +248,13 @@ export default function EmployerJobsPanel({
         ) : (
           <div className="space-y-4">
             {jobs.map((job) => (
-              <div
+              <EmployerJobCard
                 key={job.id}
-                className="rounded-2xl border border-surface-border bg-white p-5 transition-all hover:border-secondary/40 sm:p-6"
-              >
-                <div className="flex flex-wrap items-start justify-between gap-4">
-                  <div className="min-w-0 flex-1">
-                    <h3 className="text-xl font-extrabold leading-snug tracking-tight text-text-main">{job.title}</h3>
-                    <div className="mt-2 flex flex-wrap items-center gap-2">
-                      <span
-                        className={`rounded-full px-3 py-1 text-xs font-extrabold ${
-                          job.status === 'ACTIVE' ? 'bg-success/15 text-success' : 'bg-surface-alt text-text-muted'
-                        }`}
-                      >
-                        {job.status}
-                      </span>
-                      {job.postedByAdmin ? (
-                        <span className="rounded-full bg-secondary/10 px-3 py-1 text-xs font-extrabold text-secondary">Admin assisted</span>
-                      ) : null}
-                      <span className="flex items-center gap-1.5 text-sm font-semibold text-text-muted">
-                        <Clock className="h-3.5 w-3.5" /> {formatRelativeTime(job.createdAt)}
-                      </span>
-                    </div>
-                    {job.postedByAdmin ? (
-                      <p className="mt-2 text-sm font-semibold text-text-muted">
-                        Posted by JobWahala admin / {emailHandle(job.postedByAdmin.email)}
-                      </p>
-                    ) : null}
-                  </div>
-                  <div className="rounded-xl bg-surface-alt/70 px-6 py-3 text-center">
-                    <p className="text-2xl font-black leading-none text-text-main">{job._count.applications}</p>
-                    <p className="mt-1 text-xs font-bold text-text-muted">Applicants</p>
-                  </div>
-                </div>
-                <div className="mt-4 flex flex-wrap gap-2 border-t border-surface-border pt-4">
-                  <button
-                    type="button"
-                    onClick={() => onReviewApplicants(job.id, job.title)}
-                    className="btn btn-primary btn-sm"
-                  >
-                    Review Applicants
-                  </button>
-                  <Link to={`/jobs/${job.id}`} className="btn btn-outline btn-sm bg-white">
-                    View Role
-                  </Link>
-                  <button
-                    type="button"
-                    disabled={isUpdatingJobStatus}
-                    onClick={() => void handleJobStatusUpdate(job.id, job.status === 'ACTIVE' ? 'CLOSED' : 'ACTIVE')}
-                    className="btn btn-outline btn-sm bg-white disabled:opacity-60"
-                  >
-                    {job.status === 'ACTIVE' ? 'Close Role' : 'Reopen Role'}
-                  </button>
-                </div>
-              </div>
+                job={job}
+                highlighted={job.id === extendJobId}
+                onChanged={onJobCreated}
+                onReviewApplicants={onReviewApplicants}
+              />
             ))}
           </div>
         )}

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import prisma from '../config/prisma';
 import env from '../config/env';
+import { publicJobWhere } from '../utils/jobLifecycle';
 import { getErrorMessage } from '../utils/errors';
 
 /** Public switches the website needs to know about. */
@@ -31,14 +32,14 @@ export const getPlatformStats = async (_req: Request, res: Response) => {
       recentJobs,
       topFreelancers,
     ] = await Promise.all([
-      prisma.job.count({ where: { status: 'ACTIVE' } }),
+      prisma.job.count({ where: publicJobWhere() }),
       prisma.user.count({ where: { role: 'FREELANCER', status: 'ACTIVE' } }),
       prisma.user.count({ where: { role: 'SEEKER', status: 'ACTIVE' } }),
       prisma.user.count({ where: { role: 'EMPLOYER', status: 'ACTIVE' } }),
       prisma.freelanceService.count({ where: { status: 'ACTIVE' } }),
       prisma.application.count(),
       prisma.job.findMany({
-        where: { status: 'ACTIVE' },
+        where: publicJobWhere(),
         select: {
           id: true,
           title: true,

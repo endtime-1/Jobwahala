@@ -6,6 +6,7 @@ import { singleValue } from '../utils/request';
 import { getErrorMessage } from '../utils/errors';
 import { renderFreelancerSharePage, renderSharePageNotFound } from '../utils/sharePage';
 import { renderJobListPage, renderJobPage, type SeoJob } from '../utils/seoPages';
+import { publicJobWhere } from '../utils/jobLifecycle';
 import {
   buildSitemapXml,
   countryEntries,
@@ -30,6 +31,7 @@ const seoJobSelect = {
   category: true,
   salary: true,
   createdAt: true,
+  closesAt: true,
   employer: { select: { employerProfile: { select: { companyName: true, logoUrl: true, website: true } } } },
 } as const;
 
@@ -42,6 +44,7 @@ type SeoJobRow = {
   category: string | null;
   salary: string | null;
   createdAt: Date;
+  closesAt: Date;
   employer: { employerProfile: { companyName: string; logoUrl: string | null; website: string | null } | null };
 };
 
@@ -57,6 +60,7 @@ const toSeoJob = (row: SeoJobRow, siteUrl: string): SeoJob => {
     category: row.category,
     salary: row.salary,
     createdAt: row.createdAt,
+    closesAt: row.closesAt,
     employerName: row.employer.employerProfile?.companyName || 'A company on JobWahala',
     employerLogoUrl: logo ? (/^https?:\/\//i.test(logo) ? logo : `${siteUrl}${logo}`) : null,
     employerWebsite: row.employer.employerProfile?.website ?? null,
@@ -121,7 +125,7 @@ export const getSitemap = async (req: Request, res: Response) => {
     });
 
     const jobs = await prisma.job.findMany({
-      where: { status: 'ACTIVE' },
+      where: publicJobWhere(),
       select: { id: true, employerId: true, updatedAt: true },
       orderBy: { updatedAt: 'desc' },
       take: 5000,
@@ -157,7 +161,7 @@ export const getJobSharePage = async (req: Request, res: Response) => {
   try {
     const id = singleValue(req.params.id);
     const job = id
-      ? await prisma.job.findFirst({ where: { id, status: 'ACTIVE' }, select: seoJobSelect })
+      ? await prisma.job.findFirst({ where: { id, ...publicJobWhere() }, select: seoJobSelect })
       : null;
 
     res.type('html');
@@ -191,7 +195,7 @@ export const getJobListSharePage = async (req: Request, res: Response) => {
 
     const rows = await prisma.job.findMany({
       where: {
-        status: 'ACTIVE',
+        ...publicJobWhere(),
         ...(country ? { location: { contains: country } } : {}),
       },
       select: seoJobSelect,

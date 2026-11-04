@@ -8,6 +8,17 @@ import { singleValue } from '../utils/request';
 import { createAgreementEvent } from '../utils/agreementEvents';
 import { generateEmployerApplicantComparisonSummary, generateEmployerApplicantDecisionBrief, generateEmployerShortlistSummary, generateJobApplicationCoaching, generateJobPostOptimization, generateSeekerJobComparisonSummary } from '../services/ai';
 import { scoreApplicantForJob, scoreJobForSeeker } from '../utils/matching';
+import {
+  ClosingDateError,
+  canChangeStatus,
+  closesAtFromDays,
+  isOwnerManaged,
+  isPastClosingDate,
+  publicJobWhere,
+  resolveClosesAt,
+  DEFAULT_JOB_DAYS,
+  addDays,
+} from '../utils/jobLifecycle';
 import { approvedBusinessVerificationQuery, publicEmployerVerification } from '../utils/verification';
 import { getErrorMessage } from '../utils/errors';
 
@@ -47,13 +58,27 @@ const mapRankedApplications = <
 
 export const createJob = async (req: AuthRequest, res: Response) => {
   try {
-    const { title, description, location, type, salary, category } = req.body;
+    const { title, description, location, type, salary, category, closesAt: closesAtInput, status: requestedStatus } = req.body;
     if (!title?.trim() || !description?.trim() || !type?.trim()) {
       return res.status(400).json({ success: false, message: 'Title, description, and type are required' });
     }
 
+    let closesAt: Date;
+    try {
+      closesAt = resolveClosesAt(closesAtInput);
+    } catch (error) {
+      if (error instanceof ClosingDateError) {
+        return res.status(400).json({ success: false, message: error.message });
+      }
+      throw error;
+    }
+
+    const status = requestedStatus === 'DRAFT' ? 'DRAFT' : 'ACTIVE';
+
     const job = await prisma.job.create({
       data: {
+        status,
+        closesAt,
         title: title.trim(),
         description: description.trim(),
         location: location?.trim() || null,
@@ -63,7 +88,8 @@ export const createJob = async (req: AuthRequest, res: Response) => {
         employerId: req.user!.id
       }
     });
-    void notifyJobAlerts(job);
+    // Drafts are private; alerts go out when the job is published.
+    if (status === 'ACTIVE') void notifyJobAlerts(job);
     res.status(201).json({ success: true, job });
   } catch (error) {
     res.status(500).json({ success: false, message: getErrorMessage(error) });
@@ -112,7 +138,7 @@ export const getJobs = async (req: AuthRequest, res: Response) => {
     const type = singleValue(req.query.type as string | string[] | undefined)?.trim() || '';
     const location = singleValue(req.query.location as string | string[] | undefined)?.trim() || '';
 
-    const where: any = { status: 'ACTIVE' };
+    const where: any = { ...publicJobWhere() };
 
     // Full-text search across title + description
     if (q) {
@@ -185,7 +211,7 @@ export const compareJobsForSeeker = async (req: AuthRequest, res: Response) => {
       prisma.job.findMany({
         where: {
           id: { in: jobIds },
-          status: 'ACTIVE',
+          ...publicJobWhere(),
         },
         include: {
           employer: {
@@ -280,7 +306,7 @@ export const getJobById = async (req: AuthRequest, res: Response) => {
     }
 
     const job = await prisma.job.findFirst({
-      where: { id: jobId, status: 'ACTIVE' },
+      where: { id: jobId, ...publicJobWhere() },
       include: {
         employer: {
           select: {
@@ -321,7 +347,7 @@ export const applyForJob = async (req: AuthRequest, res: Response) => {
     }
 
     const job = await prisma.job.findFirst({
-      where: { id: jobId, status: 'ACTIVE' }
+      where: { id: jobId, ...publicJobWhere() }
     });
 
     if (!job) {
@@ -678,7 +704,7 @@ export const getJobApplicationCoaching = async (req: AuthRequest, res: Response)
 
     const [job, seekerProfile, application] = await Promise.all([
       prisma.job.findFirst({
-        where: { id: jobId, status: 'ACTIVE' },
+        where: { id: jobId, ...publicJobWhere() },
         select: {
           id: true,
           title: true,
@@ -908,12 +934,158 @@ export const updateOwnedJobStatus = async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ success: false, message: 'Access denied' });
     }
 
+    if (!isOwnerManaged(job.status)) {
+      return res.status(409).json({ success: false, message: 'This job is under review by JobWahala and cannot be changed yet.' });
+    }
+
+    if (job.status === status) {
+      return res.json({ success: true, job });
+    }
+
+    if (!canChangeStatus(job.status, status)) {
+      return res.status(409).json({
+        success: false,
+        message: job.status === 'EXPIRED'
+          ? 'This job has expired. Extend its closing date to open it again.'
+          : `A ${job.status.toLowerCase()} job cannot be set to ${status.toLowerCase()}.`,
+      });
+    }
+
+    if (status === 'ACTIVE' && isPastClosingDate(job.closesAt)) {
+      return res.status(409).json({ success: false, message: 'The closing date has passed. Extend the job to open it again.' });
+    }
+
+    // Applicants are never touched: pausing, closing or expiring only changes who can find and apply.
     const updatedJob = await prisma.job.update({
       where: { id: jobId },
       data: { status }
     });
 
+    // First publish of a draft is the moment saved-search alerts go out (not a resume).
+    if (job.status === 'DRAFT' && status === 'ACTIVE') void notifyJobAlerts(updatedJob);
+
     return res.json({ success: true, job: updatedJob });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
+  }
+};
+
+const loadOwnedJob = async (req: AuthRequest, res: Response) => {
+  const jobId = singleValue(req.params.id);
+  if (!jobId) {
+    res.status(400).json({ success: false, message: 'Job id is required' });
+    return null;
+  }
+
+  const job = await prisma.job.findUnique({ where: { id: jobId } });
+  if (!job || job.employerId !== req.user!.id) {
+    res.status(403).json({ success: false, message: 'Access denied' });
+    return null;
+  }
+
+  if (!isOwnerManaged(job.status)) {
+    res.status(409).json({ success: false, message: 'This job is under review by JobWahala and cannot be changed yet.' });
+    return null;
+  }
+
+  return job;
+};
+
+/** Edit a job's details. Allowed in every owner status; applicants are untouched. */
+export const updateOwnedJob = async (req: AuthRequest, res: Response) => {
+  try {
+    const job = await loadOwnedJob(req, res);
+    if (!job) return;
+
+    const body = req.body as Record<string, string | undefined>;
+    const data: Record<string, unknown> = {};
+
+    for (const key of ['title', 'description', 'type'] as const) {
+      if (body[key] !== undefined) data[key] = body[key]!.trim();
+    }
+    for (const key of ['location', 'salary', 'category'] as const) {
+      if (body[key] !== undefined) data[key] = body[key]!.trim() || null;
+    }
+
+    if (body.closesAt !== undefined && body.closesAt !== '') {
+      if (job.status === 'EXPIRED') {
+        return res.status(409).json({ success: false, message: 'This job has expired. Use Extend to open it again.' });
+      }
+      try {
+        data.closesAt = resolveClosesAt(body.closesAt);
+        data.expiryWarningSentAt = null;
+      } catch (error) {
+        if (error instanceof ClosingDateError) {
+          return res.status(400).json({ success: false, message: error.message });
+        }
+        throw error;
+      }
+    }
+
+    const updated = await prisma.job.update({ where: { id: job.id }, data });
+    return res.json({ success: true, job: updated });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
+  }
+};
+
+/** Copy a job as a new private draft with a fresh 30-day closing date. */
+export const duplicateOwnedJob = async (req: AuthRequest, res: Response) => {
+  try {
+    const job = await loadOwnedJob(req, res);
+    if (!job) return;
+
+    const copy = await prisma.job.create({
+      data: {
+        employerId: job.employerId,
+        title: job.title,
+        description: job.description,
+        location: job.location,
+        type: job.type,
+        salary: job.salary,
+        currency: job.currency,
+        category: job.category,
+        status: 'DRAFT',
+        closesAt: addDays(new Date(), DEFAULT_JOB_DAYS),
+      },
+    });
+
+    return res.status(201).json({ success: true, job: copy });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
+  }
+};
+
+/** Push the closing date out (counted from today). An expired job opens again; others keep their status. */
+export const extendOwnedJob = async (req: AuthRequest, res: Response) => {
+  try {
+    const job = await loadOwnedJob(req, res);
+    if (!job) return;
+
+    let closesAt: Date;
+    try {
+      closesAt = closesAtFromDays((req.body as { days?: number }).days);
+    } catch (error) {
+      if (error instanceof ClosingDateError) {
+        return res.status(400).json({ success: false, message: error.message });
+      }
+      throw error;
+    }
+
+    if (closesAt.getTime() <= job.closesAt.getTime()) {
+      return res.status(400).json({ success: false, message: 'That is not later than the current closing date.' });
+    }
+
+    const updated = await prisma.job.update({
+      where: { id: job.id },
+      data: {
+        closesAt,
+        expiryWarningSentAt: null,
+        ...(job.status === 'EXPIRED' ? { status: 'ACTIVE' } : {}),
+      },
+    });
+
+    return res.json({ success: true, job: updated });
   } catch (error) {
     return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }

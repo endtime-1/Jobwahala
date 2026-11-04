@@ -20,7 +20,13 @@ export type {
 export type EmployerJob = {
   id: string
   title: string
+  description?: string | null
+  location?: string | null
+  type?: string | null
+  salary?: string | null
+  category?: string | null
   status: string
+  closesAt?: string | null
   createdAt: string
   postedByAdminAt?: string | null
   postedByAdmin?: {
