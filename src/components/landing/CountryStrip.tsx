@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
-import { buildJobSearchPath } from '../../lib/jobSearch'
+import { buildJobSearchPath, countrySlug } from '../../lib/jobSearch'
 
-// Quick job-search shortcuts. They search the job board; they do not claim a presence in each country.
+// Quick shortcuts to each country's job list. They search the job board; they do not claim a presence in each country.
 const PLACES = ['Ghana', 'Nigeria', 'Kenya', 'South Africa', 'Rwanda', 'Senegal', 'Tanzania', 'Uganda', 'Ethiopia', 'Egypt', 'Remote']
 
 export default function CountryStrip() {
@@ -9,7 +9,7 @@ export default function CountryStrip() {
     PLACES.map((place) => (
       <Link
         key={`${place}-${hidden}`}
-        to={buildJobSearchPath('', place)}
+        to={place === 'Remote' ? buildJobSearchPath('', place) : `/jobs-in/${countrySlug(place)}`}
         tabIndex={hidden ? -1 : 0}
         className="group flex flex-none items-center gap-3 text-lg font-extrabold text-white/80 transition-colors hover:text-gold sm:text-xl"
       >

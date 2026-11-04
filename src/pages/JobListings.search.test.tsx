@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
+import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import JobListings from './JobListings'
 
@@ -62,5 +62,54 @@ describe('JobListings ?search= prefill (used by the homepage)', () => {
     expect(await screen.findByText('Hotel Receptionist')).toBeInTheDocument()
     expect(screen.queryByText('Cashier')).not.toBeInTheDocument()
     expect((await screen.findAllByDisplayValue('kumasi')).length).toBeGreaterThan(0)
+  })
+})
+
+describe('JobListings field, type and country links', () => {
+  const mixed = [
+    { ...job('1', 'Hotel Receptionist'), category: 'Tourism & Hotels', type: 'Full-time' },
+    { ...job('2', 'Financial Consultant'), category: 'Finance', type: 'Contract' },
+    { ...job('3', 'Branch Accountant'), category: 'Finance', type: 'Full-time', location: 'Nairobi, Kenya' },
+  ]
+
+  beforeEach(() => {
+    apiGetJobsMock.mockResolvedValue({ jobs: mixed })
+  })
+
+  it('filters by the field in the link', async () => {
+    render(
+      <MemoryRouter initialEntries={['/jobs?category=Finance']}>
+        <JobListings />
+      </MemoryRouter>,
+    )
+
+    expect(await screen.findByText('Financial Consultant')).toBeInTheDocument()
+    expect(screen.getByText('Branch Accountant')).toBeInTheDocument()
+    expect(screen.queryByText('Hotel Receptionist')).not.toBeInTheDocument()
+  })
+
+  it('filters by the job type in the link', async () => {
+    render(
+      <MemoryRouter initialEntries={['/jobs?type=Contract']}>
+        <JobListings />
+      </MemoryRouter>,
+    )
+
+    expect(await screen.findByText('Financial Consultant')).toBeInTheDocument()
+    expect(screen.queryByText('Branch Accountant')).not.toBeInTheDocument()
+  })
+
+  it('shows only jobs in the country on a country page', async () => {
+    render(
+      <MemoryRouter initialEntries={['/jobs-in/kenya']}>
+        <Routes>
+          <Route path="/jobs-in/:country" element={<JobListings />} />
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(await screen.findByText('Branch Accountant')).toBeInTheDocument()
+    expect(screen.queryByText('Hotel Receptionist')).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/real jobs in kenya/i)
   })
 })

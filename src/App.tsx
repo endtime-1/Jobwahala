@@ -74,6 +74,7 @@ function App() {
         <Route element={<Layout />}>
           <Route path="/" element={<Landing />} />
           <Route path="/jobs" element={<JobListings />} />
+          <Route path="/jobs-in/:country" element={<JobListings />} />
           <Route path="/jobs/:id" element={<JobDetails />} />
           <Route path="/cv-generator" element={renderProtected(<CVGenerator />)} />
           <Route path="/messaging" element={renderProtected(<Messaging />)} />

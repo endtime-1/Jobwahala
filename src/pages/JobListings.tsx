@@ -1,5 +1,5 @@
 import { Search, MapPin, Clock, ChevronRight, Flag, Sparkles, Briefcase, X } from 'lucide-react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
 import ReportModal from '../components/ReportModal'
 import CompanyLogo from '../components/CompanyLogo'
@@ -16,6 +16,7 @@ import { useAuth } from '../context/AuthContext'
 import SEO from '../components/SEO'
 import JobAlerts from '../components/JobAlerts'
 import { alertCriteriaFromFilters } from '../lib/jobAlerts'
+import { countryFromSlug, matchesJobField, parseJobType } from '../lib/jobSearch'
 import { getErrorMessage } from '../lib/errors'
 
 type JobRecord = {
@@ -58,9 +59,15 @@ export default function JobListings() {
   const [error, setError] = useState('')
   const [reportTarget, setReportTarget] = useState<{ id: string; name: string } | null>(null)
   const [searchParams] = useSearchParams()
+  const { country } = useParams()
+  const countryName = countryFromSlug(country)
   const [search, setSearch] = useState(() => searchParams.get('search') ?? '')
-  const [town, setTown] = useState(() => searchParams.get('location') ?? '')
-  const [selectedTypes, setSelectedTypes] = useState<string[]>(jobTypes)
+  const [town, setTown] = useState(() => countryName || (searchParams.get('location') ?? ''))
+  const [category, setCategory] = useState(() => searchParams.get('category') ?? '')
+  const [selectedTypes, setSelectedTypes] = useState<string[]>(() => {
+    const wanted = parseJobType(searchParams.get('type'))
+    return wanted ? [wanted] : jobTypes
+  })
   const [selectedLocation, setSelectedLocation] = useState('All of Africa')
   const [selectedJobIds, setSelectedJobIds] = useState<string[]>([])
   const [comparison, setComparison] = useState<JobComparisonRecord | null>(null)
@@ -117,15 +124,16 @@ export default function JobListings() {
       const matchesTown = !town.trim() || location.toLowerCase().includes(town.trim().toLowerCase())
 
       const matchesType = selectedTypes.length === 0 || selectedTypes.includes(job.type)
+      const matchesField = matchesJobField(job.category, category)
 
       const matchesLocation =
         selectedLocation === 'All of Africa' ||
         (selectedLocation === 'Remote Only' && isRemoteJob(job.location)) ||
         location.toLowerCase().includes(selectedLocation.toLowerCase())
 
-      return matchesSearch && matchesType && matchesLocation && matchesTown
+      return matchesSearch && matchesType && matchesLocation && matchesTown && matchesField
     })
-  }, [jobs, search, selectedLocation, selectedTypes, town])
+  }, [jobs, search, selectedLocation, selectedTypes, town, category])
 
   const remoteCount = useMemo(
     () => jobs.filter((job) => isRemoteJob(job.location)).length,
@@ -188,12 +196,14 @@ export default function JobListings() {
   const hasActiveFilters =
     Boolean(search.trim()) ||
     Boolean(town.trim()) ||
+    Boolean(category.trim()) ||
     selectedLocation !== 'All of Africa' ||
     selectedTypes.length !== jobTypes.length
 
   const clearFilters = () => {
     setSearch('')
     setTown('')
+    setCategory('')
     setSelectedLocation('All of Africa')
     setSelectedTypes(jobTypes)
   }
@@ -201,9 +211,13 @@ export default function JobListings() {
   return (
     <div className="pb-24 pt-32 xl:pt-36">
       <SEO
-        title="Find Jobs and Freelance Work Across Africa"
-        description="Filter and apply for full-time, contract, and freelance roles in Accra and across Africa. Updated daily."
-        keywords="jobs in ghana, accra tech careers, remote jobs africa, software engineering ghana"
+        title={countryName ? `Jobs in ${countryName} - real jobs from employers you can check` : 'Find Jobs Across Africa'}
+        description={
+          countryName
+            ? `Browse and apply for real jobs in ${countryName}. See the pay and location before you apply, and track every application.`
+            : 'Browse and apply for real jobs across Africa. See the pay and location before you apply, and track every application.'
+        }
+        keywords={`jobs in ${countryName || 'africa'}, apply for jobs, hiring in ${countryName || 'africa'}, jobwahala`}
       />
 
       <div className="container">
@@ -215,9 +229,9 @@ export default function JobListings() {
           }}
         >
           <div className="heritage-strip absolute inset-x-0 top-0" aria-hidden />
-          <p className="page-eyebrow">Find your next job</p>
+          <p className="page-eyebrow">{countryName ? `Jobs in ${countryName}` : 'Find your next job'}</p>
           <h1 className="mt-3 max-w-3xl text-4xl font-black leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
-            Real jobs across Africa. <span className="text-gold">Apply in minutes.</span>
+            {countryName ? `Real jobs in ${countryName}.` : 'Real jobs across Africa.'} <span className="text-gold">Apply in minutes.</span>
           </h1>
 
           <div className="relative mt-7 rounded-2xl bg-white p-2 shadow-premium-xl sm:flex sm:items-center sm:gap-2">
@@ -303,6 +317,16 @@ export default function JobListings() {
 
         <div id="results" className="mt-6 scroll-mt-28 space-y-5">
           <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-surface-border bg-white p-3 sm:p-4">
+            {category.trim() ? (
+              <button
+                type="button"
+                onClick={() => setCategory('')}
+                className="inline-flex items-center gap-1.5 rounded-full bg-gold px-3.5 py-2 text-sm font-extrabold text-primary"
+                aria-label={`Remove field filter ${category}`}
+              >
+                {category} <X className="h-3.5 w-3.5" />
+              </button>
+            ) : null}
             <span className="mr-1 hidden text-sm font-bold text-text-muted sm:inline">Job type</span>
             {jobTypes.map((type) => (
               <button

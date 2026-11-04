@@ -3,6 +3,7 @@ import SEO from '../components/SEO'
 import CvBuilderSection from '../components/landing/CvBuilderSection'
 import EmployerCard from '../components/landing/EmployerCard'
 import Faq from '../components/landing/Faq'
+import FieldTiles from '../components/landing/FieldTiles'
 import FinalCta, { LegalLinks } from '../components/landing/FinalCta'
 import Hero from '../components/landing/Hero'
 import MarketPulse from '../components/landing/MarketPulse'
@@ -110,6 +111,10 @@ export default function Landing() {
 
       <Section eyebrow="Start here" title="Where do you want to begin?">
         <PathCards />
+      </Section>
+
+      <Section eyebrow="Browse by field" title="What kind of work do you want?">
+        <FieldTiles jobs={jobs} />
       </Section>
 
       <Section eyebrow="On the board" title="Open roles.">
