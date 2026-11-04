@@ -297,7 +297,7 @@ export default function FreelancerMarketplace() {
   }
 
   return (
-    <div className="container pt-32 pb-24 xl:pt-36">
+    <div className="container pt-24 pb-24 xl:pt-28">
       <SEO 
         title="Hire Skilled Freelancers Across Africa | Tech, Design & More"
         description="Connect with top-rated Ghanaian software engineers, UI/UX designers, and digital marketers. Verified talent for global high-growth projects."

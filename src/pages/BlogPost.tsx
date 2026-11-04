@@ -20,7 +20,7 @@ export default function BlogPost() {
 
   if (!post) {
     return (
-      <div className="container pb-24 pt-36 text-center">
+      <div className="container pb-24 pt-28 text-center">
         <h1 className="text-3xl font-black text-text-main">We can&apos;t find that article</h1>
         <Link to="/blog" className="btn btn-primary mt-6 inline-flex px-6">
           Back to all articles
@@ -33,7 +33,7 @@ export default function BlogPost() {
   const otherPosts = blogPosts.filter((p) => p.id !== post.id).slice(0, 2)
 
   return (
-    <div className="pb-20 pt-32 xl:pt-36">
+    <div className="pb-20 pt-24 xl:pt-28">
       <SEO title={`${post.title} — JobWahala Resource Center`} description={post.excerpt} />
 
       <div className="container max-w-4xl">

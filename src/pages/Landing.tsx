@@ -81,7 +81,7 @@ export default function Landing() {
         keywords="jobs in africa, freelance africa, hire freelancers africa, escrow payments, mobile money freelance, remote work africa, jobwahala"
       />
 
-      <section className="relative isolate overflow-hidden bg-primary pb-16 pt-36 text-white sm:pb-24 sm:pt-40 xl:pt-44">
+      <section className="relative isolate overflow-hidden bg-primary pb-16 pt-28 text-white sm:pb-24 sm:pt-32 xl:pt-36">
         <div
           className="absolute inset-0 -z-10"
           style={{

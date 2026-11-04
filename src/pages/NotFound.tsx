@@ -11,7 +11,7 @@ const SHORTCUTS = [
 
 export default function NotFound() {
   return (
-    <div className="container pb-24 pt-32 xl:pt-36">
+    <div className="container pb-24 pt-24 xl:pt-28">
       <SEO
         title="Page Not Found — JobWahala"
         description="The page you're looking for doesn't exist. Navigate back to JobWahala."

@@ -2151,7 +2151,7 @@ const renderForm = () => (
   )
 
   return (
-    <div className="container pt-32 pb-24 md:pt-32 xl:pt-36">
+    <div className="container pt-24 pb-24 md:pt-24 xl:pt-28">
       <section className="dashboard-hero mb-8 px-5 py-6 no-print sm:px-7 sm:py-7 lg:px-8 lg:py-8">
         <div className="relative z-10 flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-2xl">

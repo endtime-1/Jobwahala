@@ -15,7 +15,7 @@ type LegalPageProps = {
 
 export default function LegalPage({ title, description, updated, intro, sections }: LegalPageProps) {
   return (
-    <div className="pb-20 pt-32 xl:pt-36">
+    <div className="pb-20 pt-24 xl:pt-28">
       <SEO title={title} description={description} />
       <div className="container max-w-4xl">
         <PageHero eyebrow="Legal" title={title}>

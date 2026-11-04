@@ -253,7 +253,7 @@ export default function FreelancerProfile() {
   }
 
   return (
-    <div className="container animate-in fade-in slide-in-from-bottom-4 pt-32 pb-24 duration-1000 md:pt-32 xl:pt-36">
+    <div className="container animate-in fade-in slide-in-from-bottom-4 pt-24 pb-24 duration-1000 md:pt-24 xl:pt-28">
       {share ? (
         <>
           <SEO title={share.title} description={share.description} canonical={share.url} ogType="profile" />

@@ -72,7 +72,7 @@ export default function CompanyProfile() {
 
   if (isLoading) {
     return (
-      <div className="container pt-36 pb-24">
+      <div className="container pt-28 pb-24">
         <div className="h-40 animate-pulse rounded-[2rem] bg-surface-alt/60" aria-label="Loading company" />
       </div>
     )
@@ -80,7 +80,7 @@ export default function CompanyProfile() {
 
   if (error || !company) {
     return (
-      <div className="container pt-36 pb-24">
+      <div className="container pt-28 pb-24">
         <div className="dashboard-panel p-8 text-center">
           <h1 className="text-2xl font-black text-text-main">We could not find that company</h1>
           <p className="mt-2 text-sm font-medium text-text-muted">{error || 'It may have been removed or is no longer active.'}</p>
@@ -95,7 +95,7 @@ export default function CompanyProfile() {
   const openRoles = company.jobs.length
 
   return (
-    <div className="container pt-36 pb-24">
+    <div className="container pt-28 pb-24">
       <SEO
         title={`${company.companyName} jobs and company profile`}
         description={

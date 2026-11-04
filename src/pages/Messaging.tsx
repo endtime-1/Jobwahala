@@ -1005,7 +1005,7 @@ export default function Messaging() {
   )
 
   return (
-    <div className="min-h-screen bg-surface-alt/10 pt-36 pb-[calc(env(safe-area-inset-bottom)+6.5rem)] md:pb-10">
+    <div className="min-h-screen bg-surface-alt/10 pt-28 pb-[calc(env(safe-area-inset-bottom)+6.5rem)] md:pb-10">
       <div className="container mx-auto h-[calc(100vh-220px)] max-w-7xl overflow-hidden md:h-[calc(100vh-220px)]">
         <div className="flex h-full overflow-hidden rounded-[2rem] border border-surface-border/50 bg-white shadow-premium-2xl md:rounded-[3rem]">
           {(isMobile && !showChat) || !isMobile ? renderSidebar() : null}

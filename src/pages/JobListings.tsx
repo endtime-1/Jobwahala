@@ -209,7 +209,7 @@ export default function JobListings() {
   }
 
   return (
-    <div className="pb-24 pt-32 xl:pt-36">
+    <div className="pb-24 pt-24 xl:pt-28">
       <SEO
         title={countryName ? `Jobs in ${countryName} - real jobs from employers you can check` : 'Find Jobs Across Africa'}
         description={
