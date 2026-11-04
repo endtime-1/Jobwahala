@@ -1,15 +1,15 @@
 export const FAQS = [
   {
     q: 'Is JobWahala free to use?',
-    a: 'Creating a profile, browsing and applying are free. A small platform fee applies to payments processed through escrow.',
+    a: 'Yes. Creating a profile, searching, applying and posting a job are all free. You should never pay to apply for a job here, and if anyone asks you to, please report it.',
   },
   {
-    q: 'How do I get paid?',
-    a: 'When an employer approves a milestone, the payment is released to the mobile money or bank account you added in your dashboard. A short safety hold may apply before the payout.',
+    q: 'How do I know a job is real?',
+    a: 'Every job shows the pay and location up front, and employers have their own company page. Employers can verify their identity, and verified accounts wear a badge. If something looks wrong, report the job and our team will review it.',
   },
   {
-    q: 'What if the other side disappears or disagrees?',
-    a: 'Paid work is held in escrow, so the money does not sit with either party. If you cannot agree, open a dispute from the agreement. Both sides add evidence and an admin reviews it.',
+    q: 'Are freelance gigs available?',
+    a: 'Not yet. We are starting with jobs. If you want to know when freelance gigs open, leave your email or phone number in the Freelance gigs box on this page.',
   },
   {
     q: 'Do I need a laptop?',
@@ -20,7 +20,7 @@ export const FAQS = [
     a: 'Verification evidence is used only to review your request. It is stored under private, unguessable addresses and only shown to you and administrators. See our Privacy Policy for details.',
   },
   {
-    q: 'Which currencies are supported?',
-    a: 'Projects can be priced in Ghana cedis (GHS) or US dollars (USD).',
+    q: 'Which countries do you cover?',
+    a: 'We are starting in Ghana and open to employers and job seekers across Africa. Remote roles can be filled from anywhere.',
   },
 ]

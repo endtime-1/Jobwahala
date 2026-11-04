@@ -124,6 +124,14 @@ export const apiUpdateSavedSearch = (id: string, data: { emailAlerts: boolean })
 export const apiDeleteSavedSearch = (id: string) =>
   fetch(`${BASE_URL}/saved-searches/${id}`, { method: 'DELETE', headers: headers(true) }).then(handleResponse);
 
+// Public interest list (no account needed)
+export const apiCreateInterestSignup = (data: { email?: string; phone?: string; source: string; website?: string }) =>
+  fetch(`${BASE_URL}/interest`, {
+    method: 'POST',
+    headers: headers(),
+    body: JSON.stringify(data),
+  }).then(handleResponse);
+
 // Jobs
 export const apiGetJobs = (params?: Record<string, string>) => {
   const query = params ? '?' + new URLSearchParams(params).toString() : '';

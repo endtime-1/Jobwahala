@@ -7,7 +7,7 @@ const footerColumns = [
     title: 'For job seekers',
     links: [
       ['Browse jobs', '/jobs'],
-      ['Find freelance gigs', '/freelancers'],
+      ['Freelance gigs (coming soon)', '/#freelance-gigs'],
       ['Build a free CV', '/cv-generator'],
       ['My dashboard', '/dashboard'],
     ],
@@ -16,7 +16,6 @@ const footerColumns = [
     title: 'For employers',
     links: [
       ['Post a job', '/onboarding?role=employer'],
-      ['Find freelancers', '/freelancers'],
       ['Proposals', '/proposals'],
       ['Agreements', '/agreements'],
     ],
@@ -65,7 +64,7 @@ export default function Footer() {
               <Logo tone="dark" size={40} />
             </Link>
             <p className="mt-5 text-base font-medium leading-relaxed text-white/65">
-              Jobs and freelance work across Africa, with payments held safely until the work is approved.
+              Real jobs from employers you can check, across Africa. Free to apply and free to post.
             </p>
           </div>
 

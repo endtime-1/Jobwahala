@@ -1,4 +1,4 @@
-import { BadgeCheck, MessageCircle, Scale, ShieldCheck } from 'lucide-react'
+import { BadgeCheck, Coins, MessageCircle, ShieldCheck } from 'lucide-react'
 
 const PILLARS = [
   {
@@ -20,9 +20,9 @@ const PILLARS = [
     tone: 'bg-primary/10 text-primary',
   },
   {
-    icon: Scale,
-    title: 'Protection for paid projects',
-    body: 'For one-off projects, money is held in escrow and released on approval. If something goes wrong, open a dispute and an admin records a decision.',
+    icon: Coins,
+    title: 'Free for job seekers and employers',
+    body: 'Searching, applying and posting a job are free. Nobody should ask you to pay to get a job, and if they do, report them.',
     tone: 'bg-accent/15 text-accent',
   },
 ]

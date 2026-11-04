@@ -41,21 +41,21 @@ export default function FinalCta() {
           Your next job - or your next hire - shouldn&apos;t cost you sleep.
         </h2>
         <p className="mx-auto mt-4 max-w-xl text-base font-medium text-white/75">
-          Join free in about a minute. Money stays protected until the work is done.
+          Join free in about a minute. No fees to apply, none to post.
         </p>
 
         <div className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
           <Link
-            to="/onboarding?role=seeker"
+            to="/jobs"
             className="btn btn-gold btn-lg justify-center px-8"
           >
-            I want work <ArrowRight className="h-5 w-5" />
+            Find a job <ArrowRight className="h-5 w-5" />
           </Link>
           <Link
             to="/onboarding?role=employer"
             className="btn btn-lg justify-center border border-white/30 bg-white/10 px-8 text-white hover:bg-white/20"
           >
-            I want to hire
+            Post a job free
           </Link>
         </div>
 

@@ -53,10 +53,10 @@ export default function PathCards() {
       ))}
     </div>
     <p className="mt-5 text-center text-base font-medium text-text-muted">
-      Also here: freelancers can list a service and get hired.{' '}
-      <Link to="/freelancers" className="font-extrabold text-secondary hover:underline">
-        See freelancers
-      </Link>
+      Freelancer?{' '}
+      <a href="#freelance-gigs" className="font-extrabold text-secondary hover:underline">
+        Freelance gigs are coming soon
+      </a>
     </p>
     </div>
   )

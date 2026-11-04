@@ -2,21 +2,20 @@ import { useEffect, useState, type ReactNode } from 'react'
 import SEO from '../components/SEO'
 import CvBuilderSection from '../components/landing/CvBuilderSection'
 import EmployerBand from '../components/landing/EmployerBand'
-import EmployerCard from '../components/landing/EmployerCard'
+import FreelanceWaitlist from '../components/landing/FreelanceWaitlist'
 import Faq from '../components/landing/Faq'
 import FieldTiles from '../components/landing/FieldTiles'
 import FinalCta, { LegalLinks } from '../components/landing/FinalCta'
 import Hero from '../components/landing/Hero'
 import MarketPulse from '../components/landing/MarketPulse'
 import MatchLab from '../components/landing/MatchLab'
-import MoneyPath from '../components/landing/MoneyPath'
 import CountryStrip from '../components/landing/CountryStrip'
 import HeroVisual from '../components/landing/HeroVisual'
 import OldVsNew from '../components/landing/OldVsNew'
 import PathCards from '../components/landing/PathCards'
 import Reveal from '../components/landing/Reveal'
 import TrustGrid from '../components/landing/TrustGrid'
-import type { Audience, HiringCompany, LandingCounts, LandingJob } from '../components/landing/types'
+import type { HiringCompany, LandingCounts, LandingJob } from '../components/landing/types'
 import { apiGetHiringCompanies, apiGetJobs, apiGetPlatformStats } from '../lib/api'
 
 function Section({ eyebrow, title, intro, children }: { eyebrow: string; title: string; intro?: string; children: ReactNode }) {
@@ -38,7 +37,6 @@ function Section({ eyebrow, title, intro, children }: { eyebrow: string; title: 
 }
 
 export default function Landing() {
-  const [audience, setAudience] = useState<Audience>('talent')
   const [jobs, setJobs] = useState<LandingJob[]>([])
   const [counts, setCounts] = useState<LandingCounts | null>(null)
   const [companies, setCompanies] = useState<HiringCompany[]>([])
@@ -76,9 +74,9 @@ export default function Landing() {
   return (
     <div className="on-home">
       <SEO
-        title="Jobs and freelance work across Africa with escrow-protected payments"
-        description="Find jobs and freelance gigs across Africa, or hire people you can trust. Payments are held in escrow until the work is approved, then paid to mobile money or bank."
-        keywords="jobs in africa, freelance africa, hire freelancers africa, escrow payments, mobile money freelance, remote work africa, jobwahala"
+        title="Real jobs from employers you can check, across Africa"
+        description="Find real jobs across Africa from employers you can check, or post your jobs free and review applicants on one board. Pay and location shown up front. Freelance gigs coming soon."
+        keywords="jobs in africa, jobs in ghana, find a job, post a job free, hire in africa, verified employers, work without the wahala, jobwahala"
       />
 
       <section className="relative isolate overflow-hidden bg-primary pb-16 pt-28 text-white sm:pb-24 sm:pt-32 xl:pt-36">
@@ -101,7 +99,7 @@ export default function Landing() {
         />
         <div className="container">
           <div className="grid gap-14 lg:grid-cols-[1.05fr_0.95fr] lg:items-start lg:gap-10">
-            <Hero audience={audience} onAudienceChange={setAudience} />
+            <Hero />
             <HeroVisual />
           </div>
         </div>
@@ -144,15 +142,11 @@ export default function Landing() {
 
       <Section
         eyebrow="Try it now"
-        title={audience === 'talent' ? 'What are you good at?' : 'Hiring, step by step.'}
-        intro={
-          audience === 'talent'
-            ? 'Type a skill and see the open roles that fit. No sign up needed.'
-            : 'From job post to paid in three steps, with your money protected the whole way.'
-        }
+        title="What are you good at?"
+        intro="Type a skill and see the open roles that fit. No sign up needed."
       >
         <div className="mx-auto max-w-3xl">
-          {audience === 'talent' ? <MatchLab jobs={jobs} isLoading={jobsLoading} /> : <EmployerCard />}
+          <MatchLab jobs={jobs} isLoading={jobsLoading} />
         </div>
       </Section>
 
@@ -163,14 +157,6 @@ export default function Landing() {
           </Reveal>
         </div>
       </section>
-
-      <Section
-        eyebrow="For contract and freelance work"
-        title="Paid projects are protected too."
-        intro="When a job is a one-off project, the money is held safely and released as work is approved. Tap through a project to see how."
-      >
-        <MoneyPath />
-      </Section>
 
       <Section
         eyebrow="Built for trust"
@@ -187,6 +173,14 @@ export default function Landing() {
       >
         <CvBuilderSection />
       </Section>
+
+      <section className="py-6 sm:py-10">
+        <div className="container">
+          <Reveal>
+            <FreelanceWaitlist />
+          </Reveal>
+        </div>
+      </section>
 
       <Section eyebrow="Good to know" title="Questions people ask first.">
         <Faq />

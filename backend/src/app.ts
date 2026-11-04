@@ -26,6 +26,7 @@ import disputeRoutes from './routes/disputeRoutes';
 import shareRoutes from './routes/shareRoutes';
 import savedSearchRoutes from './routes/savedSearchRoutes';
 import companyRoutes from './routes/companyRoutes';
+import interestRoutes from './routes/interestRoutes';
 import {
   createRateLimit,
   notFoundHandler,
@@ -178,6 +179,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/realtime', realtimeRoutes);
 app.use('/api/platform', platformRoutes);
+app.use('/api/interest', interestRoutes);
 app.use('/api/verifications', verificationRoutes);
 app.use('/api/payouts', payoutRoutes);
 

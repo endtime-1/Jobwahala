@@ -621,3 +621,16 @@ model PasswordResetToken {
   @@index([userId])
   @@index([expiresAt])
 }
+
+// People who asked to be told when something launches (e.g. freelance gigs). Public form, no account needed.
+model InterestSignup {
+  id        String   @id @default(uuid())
+  email     String?
+  phone     String?
+  source    String
+  createdAt DateTime @default(now())
+
+  @@unique([email, source])
+  @@unique([phone, source])
+  @@index([source, createdAt])
+}

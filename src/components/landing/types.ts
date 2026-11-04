@@ -1,7 +1,5 @@
 import type { PreviewJob } from '../../lib/matchPreview'
 
-export type Audience = 'talent' | 'employer'
-
 export type LandingCounts = {
   openJobs: number
   freelancers: number
@@ -42,7 +40,7 @@ export const timeAgo = (iso?: string) => {
 
 export const buildWhatsAppInvite = (origin: string) =>
   `https://wa.me/?text=${encodeURIComponent(
-    `Found a jobs and freelance site for Africa where payments are held in escrow until the work is approved: ${origin}`,
+    `Found a job site for Africa with real jobs and employers you can check. Free to apply: ${origin}`,
   )}`
 
 // Only show an age for recent roles: "6mo ago" beside an "open" label undersells and confuses.
