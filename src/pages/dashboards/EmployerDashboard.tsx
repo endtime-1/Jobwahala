@@ -5,6 +5,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { apiCreateVerificationRequest } from '../../lib/api'
 import { subscribeToRealtimeEvents } from '../../lib/realtime'
 import VerifiedBadge from '../../components/VerifiedBadge'
+import { useFeatures } from '../../lib/features'
 import VerificationPanel from '../../components/VerificationPanel'
 
 import { useEmployerDashboard, useJobApplicants } from './employer/hooks'
@@ -17,6 +18,7 @@ import EmployerServiceRequests from './employer/EmployerServiceRequests'
 import { getErrorMessage } from '../../lib/errors'
 
 export default function EmployerDashboard() {
+  const { freelanceEnabled } = useFeatures()
   const queryClient = useQueryClient()
   const { data, isLoading, error: dashboardError } = useEmployerDashboard()
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null)
@@ -107,20 +109,24 @@ export default function EmployerDashboard() {
               <button type="button" onClick={() => setShowCreateForm((c) => !c)} className="dashboard-action-chip">
                 <PlusCircle className="h-4 w-4" /> {showCreateForm ? 'Close form' : 'Post New Role'}
               </button>
-              <Link to="/freelancers" className="dashboard-action-chip">
-                <Users className="h-4 w-4" /> Find talent
-              </Link>
-              <Link to="/agreements" className="dashboard-action-chip">
-                <Handshake className="h-4 w-4" /> Agreements
-              </Link>
-              <Link to="/proposals" className="dashboard-action-chip">
-                <Handshake className="h-4 w-4" /> Proposals
-              </Link>
+              {freelanceEnabled ? (
+                <>
+                  <Link to="/freelancers" className="dashboard-action-chip">
+                    <Users className="h-4 w-4" /> Find talent
+                  </Link>
+                  <Link to="/agreements" className="dashboard-action-chip">
+                    <Handshake className="h-4 w-4" /> Agreements
+                  </Link>
+                  <Link to="/proposals" className="dashboard-action-chip">
+                    <Handshake className="h-4 w-4" /> Proposals
+                  </Link>
+                </>
+              ) : null}
             </div>
           </div>
           <div className="dashboard-panel sm:min-w-[20rem]">
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-text-light">Hiring snapshot</p>
-            <div className="mt-4 grid grid-cols-3 gap-3">
+            <div className={`mt-4 grid gap-3 ${freelanceEnabled ? 'grid-cols-3' : 'grid-cols-2'}`}>
               <div className="rounded-2xl bg-white/80 px-3 py-4 text-center shadow-premium-sm">
                 <p className="text-2xl font-black text-text-main">{jobs.length}</p>
                 <p className="mt-1 text-[9px] font-black uppercase tracking-[0.18em] text-text-light">Roles</p>
@@ -129,10 +135,12 @@ export default function EmployerDashboard() {
                 <p className="text-2xl font-black text-text-main">{totalApplicants}</p>
                 <p className="mt-1 text-[9px] font-black uppercase tracking-[0.18em] text-text-light">Applicants</p>
               </div>
-              <div className="rounded-2xl bg-white/80 px-3 py-4 text-center shadow-premium-sm">
-                <p className="text-2xl font-black text-text-main">{pendingPaymentActions}</p>
-                <p className="mt-1 text-[9px] font-black uppercase tracking-[0.18em] text-text-light">Payouts</p>
-              </div>
+              {freelanceEnabled ? (
+                <div className="rounded-2xl bg-white/80 px-3 py-4 text-center shadow-premium-sm">
+                  <p className="text-2xl font-black text-text-main">{pendingPaymentActions}</p>
+                  <p className="mt-1 text-[9px] font-black uppercase tracking-[0.18em] text-text-light">Payouts</p>
+                </div>
+              ) : null}
             </div>
           </div>
         </div>
@@ -206,7 +214,7 @@ export default function EmployerDashboard() {
               onSubmit={handleSubmitVerification}
             />
 
-            <EmployerServiceRequests sentRequests={sentRequests} onRefresh={refreshDashboard} />
+            {freelanceEnabled ? <EmployerServiceRequests sentRequests={sentRequests} onRefresh={refreshDashboard} /> : null}
           </div>
         </div>
       )}

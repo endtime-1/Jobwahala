@@ -3,6 +3,7 @@ import { notifyJobAlerts } from '../services/jobAlertService';
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import prisma from '../config/prisma';
+import env from '../config/env';
 import { singleValue } from '../utils/request';
 import { createAgreementEvent } from '../utils/agreementEvents';
 import { generateEmployerApplicantComparisonSummary, generateEmployerApplicantDecisionBrief, generateEmployerShortlistSummary, generateJobApplicationCoaching, generateJobPostOptimization, generateSeekerJobComparisonSummary } from '../services/ai';
@@ -788,7 +789,9 @@ export const updateApplicationStatus = async (req: AuthRequest, res: Response) =
       });
 
       if (status === 'HIRED') {
-        if (existingAgreement) {
+        if (!env.freelanceEnabled && !existingAgreement) {
+          // Agreements (and their escrow) are not live yet: hiring just updates the application.
+        } else if (existingAgreement) {
           const reactivatedAgreement = await tx.agreement.update({
             where: { id: existingAgreement.id },
             data: {

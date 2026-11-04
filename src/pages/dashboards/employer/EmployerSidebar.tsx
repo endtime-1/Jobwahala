@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { AlertTriangle, Award, Handshake, ShieldAlert, ShieldCheck, SearchCheck, Wallet, Sparkles } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { useFeatures } from '../../../lib/features'
 import { apiCompareProposals, apiCompareAgreements, apiGenerateAgreementDecisionBrief } from '../../../lib/api'
 import { formatRelativeTime, getDisplayName } from '../../../lib/display'
 import type {
@@ -63,6 +64,7 @@ export default function EmployerSidebar({
   paymentActionItems,
   onReviewApplicants,
 }: Props) {
+  const { freelanceEnabled } = useFeatures()
   // Proposal comparison state
   const [selectedProposalIds, setSelectedProposalIds] = useState<string[]>([])
   const [proposalComparison, setProposalComparison] = useState<ProposalComparisonRecord | null>(null)
@@ -284,6 +286,8 @@ export default function EmployerSidebar({
         </Link>
       </div>
 
+      {freelanceEnabled ? (
+      <>
       {/* Proposal Pulse */}
       <div className="dashboard-panel p-5 sm:p-6">
         <div className="flex justify-between items-center mb-6 pb-4 border-b border-surface-border/50">
@@ -633,6 +637,8 @@ export default function EmployerSidebar({
           </div>
         )}
       </div>
+      </>
+      ) : null}
     </aside>
   )
 }

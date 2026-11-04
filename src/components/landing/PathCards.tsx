@@ -1,5 +1,6 @@
 import { ArrowUpRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { useFeatures } from '../../lib/features'
 
 // Stock photography (Pexels licence), shown for mood.
 const PATHS = [
@@ -22,6 +23,8 @@ const PATHS = [
 ]
 
 export default function PathCards() {
+  const { freelanceEnabled } = useFeatures()
+
   return (
     <div>
     <div className="grid gap-5 md:grid-cols-2">
@@ -53,10 +56,21 @@ export default function PathCards() {
       ))}
     </div>
     <p className="mt-5 text-center text-base font-medium text-text-muted">
-      Freelancer?{' '}
-      <a href="#freelance-gigs" className="font-extrabold text-secondary hover:underline">
-        Freelance gigs are coming soon
-      </a>
+      {freelanceEnabled ? (
+        <>
+          Also here: freelancers can list a service and get hired.{' '}
+          <Link to="/freelancers" className="font-extrabold text-secondary hover:underline">
+            See freelancers
+          </Link>
+        </>
+      ) : (
+        <>
+          Freelancer?{' '}
+          <a href="#freelance-gigs" className="font-extrabold text-secondary hover:underline">
+            Freelance gigs are coming soon
+          </a>
+        </>
+      )}
     </p>
     </div>
   )

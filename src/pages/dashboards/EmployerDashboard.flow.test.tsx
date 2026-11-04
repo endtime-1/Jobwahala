@@ -4,6 +4,10 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import EmployerDashboard from './EmployerDashboard'
+import { setFeaturesForTests } from '../../lib/features'
+
+// These tests cover the freelance screens, which exist only while FREELANCE_ENABLED is on.
+setFeaturesForTests({ freelanceEnabled: true })
 
 const apiCompareAgreementsMock = vi.fn()
 const apiCompareProposalsMock = vi.fn()

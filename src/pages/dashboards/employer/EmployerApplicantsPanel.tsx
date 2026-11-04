@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Sparkles } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { useFeatures } from '../../../lib/features'
 import {
   apiUpdateApplicationStatus,
   apiCreateJobProposal,
@@ -47,6 +48,7 @@ export default function EmployerApplicantsPanel({
   onSelectJob,
   onRefresh,
 }: Props) {
+  const { freelanceEnabled } = useFeatures()
   const [isUpdatingApplication, setIsUpdatingApplication] = useState(false)
   const [isSubmittingProposal, setIsSubmittingProposal] = useState(false)
   const [isGeneratingProposalDraft, setIsGeneratingProposalDraft] = useState(false)
@@ -383,7 +385,7 @@ export default function EmployerApplicantsPanel({
                       <div className="flex justify-between items-center">
                         <span className={`badge ${getApplicationBadgeClass(application.status)}`}>{application.status}</span>
                         <div className="flex items-center gap-3">
-                          {application.agreement ? (
+                          {application.agreement && freelanceEnabled ? (
                             <Link to="/agreements" className="text-[10px] font-black uppercase tracking-widest text-primary hover:underline">Agreement</Link>
                           ) : null}
                           <Link
@@ -392,7 +394,7 @@ export default function EmployerApplicantsPanel({
                           >
                             Message
                           </Link>
-                          {application.proposals?.[0] ? (
+                          {application.proposals?.[0] && freelanceEnabled ? (
                             <Link to="/proposals" className="text-[10px] font-black uppercase tracking-widest text-primary hover:underline">Manage Proposal</Link>
                           ) : null}
                           <button

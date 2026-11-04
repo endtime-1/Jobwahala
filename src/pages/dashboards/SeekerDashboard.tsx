@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Briefcase, MessageSquare, CheckCircle, ShieldCheck, Lock, FileText, Handshake, Sparkles } from 'lucide-react'
 import VerifiedBadge from '../../components/VerifiedBadge'
+import { useFeatures } from '../../lib/features'
 import CompanyLogo from '../../components/CompanyLogo'
 import VerificationPanel from '../../components/VerificationPanel'
 import { Link } from 'react-router-dom'
@@ -24,6 +25,7 @@ type JobComparisonRecord = { summary: string; comparedCount: number; jobs: Compa
 
 export default function SeekerDashboard() {
   const { userName, user } = useAuth()
+  const { freelanceEnabled } = useFeatures()
   const queryClient = useQueryClient()
   const { data, isLoading, error: dashboardError } = useSeekerDashboard()
   const { data: optimization, isLoading: isOptLoading, error: optError } = useProfileOptimization()
@@ -113,8 +115,8 @@ export default function SeekerDashboard() {
             <div className="dashboard-actions">
               <Link to="/jobs" className="dashboard-action-chip"><Briefcase className="h-4 w-4" /> Browse roles</Link>
               <Link to="/cv-generator" className="dashboard-action-chip"><FileText className="h-4 w-4" /> Open CV studio</Link>
-              <Link to="/agreements" className="dashboard-action-chip"><Handshake className="h-4 w-4" /> View agreements</Link>
-              <Link to="/proposals" className="dashboard-action-chip"><Handshake className="h-4 w-4" /> Proposals</Link>
+              {freelanceEnabled ? <Link to="/agreements" className="dashboard-action-chip"><Handshake className="h-4 w-4" /> View agreements</Link> : null}
+              {freelanceEnabled ? <Link to="/proposals" className="dashboard-action-chip"><Handshake className="h-4 w-4" /> Proposals</Link> : null}
             </div>
           </div>
           <div className="dashboard-panel relative flex min-w-0 items-center gap-5 sm:min-w-[20rem]">
@@ -251,7 +253,7 @@ export default function SeekerDashboard() {
                             <span className={`badge ${getApplicationBadgeClass(application.status)}`}>{application.status}</span>
                             <p className="text-[9px] text-text-light font-black uppercase tracking-widest leading-none">{formatRelativeTime(application.createdAt)}</p>
                             <button type="button" aria-label={`Compare ${application.job.title}`} onClick={() => toggleJobComparisonSelection(application.job.id)} disabled={!selectedJobIds.includes(application.job.id) && selectedJobIds.length >= 3} className={`text-[10px] font-black uppercase tracking-widest disabled:opacity-40 ${selectedJobIds.includes(application.job.id) ? 'text-primary' : 'text-text-light hover:text-primary'}`}>{selectedJobIds.includes(application.job.id) ? 'Selected' : 'Compare'}</button>
-                            {application.agreement ? <Link to="/agreements" className="text-[10px] font-black uppercase tracking-widest text-primary hover:underline">Agreement Live</Link> : null}
+                            {application.agreement && freelanceEnabled ? <Link to="/agreements" className="text-[10px] font-black uppercase tracking-widest text-primary hover:underline">Agreement Live</Link> : null}
                             {['SUBMITTED', 'SHORTLISTED', 'INTERVIEW'].includes(application.status) ? (
                               <button type="button" disabled={isActing} onClick={() => void handleWithdrawApplication(application.id)} className="text-[10px] font-black uppercase tracking-widest text-error hover:underline disabled:opacity-60">Withdraw</button>
                             ) : null}
@@ -372,6 +374,7 @@ export default function SeekerDashboard() {
             <VerificationPanel type="seeker" verification={data?.verification ?? null} isSubmitting={isActing} onSubmit={handleSubmitVerification} />
 
             {/* Freelance Requests */}
+            {freelanceEnabled ? (
             <div className="dashboard-panel">
               <div className="flex justify-between items-center mb-6 pb-4 border-b border-surface-border/50">
                 <h3 className="font-black text-[10px] uppercase tracking-widest text-text-main">Freelance Requests</h3>
@@ -402,6 +405,7 @@ export default function SeekerDashboard() {
                 </div>
               )}
             </div>
+            ) : null}
 
             {/* Trust Layer */}
             <div className="dashboard-panel bg-success/5 border-success/10 shadow-sm relative overflow-hidden group/success p-5">

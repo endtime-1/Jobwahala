@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { LogoMark } from './Logo'
+import { isFreelancePath, useFeatures } from '../lib/features'
 import { apiGetWorkspaceSignals } from '../lib/api'
 import { getInitials } from '../lib/display'
 import { subscribeToRealtimeEvents } from '../lib/realtime'
@@ -174,7 +175,9 @@ export default function Navbar() {
     return 0
   }
 
-  const currentLinks = useMemo(() => {
+  const { freelanceEnabled } = useFeatures()
+
+  const roleLinks = useMemo(() => {
     if (!user) return guestLinks
     if (!isOnboarded) return pendingSetupLinks
     if (role === 'SEEKER') return seekerLinks
@@ -184,7 +187,12 @@ export default function Navbar() {
     return guestLinks
   }, [isOnboarded, role, user])
 
-  const mobileDockLinks = useMemo(() => {
+  const currentLinks = useMemo(
+    () => (freelanceEnabled ? roleLinks : roleLinks.filter((link) => !isFreelancePath(link.href))),
+    [freelanceEnabled, roleLinks],
+  )
+
+  const dockLinks = useMemo(() => {
     if (!user) return guestDockLinks
     if (!isOnboarded) return pendingSetupLinks
     if (role === 'SEEKER') {
@@ -224,6 +232,11 @@ export default function Navbar() {
 
     return guestDockLinks
   }, [isOnboarded, role, user])
+
+  const mobileDockLinks = useMemo(
+    () => (freelanceEnabled ? dockLinks : dockLinks.filter((link) => !isFreelancePath(link.href))),
+    [freelanceEnabled, dockLinks],
+  )
 
   const handleLogout = () => {
     logout()

@@ -1,6 +1,12 @@
 import { Request, Response } from 'express';
 import prisma from '../config/prisma';
+import env from '../config/env';
 import { getErrorMessage } from '../utils/errors';
+
+/** Public switches the website needs to know about. */
+export const getPlatformConfig = (_req: Request, res: Response) => {
+  res.json({ success: true, config: { freelanceEnabled: env.freelanceEnabled } });
+};
 
 // Cached stats to avoid hitting the DB on every page load
 let cachedStats: Record<string, unknown> | null = null;

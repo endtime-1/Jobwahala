@@ -4,6 +4,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { buildWhatsAppInvite, recentAge } from '../components/landing/types'
 import Landing from './Landing'
+import { setFeaturesForTests } from '../lib/features'
 
 const apiGetJobsMock = vi.fn()
 const apiGetPlatformStatsMock = vi.fn()
@@ -232,5 +233,30 @@ describe('Freelance gigs sign-up', () => {
     fireEvent.change(box(), { target: { value: 'ama@example.com' } })
     send()
     expect(await screen.findByRole('alert')).toHaveTextContent(/too many requests/i)
+  })
+})
+
+describe('Landing page and the freelance flag', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    apiGetJobsMock.mockResolvedValue({ jobs: [] })
+    apiGetHiringCompaniesMock.mockResolvedValue({ companies: [] })
+    apiGetPlatformStatsMock.mockResolvedValue({ success: true, stats: { counts: {} } })
+  })
+
+  it('shows the waitlist and no freelance links while the flag is off', () => {
+    setFeaturesForTests({ freelanceEnabled: false })
+    const { container } = renderLanding()
+
+    expect(screen.getByRole('heading', { name: /freelance gigs/i })).toBeInTheDocument()
+    expect(container.querySelector('a[href^="/freelancers"]')).toBeNull()
+  })
+
+  it('swaps the waitlist for a link to freelancers when the flag is on', () => {
+    setFeaturesForTests({ freelanceEnabled: true })
+    const { container } = renderLanding()
+
+    expect(screen.queryByRole('button', { name: /tell me when it opens/i })).not.toBeInTheDocument()
+    expect(container.querySelector('a[href="/freelancers"]')).not.toBeNull()
   })
 })

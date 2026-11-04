@@ -2,6 +2,10 @@ import { render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import Navbar from './Navbar'
+import { setFeaturesForTests } from '../lib/features'
+
+// These tests cover the freelance screens, which exist only while FREELANCE_ENABLED is on.
+setFeaturesForTests({ freelanceEnabled: true })
 
 const useAuthMock = vi.fn()
 const apiGetWorkspaceSignalsMock = vi.fn()

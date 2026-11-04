@@ -4,6 +4,7 @@ import ApiStatusBanner from './components/ApiStatusBanner'
 import Layout from './components/Layout'
 import Landing from './pages/Landing'
 import { useAuth } from './context/AuthContext'
+import { useFeatures } from './lib/features'
 
 const JobListings = lazy(() => import('./pages/JobListings'))
 const JobDetails = lazy(() => import('./pages/JobDetails'))
@@ -35,6 +36,13 @@ function RouteFallback() {
       <p className="text-xs font-black uppercase tracking-[0.3em] text-text-light">Loading Page</p>
     </div>
   )
+}
+
+// Freelance pages only exist while FREELANCE_ENABLED is on; otherwise visitors land on the waitlist.
+function FreelanceGate({ children }: { children: ReactElement }) {
+  const { loaded, freelanceEnabled } = useFeatures()
+  if (!loaded) return <RouteFallback />
+  return freelanceEnabled ? children : <Navigate to="/#freelance-gigs" replace />
 }
 
 function App() {
@@ -78,11 +86,11 @@ function App() {
           <Route path="/jobs/:id" element={<JobDetails />} />
           <Route path="/cv-generator" element={renderProtected(<CVGenerator />)} />
           <Route path="/messaging" element={renderProtected(<Messaging />)} />
-          <Route path="/agreements" element={renderProtected(<Agreements />)} />
-          <Route path="/proposals" element={renderProtected(<Proposals />)} />
+          <Route path="/agreements" element={<FreelanceGate>{renderProtected(<Agreements />)}</FreelanceGate>} />
+          <Route path="/proposals" element={<FreelanceGate>{renderProtected(<Proposals />)}</FreelanceGate>} />
           <Route path="/dashboard" element={renderProtected(<Dashboard />)} />
-          <Route path="/freelancers" element={<FreelancerMarketplace />} />
-          <Route path="/freelancers/:id" element={<FreelancerProfile />} />
+          <Route path="/freelancers" element={<FreelanceGate><FreelancerMarketplace /></FreelanceGate>} />
+          <Route path="/freelancers/:id" element={<FreelanceGate><FreelancerProfile /></FreelanceGate>} />
           <Route path="/companies/:id" element={<CompanyProfile />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/:id" element={<BlogPost />} />

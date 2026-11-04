@@ -27,6 +27,7 @@ import shareRoutes from './routes/shareRoutes';
 import savedSearchRoutes from './routes/savedSearchRoutes';
 import companyRoutes from './routes/companyRoutes';
 import interestRoutes from './routes/interestRoutes';
+import { requireFreelanceEnabled } from './middleware/featureFlags';
 import {
   createRateLimit,
   notFoundHandler,
@@ -164,24 +165,27 @@ app.use('/api', apiRateLimit);
 app.use('/api/uploads', uploadRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/jobs', jobRoutes);
-app.use('/api/services', serviceRoutes);
+// Freelance features are switched off by FREELANCE_ENABLED=false (the default). The guard runs before the routers.
+const freelanceOnly = requireFreelanceEnabled();
+const freelanceOnlyExceptWebhooks = requireFreelanceEnabled({ allow: (req) => req.path.startsWith('/webhooks/') });
+app.use('/api/services', freelanceOnly, serviceRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/cv', strictAiRateLimit, cvRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/reports', reportRoutes);
-app.use('/api/agreements', agreementRoutes);
-app.use('/api/disputes', disputeRoutes);
+app.use('/api/agreements', freelanceOnly, agreementRoutes);
+app.use('/api/disputes', freelanceOnly, disputeRoutes);
 app.use('/api/share', shareRoutes);
 app.use('/api/saved-searches', savedSearchRoutes);
 app.use('/api/companies', companyRoutes);
-app.use('/api/proposals', proposalRoutes);
+app.use('/api/proposals', freelanceOnly, proposalRoutes);
 app.use('/api/notifications', notificationRoutes);
-app.use('/api/payments', paymentRoutes);
+app.use('/api/payments', freelanceOnlyExceptWebhooks, paymentRoutes);
 app.use('/api/realtime', realtimeRoutes);
 app.use('/api/platform', platformRoutes);
 app.use('/api/interest', interestRoutes);
 app.use('/api/verifications', verificationRoutes);
-app.use('/api/payouts', payoutRoutes);
+app.use('/api/payouts', freelanceOnly, payoutRoutes);
 
 app.use(notFoundHandler);
 

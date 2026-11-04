@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { AlertTriangle, Award, Handshake, Wallet, Sparkles } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { useFeatures } from '../../../lib/features'
 import { apiCompareProposals, apiCompareAgreements, apiGenerateAgreementDecisionBrief } from '../../../lib/api'
 import { formatRelativeTime } from '../../../lib/display'
 import type {
@@ -36,7 +37,7 @@ type Props = {
   paymentActionItems: PaymentActionItem[]
 }
 
-export default function WorkflowSidebar({
+function WorkflowPanels({
   activeAgreementCount,
   upcomingMilestones,
   pendingProposalActions,
@@ -421,4 +422,10 @@ export default function WorkflowSidebar({
       </div>
     </>
   )
+}
+
+// Proposal, agreement, payment and dispute panels only exist while freelance gigs are switched on.
+export default function WorkflowSidebar(props: Props) {
+  const { freelanceEnabled } = useFeatures()
+  return freelanceEnabled ? <WorkflowPanels {...props} /> : null
 }

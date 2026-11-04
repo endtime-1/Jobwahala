@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
+import { setFeaturesForTests } from './lib/features'
 
 const useAuthMock = vi.fn()
 
@@ -138,5 +139,42 @@ describe('App smoke routing', () => {
     renderRoute('/dashboard')
 
     expect(screen.getByText('Loading Workspace')).toBeInTheDocument()
+  })
+})
+
+vi.mock('./pages/Proposals', () => ({
+  default: () => <div>Proposals Page</div>,
+}))
+
+describe('freelance feature flag', () => {
+  const signedInSeeker = () =>
+    useAuthMock.mockReturnValue({ user: { id: 'user-1', role: 'SEEKER' }, isLoading: false, isOnboarded: true })
+
+  beforeEach(() => signedInSeeker())
+
+  it.each(['/freelancers', '/freelancers/abc', '/proposals', '/agreements'])(
+    'sends %s to the landing page waitlist while the flag is off',
+    async (route) => {
+      setFeaturesForTests({ freelanceEnabled: false })
+
+      renderRoute(route)
+
+      expect(await screen.findByText('Landing Page')).toBeInTheDocument()
+      expect(screen.queryByText(/Marketplace Page|Profile Page|Proposals Page|Agreements Page/)).not.toBeInTheDocument()
+    },
+  )
+
+  it('opens the freelance pages when the flag is on', async () => {
+    setFeaturesForTests({ freelanceEnabled: true })
+
+    renderRoute('/freelancers')
+    expect(await screen.findByText('Freelancer Marketplace Page')).toBeInTheDocument()
+  })
+
+  it('opens agreements for a signed-in user when the flag is on', async () => {
+    setFeaturesForTests({ freelanceEnabled: true })
+
+    renderRoute('/agreements')
+    expect(await screen.findByText('Agreements Page')).toBeInTheDocument()
   })
 })

@@ -1,9 +1,13 @@
 import { ChevronDown } from 'lucide-react'
 import { Helmet } from 'react-helmet-async'
-import { FAQS } from './faqs'
+import { useFeatures } from '../../lib/features'
+import { FAQS as ALL_FAQS } from './faqs'
 
 
 export default function Faq() {
+  const { freelanceEnabled } = useFeatures()
+  const FAQS = ALL_FAQS.filter((item) => !(freelanceEnabled && item.comingSoon))
+
   const structured = {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',

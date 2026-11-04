@@ -8,6 +8,7 @@ export const FAQS = [
     a: 'Every job shows the pay and location up front, and employers have their own company page. Employers can verify their identity, and verified accounts wear a badge. If something looks wrong, report the job and our team will review it.',
   },
   {
+    comingSoon: true,
     q: 'Are freelance gigs available?',
     a: 'Not yet. We are starting with jobs. If you want to know when freelance gigs open, leave your email or phone number in the Freelance gigs box on this page.',
   },

@@ -140,6 +140,8 @@ const env = {
   smileIdServer: process.env.SMILE_ID_SERVER || '0', // 0 for sandbox, 1 for production
   platformFeePercentage: parseNumber(process.env.PLATFORM_FEE_PERCENTAGE, 5),
   payoutHoldDurationHours: parseNumber(process.env.PAYOUT_HOLD_DURATION_HOURS, 24),
+  // Freelance gigs, proposals, agreements, payments, payouts and escrow. Off until launch.
+  freelanceEnabled: parseBoolean(process.env.FREELANCE_ENABLED, false),
 } as const;
 
 export default env;

@@ -32,6 +32,10 @@ export const register = async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, message: 'Invalid registration role' });
     }
 
+    if (normalizedRole === 'FREELANCER' && !env.freelanceEnabled) {
+      return res.status(403).json({ success: false, code: 'FREELANCE_DISABLED', message: 'Freelance accounts are not open yet. Join as a job seeker or employer for now.' });
+    }
+
     // Check if user exists
     let user = await prisma.user.findUnique({ where: { email } });
     if (user) {

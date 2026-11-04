@@ -1,6 +1,7 @@
 import { ArrowRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import Logo from './Logo'
+import { isFreelancePath, useFeatures } from '../lib/features'
 
 const footerColumns = [
   {
@@ -32,6 +33,17 @@ const footerColumns = [
 ]
 
 export default function Footer() {
+  const { freelanceEnabled } = useFeatures()
+  const columns = footerColumns.map((column) => ({
+    ...column,
+    links: column.links
+      .map(([label, href]) =>
+        freelanceEnabled && href === '/#freelance-gigs' ? ['Find freelance gigs', '/freelancers'] : [label, href],
+      )
+      .filter(([, href]) => freelanceEnabled || !isFreelancePath(href)),
+  }))
+  if (freelanceEnabled) columns[1].links.splice(1, 0, ['Find freelancers', '/freelancers'])
+
   return (
     <footer className="relative mt-8 bg-primary pb-36 text-white xl:pb-10">
       <div className="heritage-strip absolute inset-x-0 top-0" aria-hidden />
@@ -68,7 +80,7 @@ export default function Footer() {
             </p>
           </div>
 
-          {footerColumns.map((column) => (
+          {columns.map((column) => (
             <div key={column.title}>
               <h3 className="text-base font-extrabold text-white">{column.title}</h3>
               <div className="mt-4 flex flex-col gap-3">

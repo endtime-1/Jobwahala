@@ -93,6 +93,9 @@ export const apiResetPassword = (token: string, password: string) =>
   }).then(handleResponse);
 
 // Platform (public)
+export const apiGetPlatformConfig = () =>
+  fetch(`${BASE_URL}/platform/config`, { headers: headers() }).then(handleResponse);
+
 export const apiGetPlatformStats = () =>
   fetch(`${BASE_URL}/platform/stats`, { headers: headers() }).then(handleResponse);
 
