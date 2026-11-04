@@ -3,7 +3,7 @@ import { BadgeCheck, Briefcase, Building2 } from 'lucide-react'
 // Stock photography (Pexels licence), shown for mood. The floating cards are illustrative examples.
 export default function HeroVisual() {
   return (
-    <div className="relative mx-auto h-[24rem] w-full max-w-md sm:h-[30rem] lg:h-[34rem] lg:max-w-none">
+    <div className="relative mx-auto h-[24rem] w-full max-w-md sm:h-[30rem] lg:h-[40rem] lg:max-w-none">
       <div className="absolute inset-x-6 top-10 -z-10 h-3/4 rounded-full bg-secondary/30 blur-3xl" aria-hidden />
 
       <img

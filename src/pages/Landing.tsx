@@ -100,7 +100,7 @@ export default function Landing() {
           aria-hidden
         />
         <div className="container">
-          <div className="grid gap-14 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-10">
+          <div className="grid gap-14 lg:grid-cols-[1.05fr_0.95fr] lg:items-start lg:gap-10">
             <Hero audience={audience} onAudienceChange={setAudience} />
             <HeroVisual />
           </div>
