@@ -15,7 +15,7 @@ export type LandingJob = PreviewJob & {
 }
 
 export const companyOf = (job: LandingJob) =>
-  job.companyName || job.employer?.employerProfile?.companyName || 'Verified employer'
+  job.companyName || job.employer?.employerProfile?.companyName || 'An employer'
 
 export const logoOf = (job: LandingJob) => job.employer?.employerProfile?.logoUrl ?? null
 

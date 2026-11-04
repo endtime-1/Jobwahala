@@ -33,3 +33,25 @@ export const serializeVerificationStatus = (
   latestVerificationRequest: request ? toPublicVerificationRecord(request) : null,
   verificationHistory: history.map(toPublicVerificationRecord),
 });
+
+/**
+ * The one rule for "Verified employer": a company counts as verified ONLY if it has an APPROVED
+ * BUSINESS verification request. Pending, rejected, needs-info or no request means not verified,
+ * and a newer request never takes the badge away from a company that already has an approved one.
+ */
+export const approvedBusinessVerificationQuery = {
+  where: { status: 'APPROVED', type: 'BUSINESS' },
+  take: 1,
+  select: { id: true, status: true, type: true },
+} as const;
+
+type VerificationLike = { status: string; type: string };
+
+export const isVerifiedEmployer = (requests?: VerificationLike[] | null) =>
+  Boolean(requests?.some((request) => request.status === 'APPROVED' && request.type === 'BUSINESS'));
+
+/** What public job and company responses may say about an employer: nothing but the yes/no. */
+export const publicEmployerVerification = (requests?: VerificationLike[] | null) => {
+  const isVerified = isVerifiedEmployer(requests);
+  return { isVerified, verificationStatus: isVerified ? 'APPROVED' : 'UNVERIFIED' };
+};

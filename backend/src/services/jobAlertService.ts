@@ -42,7 +42,7 @@ export const notifyJobAlerts = async (job: NewJob) => {
       where: { userId: job.employerId },
       select: { companyName: true },
     });
-    const company = employerProfile?.companyName || 'A verified employer';
+    const company = employerProfile?.companyName || 'An employer';
     const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
     let notified = 0;
 

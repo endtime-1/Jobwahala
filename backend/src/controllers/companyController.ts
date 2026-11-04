@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { approvedBusinessVerificationQuery, isVerifiedEmployer } from '../utils/verification';
 import prisma from '../config/prisma';
 import { getErrorMessage } from '../utils/errors';
 import { singleValue } from '../utils/request';
@@ -24,11 +25,7 @@ export const getCompany = async (req: Request, res: Response) => {
             id: true,
             createdAt: true,
             employerProfile: { select: publicProfileFields },
-            verificationRequests: {
-              where: { status: 'APPROVED', type: 'BUSINESS' },
-              take: 1,
-              select: { id: true },
-            },
+            verificationRequests: approvedBusinessVerificationQuery,
             jobsPosted: {
               where: { status: 'ACTIVE' },
               orderBy: { createdAt: 'desc' },
@@ -57,7 +54,7 @@ export const getCompany = async (req: Request, res: Response) => {
         id: employer.id,
         ...employer.employerProfile,
         website: safeWebsite(employer.employerProfile.website),
-        isVerified: employer.verificationRequests.length > 0,
+        isVerified: isVerifiedEmployer(employer.verificationRequests),
         memberSince: employer.createdAt,
         jobs: employer.jobsPosted,
       },
@@ -80,7 +77,7 @@ export const listHiringCompanies = async (_req: Request, res: Response) => {
       select: {
         id: true,
         employerProfile: { select: { companyName: true, industry: true, logoUrl: true } },
-        verificationRequests: { where: { status: 'APPROVED', type: 'BUSINESS' }, take: 1, select: { id: true } },
+        verificationRequests: approvedBusinessVerificationQuery,
         _count: { select: { jobsPosted: { where: { status: 'ACTIVE' } } } },
         jobsPosted: { where: { status: 'ACTIVE' }, orderBy: { createdAt: 'desc' }, take: 1, select: { createdAt: true } },
       },
@@ -92,7 +89,7 @@ export const listHiringCompanies = async (_req: Request, res: Response) => {
       .map((employer) => ({
         id: employer.id,
         ...employer.employerProfile!,
-        isVerified: employer.verificationRequests.length > 0,
+        isVerified: isVerifiedEmployer(employer.verificationRequests),
         openRoles: employer._count.jobsPosted,
         latestJobAt: employer.jobsPosted[0]?.createdAt ?? null,
       }))

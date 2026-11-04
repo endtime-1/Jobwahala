@@ -7,7 +7,7 @@ import { singleValue } from '../utils/request';
 import { createAgreementEvent } from '../utils/agreementEvents';
 import { generateEmployerApplicantComparisonSummary, generateEmployerApplicantDecisionBrief, generateEmployerShortlistSummary, generateJobApplicationCoaching, generateJobPostOptimization, generateSeekerJobComparisonSummary } from '../services/ai';
 import { scoreApplicantForJob, scoreJobForSeeker } from '../utils/matching';
-import { serializeVerificationStatus } from '../utils/verification';
+import { approvedBusinessVerificationQuery, publicEmployerVerification } from '../utils/verification';
 import { getErrorMessage } from '../utils/errors';
 
 const mapRankedApplications = <
@@ -141,11 +141,7 @@ export const getJobs = async (req: AuthRequest, res: Response) => {
             id: true,
             email: true,
             employerProfile: true,
-            verificationRequests: {
-              where: { type: 'BUSINESS' },
-              orderBy: { createdAt: 'desc' },
-              take: 1,
-            },
+            verificationRequests: approvedBusinessVerificationQuery,
           }
         }
       },
@@ -160,7 +156,7 @@ export const getJobs = async (req: AuthRequest, res: Response) => {
           id: job.employer.id,
           email: job.employer.email,
           employerProfile: job.employer.employerProfile,
-          ...serializeVerificationStatus(job.employer.verificationRequests[0] || null),
+          ...publicEmployerVerification(job.employer.verificationRequests),
         },
       })),
     });
@@ -196,11 +192,7 @@ export const compareJobsForSeeker = async (req: AuthRequest, res: Response) => {
               id: true,
               email: true,
               employerProfile: true,
-              verificationRequests: {
-                where: { type: 'BUSINESS' },
-                orderBy: { createdAt: 'desc' },
-                take: 1,
-              },
+              verificationRequests: approvedBusinessVerificationQuery,
             }
           }
         }
@@ -269,7 +261,7 @@ export const compareJobsForSeeker = async (req: AuthRequest, res: Response) => {
             id: job.employer.id,
             email: job.employer.email,
             employerProfile: job.employer.employerProfile,
-            ...serializeVerificationStatus(job.employer.verificationRequests[0] || null),
+            ...publicEmployerVerification(job.employer.verificationRequests),
           },
         })),
       },
@@ -294,11 +286,7 @@ export const getJobById = async (req: AuthRequest, res: Response) => {
             id: true,
             email: true,
             employerProfile: true,
-            verificationRequests: {
-              where: { type: 'BUSINESS' },
-              orderBy: { createdAt: 'desc' },
-              take: 1,
-            },
+            verificationRequests: approvedBusinessVerificationQuery,
           },
         },
       }
@@ -312,7 +300,7 @@ export const getJobById = async (req: AuthRequest, res: Response) => {
           id: job.employer.id,
           email: job.employer.email,
           employerProfile: job.employer.employerProfile,
-          ...serializeVerificationStatus(job.employer.verificationRequests[0] || null),
+          ...publicEmployerVerification(job.employer.verificationRequests),
         },
       },
     });
