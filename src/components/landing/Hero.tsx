@@ -1,4 +1,4 @@
-import { ArrowRight, Check, Smartphone } from 'lucide-react'
+import { ArrowRight, Check } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import HeroSearch from './HeroSearch'
 import type { Audience } from './types'
@@ -13,22 +13,14 @@ const COPY: Record<
   }
 > = {
   talent: {
-    sub: 'Find real jobs from employers you can check. See the pay and location before you apply, then track every application in one place.',
-    points: [
-      'Jobs from companies with real profiles',
-      'Know the pay and location before you apply',
-      'Free CV builder to help you get noticed',
-    ],
+    sub: 'Real jobs from employers you can check. See the pay and location before you apply.',
+    points: ['Company pages', 'Pay shown up front', 'Free CV builder'],
     primary: { label: 'Create my free profile', to: '/onboarding?role=seeker' },
     secondary: { label: 'Browse open jobs', to: '/jobs' },
   },
   employer: {
-    sub: 'Post your jobs where serious people look. Build a company page people trust, and review every applicant on one simple board.',
-    points: [
-      'Post a job free and reach people across Africa',
-      'A company page that shows candidates who you are',
-      'Review applicants in one place, with a fit score',
-    ],
+    sub: 'Post your jobs where serious people look, and review every applicant on one simple board.',
+    points: ['Post a job free', 'Your own company page', 'Applicants scored for fit'],
     primary: { label: 'Post a job for free', to: '/onboarding?role=employer' },
     secondary: { label: 'See open jobs', to: '/jobs' },
   },
@@ -44,19 +36,23 @@ export default function Hero({ audience, onAudienceChange }: HeroProps) {
 
   return (
     <div>
-      <div className="mb-6 hidden items-center gap-2 rounded-full sm:inline-flex border border-white/15 bg-white/10 px-3.5 py-1.5 text-[13px] font-bold text-white/85">
+      <p className="mb-4 flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.18em] text-gold sm:text-[13px]">
         <span className="pulse-dot h-2 w-2 rounded-full bg-success" aria-hidden />
-        Real jobs · employers you can check · across Africa
-      </div>
+        The job portal for Africa
+      </p>
 
-      <h1 className="max-w-2xl text-[2.7rem] font-black leading-[1.02] tracking-tight text-white sm:text-6xl lg:text-[4.4rem]">
+      <h1 className="max-w-2xl text-[2.7rem] font-black leading-[1.02] tracking-tight text-white sm:text-6xl lg:text-[4.2rem]">
         Work without the <span className="wahala-underline italic text-gold">wahala.</span>
       </h1>
+
+      <p className="mt-5 max-w-lg text-lg font-medium leading-snug text-white/80 sm:text-xl" aria-live="polite">
+        {copy.sub}
+      </p>
 
       <div
         role="tablist"
         aria-label="I am looking to"
-        className="mt-7 inline-grid grid-cols-2 rounded-2xl border border-white/15 bg-white/10 p-1"
+        className="mt-6 inline-grid grid-cols-2 rounded-2xl border border-white/15 bg-white/10 p-1"
       >
         {(
           [
@@ -79,38 +75,28 @@ export default function Hero({ audience, onAudienceChange }: HeroProps) {
         ))}
       </div>
 
-      <p className="mt-4 max-w-xl text-base font-medium sm:mt-6 leading-relaxed text-white/75 sm:text-lg" aria-live="polite">
-        {copy.sub}
-      </p>
-
       {audience === 'talent' ? <HeroSearch /> : null}
 
-      <ul className="mt-6 space-y-2.5">
-        {copy.points.map((point, index) => (
-          <li
-            key={point}
-            className={`items-start gap-3 text-sm font-semibold text-white/90 sm:text-[15px] ${index === 2 ? 'hidden sm:flex' : 'flex'}`}
-          >
-            <span className="mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full bg-gold text-primary">
-              <Check className="h-3 w-3" strokeWidth={3} />
-            </span>
-            {point}
-          </li>
-        ))}
-      </ul>
-
-      <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-6">
         <Link to={copy.primary.to} className="btn btn-gold btn-lg justify-center px-8">
           {copy.primary.label} <ArrowRight className="h-5 w-5" />
         </Link>
-        <Link to={copy.secondary.to} className="btn btn-lg justify-center border-white/25 bg-white/10 px-8 text-white hover:bg-white/20">
+        <Link
+          to={copy.secondary.to}
+          className="inline-flex items-center justify-center gap-1.5 text-[15px] font-bold text-white underline decoration-white/40 underline-offset-4 hover:decoration-gold"
+        >
           {copy.secondary.label}
         </Link>
       </div>
 
-      <p className="mt-5 flex items-center gap-2 text-xs font-semibold text-white/55">
-        <Smartphone className="h-4 w-4" /> Free to join · works on any phone · installs like an app
-      </p>
+      <ul className="mt-6 flex flex-wrap gap-x-5 gap-y-2">
+        {copy.points.map((point) => (
+          <li key={point} className="flex items-center gap-2 text-sm font-semibold text-white/75">
+            <Check className="h-4 w-4 text-gold" strokeWidth={3} />
+            {point}
+          </li>
+        ))}
+      </ul>
     </div>
   )
 }
