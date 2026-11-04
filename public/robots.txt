@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /dashboard
+Disallow: /messaging
+Disallow: /agreements
+Disallow: /proposals
+Disallow: /onboarding
+Disallow: /verify-identity
+Disallow: /reset-password
+Disallow: /verify-email
+
+Sitemap: https://www.jobwahala.com/sitemap.xml
