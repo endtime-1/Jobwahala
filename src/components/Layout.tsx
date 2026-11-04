@@ -16,12 +16,10 @@ export default function Layout() {
 
       <div className="relative z-10 flex min-h-screen flex-col">
         <Navbar />
-        <main className="relative flex-grow pb-[calc(env(safe-area-inset-bottom)+6.75rem)] xl:pb-0">
+        <main className="relative flex-grow">
           <Outlet />
         </main>
-        <div className="hidden xl:block">
-          <Footer />
-        </div>
+        <Footer />
       </div>
     </div>
   )
