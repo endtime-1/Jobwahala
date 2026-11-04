@@ -35,7 +35,7 @@ export default function Login() {
       <AuthAside
         headline="Your next job is"
         accent="closer than you think."
-        points={['Jobs and gigs across Africa', 'Payment held safely until the work is done', 'Paid to mobile money or your bank']}
+        points={['Real jobs from employers you can check', 'See pay and location before you apply', 'Track every application in one place']}
       />
       {/* Right panel */}
       <div className="flex flex-1 flex-col bg-[#f7f9fc]">

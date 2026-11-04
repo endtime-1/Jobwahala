@@ -267,7 +267,7 @@ export default function Navbar() {
       <div className="site-nav fixed inset-x-0 top-0 z-[60]">
         <div className="bg-primary px-4 py-2 text-center text-[10px] font-black uppercase tracking-[0.1em] text-white sm:tracking-[0.25em]">
           <span className="opacity-70">
-            Escrow-protected payments<span className="hidden sm:inline"> · Mobile money payouts</span>.
+            Real jobs from employers you can check<span className="hidden sm:inline"> · across Africa</span>.
           </span>{' '}
           <Link to="/onboarding?role=seeker" className="ml-2 underline hover:text-white/80 transition-colors">Join free</Link>
         </div>
@@ -284,7 +284,7 @@ export default function Navbar() {
                       Job<span className="text-secondary">Wahala</span>
                     </p>
                     <p className="hidden whitespace-nowrap text-[10px] font-black uppercase tracking-[0.24em] text-text-light sm:block">
-                      {user ? (isOnboarded ? roleLabel : 'Setup in progress') : 'Jobs and gigs across Africa'}
+                      {user ? (isOnboarded ? roleLabel : 'Setup in progress') : 'Real jobs across Africa'}
                     </p>
                   </div>
                 </Link>

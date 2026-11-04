@@ -2,28 +2,28 @@ import { BadgeCheck, MessageCircle, Scale, ShieldCheck } from 'lucide-react'
 
 const PILLARS = [
   {
-    icon: ShieldCheck,
-    title: 'Escrow on every paid project',
-    body: 'Funds are secured before work starts and released only on approval. No more chasing payment on WhatsApp.',
-    tone: 'bg-success/12 text-success',
-  },
-  {
     icon: BadgeCheck,
-    title: 'Verified people',
-    body: 'Job seekers can verify with their Ghana Card. Employers and freelancers can verify their business or track record. Verified accounts wear a badge.',
+    title: 'Employers you can check',
+    body: 'Companies have their own page with their logo, details and open roles. Employers and job seekers can verify their identity, and verified accounts wear a badge.',
     tone: 'bg-secondary-light text-secondary',
   },
   {
-    icon: Scale,
-    title: 'A real dispute desk',
-    body: 'If a project goes wrong, open a dispute from the agreement. Both sides add evidence and an admin records a decision.',
-    tone: 'bg-accent/15 text-accent',
+    icon: ShieldCheck,
+    title: 'Safer applying',
+    body: 'Every job shows the pay and location up front. You never pay to apply, and you can report any suspicious job so our team can review it.',
+    tone: 'bg-success/12 text-success',
   },
   {
     icon: MessageCircle,
     title: 'Everything in one thread',
-    body: 'Chat, files, proposals and milestones live together, so there is always a record of what was agreed.',
+    body: 'Messages, files and proposals live together, so there is always a record of what was agreed between you and the employer.',
     tone: 'bg-primary/10 text-primary',
+  },
+  {
+    icon: Scale,
+    title: 'Protection for paid projects',
+    body: 'For one-off projects, money is held in escrow and released on approval. If something goes wrong, open a dispute and an admin records a decision.',
+    tone: 'bg-accent/15 text-accent',
   },
 ]
 

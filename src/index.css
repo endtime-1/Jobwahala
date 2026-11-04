@@ -633,3 +633,41 @@ button {
 .text-\[11px\] {
   font-size: 0.75rem;
 }
+
+/* Home page: slow floating cards and the country ticker. Transform only, so they stay on the compositor. */
+@keyframes floatCard {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.float-card {
+  animation: floatCard 6s ease-in-out infinite;
+}
+
+.float-card--late {
+  animation-delay: -3s;
+}
+
+@keyframes marqueeSlide {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.marquee-track {
+  animation: marqueeSlide 45s linear infinite;
+}
+
+.marquee:hover .marquee-track {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .float-card,
+  .marquee-track {
+    animation: none;
+  }
+
+  .marquee {
+    overflow-x: auto;
+  }
+}

@@ -43,7 +43,7 @@ export default function Signup() {
       <AuthAside
         headline="Join free and"
         accent="get paid safely."
-        points={['Free to join, no hidden fees', 'Verified employers and freelancers', 'Payment held until the work is approved', 'Built for Africa, open to the world']}
+        points={['Free to join, no hidden fees', 'Employers with real company pages', 'See pay and location before you apply', 'Post jobs and review applicants free']}
       />
       {/* Right panel */}
       <div className="flex flex-1 flex-col bg-[#f7f9fc]">

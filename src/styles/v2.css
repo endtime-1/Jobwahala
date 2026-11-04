@@ -10,7 +10,8 @@
 
 /* Readable labels: the old design shouted in tiny, wide-spaced capitals. */
 .v2 .uppercase,
-.site-nav .uppercase {
+.site-nav .uppercase,
+.on-home .uppercase {
   text-transform: none;
 }
 
@@ -18,13 +19,16 @@
 .v2 .tracking-widest,
 .v2 .tracking-wider,
 .site-nav [class*='tracking-['],
-.site-nav .tracking-widest {
+.site-nav .tracking-widest,
+.on-home [class*='tracking-['],
+.on-home .tracking-widest {
   letter-spacing: 0.005em;
 }
 
 /* Buttons read like actions, not warnings. */
 .v2 .btn,
-.site-nav .btn {
+.site-nav .btn,
+.on-home .btn {
   text-transform: none;
   letter-spacing: 0;
   font-size: 0.95rem;
@@ -33,12 +37,14 @@
 }
 
 .v2 .btn-sm,
-.site-nav .btn-sm {
+.site-nav .btn-sm,
+.on-home .btn-sm {
   font-size: 0.85rem;
   min-height: 2.6rem;
 }
 
-.v2 .btn-lg {
+.v2 .btn-lg,
+.on-home .btn-lg {
   font-size: 1.05rem;
   min-height: 3.4rem;
 }
@@ -264,4 +270,23 @@
   font-size: 1.125rem;
   line-height: 1.3;
   letter-spacing: 0;
+}
+
+/* Home page: the navbar floats over a dark hero, so it needs a solid white surface. */
+.site-nav .glass,
+.site-nav [class*='backdrop-blur'] {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.site-nav nav [class*='bg-white/'] {
+  background-color: #fff;
+}
+
+.on-home .badge {
+  text-transform: none;
+}
+
+.site-nav .glass {
+  background: #fff;
 }

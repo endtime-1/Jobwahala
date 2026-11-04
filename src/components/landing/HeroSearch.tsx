@@ -18,7 +18,7 @@ export default function HeroSearch() {
       onSubmit={submit}
       role="search"
       aria-label="Search jobs"
-      className="mt-6 flex flex-col gap-2 rounded-[1.6rem] border border-surface-border bg-white p-2 shadow-premium-md sm:flex-row sm:items-center"
+      className="mt-6 flex flex-col gap-2 rounded-[1.6rem] bg-white p-2 shadow-premium-xl sm:flex-row sm:items-center"
     >
       <label className="relative flex-1">
         <span className="sr-only">Job title or keyword</span>
@@ -42,7 +42,7 @@ export default function HeroSearch() {
           className="h-12 w-full rounded-2xl border-0 bg-surface-alt/50 pl-11 pr-3 text-[15px] font-semibold"
         />
       </label>
-      <button type="submit" className="btn btn-primary h-12 justify-center px-7">
+      <button type="submit" className="btn btn-gold h-12 justify-center px-7">
         Search jobs
       </button>
     </form>
