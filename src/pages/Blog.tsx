@@ -38,7 +38,7 @@ export default function Blog() {
         {/* Featured Post (Template) */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-20 items-center">
           <Link to={`/blog/${blogPosts[0].id}`} className="rounded-[3rem] overflow-hidden shadow-premium-2xl aspect-video lg:aspect-square relative group block">
-            <img src={blogPosts[0].image} alt={blogPosts[0].title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+            <img src={blogPosts[0].image} alt={blogPosts[0].title} className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
             <div className="absolute bottom-10 left-10 right-10">
                <span className="px-3 py-1 bg-primary text-white rounded-lg text-[10px] font-black uppercase tracking-widest mb-4 inline-block">Featured</span>
@@ -73,7 +73,7 @@ export default function Blog() {
           {blogPosts.slice(1).map((post) => (
             <Link key={post.id} to={`/blog/${post.id}`} className="card group hover:scale-[1.02] shadow-premium-lg border-surface-border/50 overflow-hidden active:scale-95 transition-all">
                <div className="aspect-[16/10] overflow-hidden -mx-7 -mt-7 mb-7 relative rounded-t-[2rem]">
-                 <img src={post.image} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                 <img src={post.image} alt={post.title} className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700" />
                  <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest text-primary shadow-sm">
                    {post.category}
                  </div>

@@ -26,7 +26,7 @@ export const blogPosts: BlogPost[] = [
     date: "April 2, 2026",
     readTime: "8 min read",
     category: "Hiring Guide",
-    image: "https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?auto=format&fit=crop&q=80&w=800",
+    image: "/people/man-office.webp",
   },
   {
     id: 'freelance-success-ghana',
@@ -40,6 +40,6 @@ export const blogPosts: BlogPost[] = [
     date: "March 28, 2026",
     readTime: "5 min read",
     category: "Success Stories",
-    image: "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&q=80&w=800",
+    image: "/people/woman-laptop.webp",
   }
 ]
