@@ -38,6 +38,14 @@ describe('resolvePublicBaseUrl', () => {
     expect(resolvePublicBaseUrl({ protocol: 'https, http', host: 'a.test' })).toBe('https://a.test');
   });
 
+  it('uses https for real sites even when the hosting layer reports http', () => {
+    expect(resolvePublicBaseUrl({ protocol: 'http', host: 'www.jobwahala.com' })).toBe('https://www.jobwahala.com');
+  });
+
+  it('keeps http for local development', () => {
+    expect(resolvePublicBaseUrl({ protocol: 'http', host: 'localhost:5000' })).toBe('http://localhost:5000');
+  });
+
   it('returns nothing rather than a broken address', () => {
     expect(resolvePublicBaseUrl({})).toBe('');
   });

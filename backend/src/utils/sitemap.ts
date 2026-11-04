@@ -58,8 +58,12 @@ export const resolvePublicBaseUrl = ({
   if (explicit) return explicit;
 
   const cleanHost = (host ?? '').trim();
-  const cleanProtocol = (protocol ?? 'https').split(',')[0].trim() || 'https';
-  return cleanHost ? `${cleanProtocol}://${cleanHost}` : '';
+  if (!cleanHost) return '';
+
+  // Hosting layers often hide the secure connection from us, so only local addresses stay on http.
+  const isLocal = /^(localhost|127\.0\.0\.1)(:|$)/.test(cleanHost);
+  const reported = (protocol ?? 'https').split(',')[0].trim() || 'https';
+  return `${isLocal ? reported : 'https'}://${cleanHost}`;
 };
 
 export const buildSitemapXml = (baseUrl: string, entries: SitemapEntry[]) => {
