@@ -18,7 +18,7 @@ export default function SEO({
   keywords = 'jobs in africa, freelance africa, remote work africa, hire freelancers africa, escrow payments, mobile money, jobwahala'
 }: SEOProps) {
   const siteTitle = 'JobWahala'
-  const fullTitle = title ? `${title} | ${siteTitle}` : `${siteTitle} — Africa's Elite Talent Platform`
+  const fullTitle = title ? `${title} | ${siteTitle}` : `${siteTitle} — Real jobs across Africa`
 
   return (
     <Helmet>

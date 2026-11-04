@@ -18,9 +18,9 @@ export default defineConfig({
         'fonts/space-grotesk-latin-wght-normal.woff2',
       ],
       manifest: {
-        name: 'JobWahala | Elite African Talent',
+        name: 'JobWahala | Real jobs across Africa',
         short_name: 'JobWahala',
-        description: 'Find jobs, hire talent and get paid securely across Africa.',
+        description: 'Find real jobs across Africa, or post jobs free and review applicants on one board.',
         theme_color: '#2f6df6',
         background_color: '#ffffff',
         display: 'standalone',
