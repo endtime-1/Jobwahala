@@ -309,6 +309,7 @@ export default function JobListings() {
           {!isLoading && !error ? (
             <p className="mt-5 text-sm font-semibold text-white/70">
               {jobs.length} open {jobs.length === 1 ? 'role' : 'roles'}
+              {jobs.length < 10 ? ' · more appear as employers post them' : ''}
               {freshCount > 0 ? ` · ${freshCount} new in the last 3 days` : ''}
               {remoteCount > 0 ? ` · ${remoteCount} remote` : ''}
             </p>

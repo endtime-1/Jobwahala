@@ -30,13 +30,13 @@ type NavLinkItem = {
 
 const seekerLinks: NavLinkItem[] = [
   { name: 'Browse Jobs', href: '/jobs', icon: <Briefcase className="h-4 w-4" /> },
-  { name: 'Freelancers', href: '/freelancers', icon: <Users className="h-4 w-4" /> },
   { name: 'Dashboard', href: '/dashboard', icon: <Rocket className="h-4 w-4" /> },
   { name: 'Proposals', href: '/proposals', icon: <Handshake className="h-4 w-4" /> },
   { name: 'Agreements', href: '/agreements', icon: <FileCheck className="h-4 w-4" /> },
   { name: 'CV Generator', href: '/cv-generator', icon: <Rocket className="h-4 w-4" /> },
   { name: 'Messages', href: '/messaging', icon: <MessageSquare className="h-4 w-4" /> },
   { name: 'Resources', href: '/blog', icon: <BookOpen className="h-4 w-4" /> },
+  { name: 'Freelance gigs', href: '/freelancers', icon: <Users className="h-4 w-4" /> },
 ]
 
 const employerLinks: NavLinkItem[] = [
@@ -67,7 +67,7 @@ const adminLinks: NavLinkItem[] = [
 
 const guestLinks: NavLinkItem[] = [
   { name: 'Browse Jobs', href: '/jobs', icon: <Briefcase className="h-4 w-4" /> },
-  { name: 'Freelancers', href: '/freelancers', icon: <Users className="h-4 w-4" /> },
+  { name: 'For employers', href: '/onboarding?role=employer', icon: <Handshake className="h-4 w-4" /> },
   { name: 'Resources', href: '/blog', icon: <BookOpen className="h-4 w-4" /> },
 ]
 
@@ -77,7 +77,7 @@ const pendingSetupLinks: NavLinkItem[] = [
 
 const guestDockLinks: NavLinkItem[] = [
   { name: 'Jobs', href: '/jobs', icon: <Briefcase className="h-4 w-4" /> },
-  { name: 'Talent', href: '/freelancers', icon: <Users className="h-4 w-4" /> },
+  { name: 'Hire', href: '/onboarding?role=employer', icon: <Users className="h-4 w-4" /> },
   { name: 'Log In', href: '/login', icon: <MessageSquare className="h-4 w-4" /> },
   { name: 'Join', href: '/signup', icon: <Rocket className="h-4 w-4" /> },
 ]

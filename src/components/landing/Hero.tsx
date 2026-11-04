@@ -44,7 +44,7 @@ export default function Hero({ audience, onAudienceChange }: HeroProps) {
 
   return (
     <div>
-      <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3.5 py-1.5 text-[13px] font-bold text-white/85">
+      <div className="mb-6 hidden items-center gap-2 rounded-full sm:inline-flex border border-white/15 bg-white/10 px-3.5 py-1.5 text-[13px] font-bold text-white/85">
         <span className="pulse-dot h-2 w-2 rounded-full bg-success" aria-hidden />
         Real jobs · employers you can check · across Africa
       </div>
@@ -79,7 +79,7 @@ export default function Hero({ audience, onAudienceChange }: HeroProps) {
         ))}
       </div>
 
-      <p className="mt-6 max-w-xl text-base font-medium leading-relaxed text-white/75 sm:text-lg" aria-live="polite">
+      <p className="mt-4 max-w-xl text-base font-medium sm:mt-6 leading-relaxed text-white/75 sm:text-lg" aria-live="polite">
         {copy.sub}
       </p>
 
