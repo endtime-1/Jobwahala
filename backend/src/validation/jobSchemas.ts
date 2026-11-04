@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const applicationStatusValues = ['SUBMITTED', 'SHORTLISTED', 'INTERVIEW', 'REJECTED', 'HIRED'] as const;
+export const applicationStatusValues = ['SUBMITTED', 'SHORTLISTED', 'INTERVIEW', 'OFFERED', 'REJECTED', 'HIRED'] as const;
 export const ownerJobStatusValues = ['ACTIVE', 'PAUSED', 'CLOSED'] as const;
 
 const trimmedOptionalString = (max: number) =>

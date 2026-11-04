@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { groupApplicantsByStage, needsConfirmation, nextStage } from './board'
+import { BOARD_STAGES, groupApplicantsByStage, needsConfirmation, nextStage } from './board'
 import type { JobApplicant } from './types'
 
 const applicant = (id: string, status: string, fitScore?: number, createdAt = '2026-03-01T00:00:00Z'): JobApplicant => ({
@@ -8,6 +8,18 @@ const applicant = (id: string, status: string, fitScore?: number, createdAt = '2
   createdAt,
   fitScore,
   seeker: { id: `s-${id}`, email: `${id}@example.com` },
+})
+
+describe('board stages', () => {
+  it('runs New, Shortlisted, Interview, Offered, Hired, Rejected', () => {
+    expect(BOARD_STAGES.map((stage) => stage.label)).toEqual(['New', 'Shortlisted', 'Interview', 'Offered', 'Hired', 'Rejected'])
+  })
+
+  it('puts offered applicants in their own column', () => {
+    const groups = groupApplicantsByStage([applicant('a', 'OFFERED')])
+    expect(groups.OFFERED.map((x) => x.id)).toEqual(['a'])
+    expect(groups.SUBMITTED).toEqual([])
+  })
 })
 
 describe('groupApplicantsByStage', () => {
@@ -45,13 +57,15 @@ describe('nextStage and confirmation', () => {
   it('advances through the pipeline and stops at end states', () => {
     expect(nextStage('SUBMITTED')).toBe('SHORTLISTED')
     expect(nextStage('SHORTLISTED')).toBe('INTERVIEW')
-    expect(nextStage('INTERVIEW')).toBe('HIRED')
+    expect(nextStage('INTERVIEW')).toBe('OFFERED')
+    expect(nextStage('OFFERED')).toBe('HIRED')
     expect(nextStage('HIRED')).toBeNull()
     expect(nextStage('REJECTED')).toBeNull()
   })
 
   it('asks for confirmation only for hard-to-undo moves', () => {
     expect(needsConfirmation('HIRED')).toBe(true)
+    expect(needsConfirmation('OFFERED')).toBe(true)
     expect(needsConfirmation('REJECTED')).toBe(true)
     expect(needsConfirmation('SHORTLISTED')).toBe(false)
   })

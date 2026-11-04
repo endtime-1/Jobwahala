@@ -13,13 +13,14 @@ export const makeInitialJobForm = () => ({
   closesAt: defaultClosingDate(),
 })
 
-export const applicationStatuses = ['SUBMITTED', 'SHORTLISTED', 'INTERVIEW', 'REJECTED', 'HIRED']
+export const applicationStatuses = ['SUBMITTED', 'SHORTLISTED', 'INTERVIEW', 'OFFERED', 'REJECTED', 'HIRED']
 
 export const getApplicationBadgeClass = (status: string) => {
   if (status === 'HIRED' || status === 'ACCEPTED') return 'bg-success text-white'
   if (status === 'REJECTED' || status === 'DECLINED' || status === 'CANCELLED') return 'bg-error text-white'
   if (status === 'INTERVIEW' || status === 'COMPLETED') return 'bg-secondary text-white'
   if (status === 'SHORTLISTED') return 'bg-accent text-white'
+  if (status === 'OFFERED') return 'bg-gold text-primary'
   return 'bg-primary text-white'
 }
 

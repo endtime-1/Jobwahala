@@ -27,6 +27,14 @@ export const getInitials = (value?: string | null) => {
   return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
 };
 
+/** 12 Nov 2026 */
+export const formatShortDate = (value?: string | null) => {
+  if (!value) return ''
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+  return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })
+}
+
 export const formatRelativeTime = (value?: string | null) => {
   if (!value) return 'Recently';
 

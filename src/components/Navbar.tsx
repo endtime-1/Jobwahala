@@ -31,6 +31,7 @@ type NavLinkItem = {
 
 const seekerLinks: NavLinkItem[] = [
   { name: 'Browse Jobs', href: '/jobs', icon: <Briefcase className="h-4 w-4" /> },
+  { name: 'My applications', href: '/applications', icon: <FileCheck className="h-4 w-4" /> },
   { name: 'Dashboard', href: '/dashboard', icon: <Rocket className="h-4 w-4" /> },
   { name: 'Proposals', href: '/proposals', icon: <Handshake className="h-4 w-4" /> },
   { name: 'Agreements', href: '/agreements', icon: <FileCheck className="h-4 w-4" /> },
@@ -198,6 +199,7 @@ export default function Navbar() {
     if (role === 'SEEKER') {
       return [
         { name: 'Jobs', href: '/jobs', icon: <Briefcase className="h-4 w-4" /> },
+        { name: 'Applied', href: '/applications', icon: <FileCheck className="h-4 w-4" /> },
         { name: 'Talent', href: '/freelancers', icon: <Users className="h-4 w-4" /> },
         { name: 'Hub', href: '/dashboard', icon: <Rocket className="h-4 w-4" /> },
         { name: 'Deals', href: '/proposals', icon: <Handshake className="h-4 w-4" /> },

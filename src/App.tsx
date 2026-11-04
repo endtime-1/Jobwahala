@@ -10,6 +10,7 @@ const JobListings = lazy(() => import('./pages/JobListings'))
 const JobDetails = lazy(() => import('./pages/JobDetails'))
 const CVGenerator = lazy(() => import('./pages/CVGenerator'))
 const Messaging = lazy(() => import('./pages/Messaging'))
+const MyApplications = lazy(() => import('./pages/MyApplications'))
 const Dashboard = lazy(() => import('./pages/Dashboard'))
 const Agreements = lazy(() => import('./pages/Agreements'))
 const Proposals = lazy(() => import('./pages/Proposals'))
@@ -86,6 +87,7 @@ function App() {
           <Route path="/jobs/:id" element={<JobDetails />} />
           <Route path="/cv-generator" element={renderProtected(<CVGenerator />)} />
           <Route path="/messaging" element={renderProtected(<Messaging />)} />
+          <Route path="/applications" element={renderProtected(<MyApplications />)} />
           <Route path="/agreements" element={<FreelanceGate>{renderProtected(<Agreements />)}</FreelanceGate>} />
           <Route path="/proposals" element={<FreelanceGate>{renderProtected(<Proposals />)}</FreelanceGate>} />
           <Route path="/dashboard" element={renderProtected(<Dashboard />)} />

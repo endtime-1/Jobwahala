@@ -138,6 +138,75 @@ export const sendJobExpiryWarningEmail = async (
   });
 };
 
+export const sendApplicationStatusEmail = async (
+  email: string,
+  update: { title: string; message: string; jobTitle: string; company: string },
+) => {
+  const e = escapeHtml;
+  const url = `${env.frontendBaseUrl}/applications`;
+
+  const html = wrapHtml(`
+    <div class="header">
+      <h1>${APP_NAME}</h1>
+      <p>An update on your application</p>
+    </div>
+    <div class="body">
+      <p style="font-size: 18px; font-weight: 700; margin-bottom: 4px;">${e(update.title)}</p>
+      <p class="muted" style="margin-top: 0;">${e(update.jobTitle)} · ${e(update.company)}</p>
+      <p>${e(update.message)}</p>
+      <p style="text-align: center; margin: 32px 0;">
+        <a href="${url}" class="btn">See my applications</a>
+      </p>
+    </div>
+    <div class="footer">
+      &copy; ${new Date().getFullYear()} ${APP_NAME}. All rights reserved.
+    </div>
+  `);
+
+  await transporter.sendMail({
+    from: env.smtpFrom,
+    to: email,
+    subject: update.title,
+    html,
+  });
+};
+
+export const sendApplicationReminderEmail = async (
+  email: string,
+  reminder: { waiting: number; days: number; jobs: { title: string; waiting: number }[] },
+) => {
+  const e = escapeHtml;
+  const url = `${env.frontendBaseUrl}/dashboard`;
+  const people = reminder.waiting === 1 ? '1 applicant has' : `${reminder.waiting} applicants have`;
+  const subjectPeople = reminder.waiting === 1 ? '1 applicant is' : `${reminder.waiting} applicants are`;
+  const rows = reminder.jobs.map((job) => `<li>${e(job.title)}: ${job.waiting} waiting</li>`).join('');
+
+  const html = wrapHtml(`
+    <div class="header">
+      <h1>${APP_NAME}</h1>
+      <p>People are waiting to hear from you</p>
+    </div>
+    <div class="body">
+      <p>${people} been waiting ${reminder.days} days or more without a reply.</p>
+      <ul>${rows}</ul>
+      <p>A short answer, even a polite no, goes a long way. Move each person to Shortlisted, Interview or Not selected and we will let them know.</p>
+      <p style="text-align: center; margin: 32px 0;">
+        <a href="${url}" class="btn">Review applicants</a>
+      </p>
+    </div>
+    <div class="footer">
+      &copy; ${new Date().getFullYear()} ${APP_NAME}. All rights reserved.
+    </div>
+  `);
+
+  await transporter.sendMail({
+    from: env.smtpFrom,
+    to: email,
+    subject: `${subjectPeople} waiting for your reply`,
+    html,
+  });
+};
+
 export const sendJobAlertEmail = async (
   email: string,
   alert: { alertName: string; jobTitle: string; company: string; location?: string | null; jobId: string },

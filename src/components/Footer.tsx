@@ -9,6 +9,7 @@ const footerColumns = [
     links: [
       ['Browse jobs', '/jobs'],
       ['Freelance gigs (coming soon)', '/#freelance-gigs'],
+      ['My applications', '/applications'],
       ['Build a free CV', '/cv-generator'],
       ['My dashboard', '/dashboard'],
     ],

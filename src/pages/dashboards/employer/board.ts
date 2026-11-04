@@ -1,7 +1,7 @@
 import type { JobApplicant } from './types'
 
 export type BoardStage = {
-  status: 'SUBMITTED' | 'SHORTLISTED' | 'INTERVIEW' | 'HIRED' | 'REJECTED'
+  status: 'SUBMITTED' | 'SHORTLISTED' | 'INTERVIEW' | 'OFFERED' | 'HIRED' | 'REJECTED'
   label: string
   hint: string
 }
@@ -10,6 +10,7 @@ export const BOARD_STAGES: BoardStage[] = [
   { status: 'SUBMITTED', label: 'New', hint: 'Just applied' },
   { status: 'SHORTLISTED', label: 'Shortlisted', hint: 'Worth a closer look' },
   { status: 'INTERVIEW', label: 'Interview', hint: 'Talking to them' },
+  { status: 'OFFERED', label: 'Offered', hint: 'Offer made' },
   { status: 'HIRED', label: 'Hired', hint: 'Creates an agreement' },
   { status: 'REJECTED', label: 'Rejected', hint: 'Not moving forward' },
 ]
@@ -45,9 +46,10 @@ export const groupApplicantsByStage = (applicants: JobApplicant[]) => {
 export const nextStage = (status: string): BoardStage['status'] | null => {
   if (status === 'SUBMITTED') return 'SHORTLISTED'
   if (status === 'SHORTLISTED') return 'INTERVIEW'
-  if (status === 'INTERVIEW') return 'HIRED'
+  if (status === 'INTERVIEW') return 'OFFERED'
+  if (status === 'OFFERED') return 'HIRED'
   return null
 }
 
-/** Moving to these stages is hard to undo (creates an agreement, or notifies a rejection). */
-export const needsConfirmation = (status: string) => status === 'HIRED' || status === 'REJECTED'
+/** Every move emails the applicant. These three are the ones that are hard to take back. */
+export const needsConfirmation = (status: string) => status === 'OFFERED' || status === 'HIRED' || status === 'REJECTED'

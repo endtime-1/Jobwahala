@@ -51,22 +51,42 @@ describe('ApplicantBoard', () => {
     expect(onMove).toHaveBeenCalledWith('a1', 'SHORTLISTED')
   })
 
-  it('asks before hiring and does nothing if the employer says no', () => {
+  it('asks before making an offer and does nothing if the employer says no', () => {
     vi.mocked(window.confirm).mockReturnValueOnce(false)
     renderBoard()
 
-    fireEvent.click(screen.getByRole('button', { name: /move esi mensah to hired/i }))
+    fireEvent.click(screen.getByRole('button', { name: /move esi mensah to offered/i }))
 
-    expect(window.confirm).toHaveBeenCalledWith(expect.stringMatching(/hire esi mensah.*agreement/i))
+    expect(window.confirm).toHaveBeenCalledWith(expect.stringMatching(/offer.*esi mensah|esi mensah.*offer/i))
     expect(onMove).not.toHaveBeenCalled()
   })
 
-  it('hires once confirmed', () => {
+  it('moves an interviewed candidate on to Offered once confirmed', () => {
     renderBoard()
 
-    fireEvent.click(screen.getByRole('button', { name: /move esi mensah to hired/i }))
+    fireEvent.click(screen.getByRole('button', { name: /move esi mensah to offered/i }))
 
+    expect(onMove).toHaveBeenCalledWith('a3', 'OFFERED')
+  })
+
+  it('asks before hiring, and tells the employer the candidate will be emailed', () => {
+    renderBoard()
+
+    fireEvent.change(screen.getByLabelText(/move esi mensah to another stage/i), { target: { value: 'HIRED' } })
+
+    expect(window.confirm).toHaveBeenCalledWith(expect.stringMatching(/mark esi mensah as hired.*email/i))
     expect(onMove).toHaveBeenCalledWith('a3', 'HIRED')
+  })
+
+  it('has an Offered column between Interview and Hired', () => {
+    renderBoard()
+
+    const names = screen.getAllByRole('region').map((region) => region.getAttribute('aria-label') ?? '')
+    const order = ['new', 'shortlisted', 'interview', 'offered', 'hired', 'rejected'].map((stage) =>
+      names.findIndex((name) => name.toLowerCase().startsWith(stage)),
+    )
+    expect(order.every((index) => index >= 0)).toBe(true)
+    expect([...order].sort((x, y) => x - y)).toEqual(order)
   })
 
   it('supports the move-to menu, including rejection with confirmation', () => {
@@ -74,7 +94,7 @@ describe('ApplicantBoard', () => {
 
     fireEvent.change(screen.getByLabelText(/move ada mensah to another stage/i), { target: { value: 'REJECTED' } })
 
-    expect(window.confirm).toHaveBeenCalledWith(expect.stringMatching(/reject ada mensah/i))
+    expect(window.confirm).toHaveBeenCalledWith(expect.stringMatching(/move ada mensah to rejected.*polite message/i))
     expect(onMove).toHaveBeenCalledWith('a1', 'REJECTED')
   })
 

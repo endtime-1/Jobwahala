@@ -114,6 +114,7 @@ export default function SeekerDashboard() {
             <p className="text-base font-medium tracking-tight text-text-muted md:text-lg">Live dashboard data from your recent applications, messages, and CV history.</p>
             <div className="dashboard-actions">
               <Link to="/jobs" className="dashboard-action-chip"><Briefcase className="h-4 w-4" /> Browse roles</Link>
+              <Link to="/applications" className="dashboard-action-chip"><CheckCircle className="h-4 w-4" /> My applications</Link>
               <Link to="/cv-generator" className="dashboard-action-chip"><FileText className="h-4 w-4" /> Open CV studio</Link>
               {freelanceEnabled ? <Link to="/agreements" className="dashboard-action-chip"><Handshake className="h-4 w-4" /> View agreements</Link> : null}
               {freelanceEnabled ? <Link to="/proposals" className="dashboard-action-chip"><Handshake className="h-4 w-4" /> Proposals</Link> : null}

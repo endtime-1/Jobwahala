@@ -55,6 +55,32 @@ describe('navigation with FREELANCE_ENABLED off', () => {
     })
   }
 
+  it('gives job seekers a My applications link, in the menu and on the phone dock, whatever the flag says', () => {
+    setFeaturesForTests({ freelanceEnabled: false })
+    signedIn('SEEKER')
+
+    render(
+      <MemoryRouter>
+        <Navbar />
+      </MemoryRouter>,
+    )
+
+    expect(hrefs().filter((href) => href === '/applications').length).toBeGreaterThanOrEqual(2)
+  })
+
+  it('does not show employers a My applications link', () => {
+    setFeaturesForTests({ freelanceEnabled: false })
+    signedIn('EMPLOYER')
+
+    render(
+      <MemoryRouter>
+        <Navbar />
+      </MemoryRouter>,
+    )
+
+    expect(hrefs()).not.toContain('/applications')
+  })
+
   it('shows them again when the flag is on', () => {
     setFeaturesForTests({ freelanceEnabled: true })
     signedIn('SEEKER')

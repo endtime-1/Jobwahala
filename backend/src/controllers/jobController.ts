@@ -21,6 +21,10 @@ import {
 } from '../utils/jobLifecycle';
 import { approvedBusinessVerificationQuery, publicEmployerVerification } from '../utils/verification';
 import { getErrorMessage } from '../utils/errors';
+import logger from '../config/logger';
+import { createNotification } from '../utils/notifications';
+import { sendApplicationStatusEmail } from '../services/emailService';
+import { describeStatusChange, isFirstResponse, nextResponseStats, responseHours } from '../utils/applicationStatus';
 
 const mapRankedApplications = <
   T extends {
@@ -777,8 +781,14 @@ export const updateApplicationStatus = async (req: AuthRequest, res: Response) =
     const application = await prisma.application.findUnique({
       where: { id: applicationId },
       include: {
+        seeker: { select: { id: true, email: true } },
         job: {
-          select: { employerId: true, title: true, salary: true }
+          select: {
+            employerId: true,
+            title: true,
+            salary: true,
+            employer: { select: { employerProfile: { select: { companyName: true } } } },
+          }
         }
       }
     });
@@ -786,6 +796,16 @@ export const updateApplicationStatus = async (req: AuthRequest, res: Response) =
     if (!application || application.job.employerId !== req.user!.id) {
       return res.status(403).json({ success: false, message: 'Access denied' });
     }
+
+    // Nothing changed, so nobody is notified and the clock does not move.
+    if (application.status === status) {
+      return res.json({ success: true, application });
+    }
+
+    const now = new Date();
+    const companyName = application.job.employer.employerProfile?.companyName || 'The employer';
+    const statusMessage = describeStatusChange(status, { jobTitle: application.job.title, company: companyName });
+    const firstResponse = isFirstResponse(application, status);
 
     const existingAgreement = await prisma.agreement.findUnique({
       where: { applicationId }
@@ -803,8 +823,32 @@ export const updateApplicationStatus = async (req: AuthRequest, res: Response) =
     const updatedApplication = await prisma.$transaction(async (tx) => {
       const nextApplication = await tx.application.update({
         where: { id: applicationId },
-        data: { status }
+        data: { status, statusChangedAt: now, ...(firstResponse ? { firstRespondedAt: now } : {}) }
       });
+
+      // How quickly this employer first answers applicants (kept as a running average).
+      if (firstResponse) {
+        const profile = await tx.employerProfile.findUnique({
+          where: { userId: application.job.employerId },
+          select: { avgResponseHours: true, responseCount: true },
+        });
+        if (profile) {
+          await tx.employerProfile.update({
+            where: { userId: application.job.employerId },
+            data: nextResponseStats(profile, responseHours(application.createdAt, now)),
+          });
+        }
+      }
+
+      if (statusMessage) {
+        await createNotification(tx, {
+          userId: application.seekerId,
+          type: 'APPLICATION_STATUS',
+          title: statusMessage.title,
+          message: statusMessage.message,
+          actionUrl: '/applications',
+        });
+      }
 
       await tx.proposal.updateMany({
         where: {
@@ -876,6 +920,17 @@ export const updateApplicationStatus = async (req: AuthRequest, res: Response) =
 
       return nextApplication;
     });
+
+    // The email goes out after the change is saved, and never holds up (or fails) the employer's action.
+    if (statusMessage) {
+      void sendApplicationStatusEmail(application.seeker.email, {
+        ...statusMessage,
+        jobTitle: application.job.title,
+        company: companyName,
+      }).catch((error) =>
+        logger.error('application_status_email_failed', { applicationId, error: getErrorMessage(error) }),
+      );
+    }
 
     return res.json({ success: true, application: updatedApplication });
   } catch (error) {

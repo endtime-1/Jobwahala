@@ -7,6 +7,7 @@ import { initSocket } from './services/socketService';
 import { processPayout } from './controllers/agreementController';
 import { getErrorMessage } from './utils/errors';
 import { JOB_SWEEP_INTERVAL_MS, runJobLifecycleSweepSafely } from './services/jobLifecycleService';
+import { runApplicationRemindersSafely } from './services/applicationReminderService';
 
 const httpServer = createServer(app);
 initSocket(httpServer);
@@ -61,8 +62,13 @@ const payoutTask = setInterval(async () => {
 
 // --- Task Scheduling: job lifecycle (expire jobs past their closing date, warn employers 3 days before) ---
 // Runs once a day, and once shortly after every start so a restart never skips a day. It is idempotent.
-const jobSweepFirstRun = setTimeout(() => void runJobLifecycleSweepSafely(), 60 * 1000);
-const jobSweepTask = setInterval(() => void runJobLifecycleSweepSafely(), JOB_SWEEP_INTERVAL_MS);
+// The same daily run also reminds employers about applications left in New for 14 days.
+const runDailySweeps = async () => {
+  await runJobLifecycleSweepSafely();
+  await runApplicationRemindersSafely();
+};
+const jobSweepFirstRun = setTimeout(() => void runDailySweeps(), 60 * 1000);
+const jobSweepTask = setInterval(() => void runDailySweeps(), JOB_SWEEP_INTERVAL_MS);
 
 let isShuttingDown = false;
 

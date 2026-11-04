@@ -14,11 +14,9 @@ type Props = {
 
 const confirmMove = (name: string, status: BoardStage['status']) => {
   if (!needsConfirmation(status)) return true
-  return window.confirm(
-    status === 'HIRED'
-      ? `Hire ${name}? This creates an agreement between you.`
-      : `Reject ${name}? They will see the updated status.`,
-  )
+  if (status === 'OFFERED') return window.confirm(`Make ${name} an offer? We will tell them by email and in the app.`)
+  if (status === 'HIRED') return window.confirm(`Mark ${name} as hired? We will tell them by email and in the app.`)
+  return window.confirm(`Move ${name} to Rejected? We will send them a polite message by email and in the app.`)
 }
 
 export default function ApplicantBoard({ applicants, busy, onMove, onReview }: Props) {

@@ -84,6 +84,9 @@ model EmployerProfile {
   logoUrl     String?
   website     String?
   description String?
+  // How quickly this employer first responds to applicants (a running average, kept up to date as they respond).
+  avgResponseHours Float?
+  responseCount    Int     @default(0)
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
@@ -160,7 +163,13 @@ model Application {
   jobId       String
   seekerId    String
   coverLetter String?
-  status      String   @default("SUBMITTED") // SUBMITTED, SHORTLISTED, INTERVIEW, REJECTED, HIRED, COMPLETED, CANCELLED
+  status      String   @default("SUBMITTED") // SUBMITTED (shown as New), SHORTLISTED, INTERVIEW, OFFERED, REJECTED, HIRED, COMPLETED, CANCELLED
+  // When the status last changed (null on older rows: use updatedAt).
+  statusChangedAt DateTime?
+  // When the employer first moved it out of New. Used for response-time stats.
+  firstRespondedAt DateTime?
+  // Set once the employer has been reminded that this application sat in New for 14 days.
+  newReminderSentAt DateTime?
   createdAt   DateTime @default(now())
   updatedAt   DateTime  @updatedAt
 
@@ -174,6 +183,7 @@ model Application {
   @@index([seekerId])
   @@index([status])
   @@index([createdAt])
+  @@index([status, createdAt])
 }
 
 model FreelanceService {

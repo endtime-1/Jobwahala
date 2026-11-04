@@ -199,6 +199,9 @@ export const apiExtendJob = (id: string, days?: number) =>
     body: JSON.stringify(days ? { days } : {}),
   }).then(handleResponse);
 
+export const apiGetMyApplications = () =>
+  fetch(`${BASE_URL}/applications/mine`, { headers: headers(true) }).then(handleResponse);
+
 export const apiGetJobApplicants = (jobId: string) =>
   fetch(`${BASE_URL}/jobs/${jobId}/applicants`, {
     headers: headers(true),
