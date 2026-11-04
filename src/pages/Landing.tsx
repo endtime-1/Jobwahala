@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import SEO from '../components/SEO'
 import CvBuilderSection from '../components/landing/CvBuilderSection'
+import EmployerBand from '../components/landing/EmployerBand'
 import EmployerCard from '../components/landing/EmployerCard'
 import Faq from '../components/landing/Faq'
 import FieldTiles from '../components/landing/FieldTiles'
@@ -154,6 +155,14 @@ export default function Landing() {
           {audience === 'talent' ? <MatchLab jobs={jobs} isLoading={jobsLoading} /> : <EmployerCard />}
         </div>
       </Section>
+
+      <section className="py-6 sm:py-10">
+        <div className="container">
+          <Reveal>
+            <EmployerBand />
+          </Reveal>
+        </div>
+      </section>
 
       <Section
         eyebrow="For contract and freelance work"
