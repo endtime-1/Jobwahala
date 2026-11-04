@@ -605,6 +605,18 @@ export default function JobListings() {
               })}
             </div>
           )}
+          {!isLoading && !error && filteredJobs.length < 10 ? (
+            <aside className="rounded-2xl bg-primary p-6 text-white sm:p-8">
+              <p className="text-sm font-extrabold uppercase tracking-wide text-gold">For employers</p>
+              <h2 className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">Be among the first employers here</h2>
+              <p className="mt-2 max-w-xl font-medium text-white/75">
+                Post your job free and it shows here straight away. Your company gets its own page, and you review every applicant on one board.
+              </p>
+              <Link to="/onboarding?role=employer" className="btn btn-gold btn-lg mt-5 inline-flex justify-center px-8">
+                Post a job for free
+              </Link>
+            </aside>
+          ) : null}
         </div>
       </div>
 
