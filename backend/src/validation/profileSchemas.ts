@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { AVAILABILITY, CV_VISIBILITY, EDUCATION_LEVELS } from '../utils/cvDatabase';
 import { matchesStoredUploadUrl } from '../services/evidenceStorage';
 import { CAREER_STAGES } from '../utils/earlyCareer';
 
@@ -34,8 +35,14 @@ const seekerProfileBodySchema = z
     institution: trimmedOptionalString(120),
     programme: trimmedOptionalString(120),
     completionYear: z.number().int().min(1990).max(new Date().getFullYear() + 8).nullable().optional(),
-    // Opt in to being found by employers whose plan includes the CV database.
-    visibleToEmployers: z.boolean().optional(),
+    // CV database: who may find this profile, and what employers can filter by.
+    cvVisibility: z.enum(CV_VISIBILITY).optional(),
+    headline: trimmedOptionalString(120),
+    location: trimmedOptionalString(80),
+    educationLevel: z.union([z.enum(EDUCATION_LEVELS), z.literal('')]).optional(),
+    availability: z.union([z.enum(AVAILABILITY), z.literal('')]).optional(),
+    yearsExperience: z.number().int().min(0).max(60).nullable().optional(),
+    jobCategory: trimmedOptionalString(80),
   })
   .strict();
 

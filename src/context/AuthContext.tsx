@@ -14,7 +14,14 @@ interface JobSeekerProfile {
   skills?: string | null;
   experience?: string | null;
   resumeFileUrl?: string | null;
-  visibleToEmployers?: boolean;
+  cvVisibility?: 'HIDDEN' | 'VERIFIED_EMPLOYERS';
+  headline?: string | null;
+  location?: string | null;
+  educationLevel?: string | null;
+  availability?: string | null;
+  yearsExperience?: number | null;
+  jobCategory?: string | null;
+  profileBoostedUntil?: string | null;
 }
 
 interface EmployerProfile {
@@ -58,7 +65,7 @@ interface AuthContextType {
   userEmail: string;
   role: UserRole | null;
   login: (email: string, password: string) => Promise<void>;
-  signup: (email: string, password: string, role: UserRole, captchaToken?: string) => Promise<void>;
+  signup: (email: string, password: string, role: UserRole, captchaToken?: string, options?: { cvVisibility?: 'HIDDEN' | 'VERIFIED_EMPLOYERS' }) => Promise<void>;
   loginWithPhone: (phone: string, code: string) => Promise<void>;
   signupWithPhone: (phone: string, code: string, role: UserRole) => Promise<void>;
   /** Log in (or sign up) with a Google ID token. Says whether the account is new. */
@@ -155,8 +162,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signup = async (email: string, password: string, role: UserRole, captchaToken?: string) => {
-    const data = captchaToken ? await apiRegister(email, password, role, captchaToken) : await apiRegister(email, password, role);
+  const signup = async (email: string, password: string, role: UserRole, captchaToken?: string, options?: { cvVisibility?: 'HIDDEN' | 'VERIFIED_EMPLOYERS' }) => {
+    const data = options ? await apiRegister(email, password, role, captchaToken, options) : captchaToken ? await apiRegister(email, password, role, captchaToken) : await apiRegister(email, password, role);
     persistToken(data.token);
 
     try {

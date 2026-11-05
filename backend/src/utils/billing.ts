@@ -1,6 +1,6 @@
 /** Billing helpers: money in whole pesewas, VAT, receipt numbers, plan periods and paid promotion. */
 
-export const PRODUCT_KINDS = ['FEATURED_JOB', 'JOB_BOOST', 'JOB_PACK', 'FEATURED_COURSE', 'SUBSCRIPTION'] as const;
+export const PRODUCT_KINDS = ['FEATURED_JOB', 'JOB_BOOST', 'JOB_PACK', 'FEATURED_COURSE', 'SUBSCRIPTION', 'PROFILE_BOOST'] as const;
 export type ProductKind = (typeof PRODUCT_KINDS)[number];
 
 export const DAY_MS = 86_400_000;
@@ -97,4 +97,5 @@ export const DEFAULT_PRODUCTS = [
   { kind: 'JOB_BOOST', slug: 'job-boost', name: 'Job boost (7 days)', description: 'Mark one job "Urgently hiring" and tell people with a matching job alert.', audience: 'EMPLOYER', pricePesewas: 2500, durationDays: 7, featuredCredits: 0, boostCredits: 0, interval: null, includes: ['Labelled "Urgently hiring"', 'Sent to people with a matching job alert'], sortOrder: 20 },
   { kind: 'JOB_PACK', slug: 'job-pack-5', name: 'Job pack: 5 featured jobs', description: 'Five featured-job credits to use whenever you like. They do not expire.', audience: 'EMPLOYER', pricePesewas: 20000, durationDays: null, featuredCredits: 5, boostCredits: 0, interval: null, includes: ['Use a credit on any job, any time'], sortOrder: 30 },
   { kind: 'FEATURED_COURSE', slug: 'featured-course', name: 'Featured course listing (30 days)', description: 'Show one course at the top of the course list for 30 days.', audience: 'PROVIDER', pricePesewas: 10000, durationDays: 30, featuredCredits: 0, boostCredits: 0, interval: null, includes: ['Shown first in course search'], sortOrder: 40 },
+  { kind: 'PROFILE_BOOST', slug: 'profile-boost', name: 'Profile boost (30 days)', description: 'Show your profile higher in the CV database for 30 days, marked "Boosted". Only verified employers on a plan with CV access can see it, and only if your profile is set to visible.', audience: 'SEEKER', pricePesewas: 2000, durationDays: 30, featuredCredits: 0, boostCredits: 0, interval: null, includes: ['Listed above other candidates in CV database results', 'Marked "Boosted" for employers', 'Your contact details stay hidden until an employer unlocks your profile'], sortOrder: 50 },
 ] as const;

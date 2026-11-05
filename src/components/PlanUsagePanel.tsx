@@ -79,6 +79,12 @@ export default function PlanUsagePanel() {
         </div>
       </dl>
 
+      {current.features.cvDatabase ? (
+        <p className="mt-3 text-sm font-semibold text-text-muted">
+          CV database unlocks this month: {usage.unlocksUsed ?? 0} of {usage.monthlyUnlocks ?? current.features.monthlyUnlocks ?? 0} used.
+        </p>
+      ) : null}
+
       <p className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-sm font-bold">
         {current.features.cvDatabase ? (
           <Link to="/cv-database" className="text-primary hover:underline">

@@ -25,7 +25,7 @@ export const productBodySchema = z
     kind: z.enum(PRODUCT_KINDS),
     name: z.string().trim().min(3).max(80),
     description: z.string().trim().max(300).default(''),
-    audience: z.enum(['EMPLOYER', 'PROVIDER']),
+    audience: z.enum(['EMPLOYER', 'PROVIDER', 'SEEKER']),
     // In cedis, as an admin types it (45 or 45.50).
     priceGhs: z.number().min(0).max(1_000_000).refine((value) => ghsToPesewas(value) !== null, 'Not a valid price'),
     durationDays: z.number().int().min(1).max(730).nullable().optional(),
@@ -37,6 +37,7 @@ export const productBodySchema = z
     planTier: z.enum(PLAN_TIERS).nullable().optional(),
     teamLimit: z.number().int().min(1).max(100).default(1),
     cvDatabase: z.boolean().default(false),
+    monthlyUnlocks: z.number().int().min(0).max(100000).default(0),
     brandedPage: z.boolean().default(false),
     hiringReports: z.boolean().default(false),
     topEmployers: z.boolean().default(false),
@@ -45,7 +46,7 @@ export const productBodySchema = z
   })
   .strict()
   .superRefine((body, ctx) => {
-    const needsDays = ['FEATURED_JOB', 'JOB_BOOST', 'FEATURED_COURSE'].includes(body.kind);
+    const needsDays = ['FEATURED_JOB', 'JOB_BOOST', 'FEATURED_COURSE', 'PROFILE_BOOST'].includes(body.kind);
     if (needsDays && !body.durationDays) ctx.addIssue({ code: 'custom', path: ['durationDays'], message: 'Say how many days it lasts' });
     if (body.kind === 'JOB_PACK' && body.featuredCredits + body.boostCredits < 1) ctx.addIssue({ code: 'custom', path: ['featuredCredits'], message: 'A pack needs at least one credit' });
     const free = body.planTier === 'FREE';
@@ -54,6 +55,7 @@ export const productBodySchema = z
     if (body.planTier && body.kind !== 'SUBSCRIPTION') ctx.addIssue({ code: 'custom', path: ['planTier'], message: 'Only plans have a tier' });
     if (body.kind === 'SUBSCRIPTION' && !body.interval && !free) ctx.addIssue({ code: 'custom', path: ['interval'], message: 'Choose monthly or yearly' });
     if ((body.kind !== 'SUBSCRIPTION' || free) && body.interval) ctx.addIssue({ code: 'custom', path: ['interval'], message: 'Only plans repeat' });
+    if ((body.kind === 'PROFILE_BOOST') !== (body.audience === 'SEEKER')) ctx.addIssue({ code: 'custom', path: ['audience'], message: 'Profile boosts are for job seekers, and only they are' });
     if (body.kind === 'FEATURED_COURSE' && body.audience !== 'PROVIDER') ctx.addIssue({ code: 'custom', path: ['audience'], message: 'Featured courses are for training providers' });
   });
 

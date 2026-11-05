@@ -12,6 +12,7 @@ import { JOB_SWEEP_INTERVAL_MS, runJobLifecycleSweepSafely } from './services/jo
 import { runApplicationRemindersSafely } from './services/applicationReminderService';
 import { backfillJobSalariesSafely } from './services/salaryBackfillService';
 import { runBillingSweepSafely } from './services/billingService';
+import { runCandidateAlertsSafely } from './services/cvDatabaseService';
 
 const httpServer = createServer(app);
 initSocket(httpServer);
@@ -74,6 +75,8 @@ const runDailySweeps = async () => {
   await backfillJobSalariesSafely();
   // Renewal reminders three days ahead, and ends plans that were not renewed.
   await runBillingSweepSafely();
+  // Email alerts for saved CV database searches that have new matches.
+  await runCandidateAlertsSafely();
 };
 const jobSweepFirstRun = setTimeout(() => void runDailySweeps(), 60 * 1000);
 const jobSweepTask = setInterval(() => void runDailySweeps(), JOB_SWEEP_INTERVAL_MS);

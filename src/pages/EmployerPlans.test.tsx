@@ -4,12 +4,10 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import CompanyPageEditor from './CompanyPageEditor'
 import CompanyProfile from './CompanyProfile'
-import CvDatabase from './CvDatabase'
 import HiringReports from './HiringReports'
 import JoinTeam from './JoinTeam'
 import Plans from './Plans'
 import Team from './Team'
-import CvVisibilityToggle from '../components/CvVisibilityToggle'
 import PlanUsagePanel from '../components/PlanUsagePanel'
 import { featureLines, planLevel, plansFor, yearlySavingPercent } from '../lib/plans'
 
@@ -22,7 +20,6 @@ const api = vi.hoisted(() => ({
   remove: vi.fn(),
   accept: vi.fn(),
   report: vi.fn(),
-  cv: vi.fn(),
   company: vi.fn(),
   updateProfile: vi.fn(),
   upload: vi.fn(),
@@ -39,7 +36,6 @@ vi.mock('../lib/api', () => ({
   apiRemoveTeamMember: (...a: unknown[]) => api.remove(...a),
   apiAcceptTeamInvite: (...a: unknown[]) => api.accept(...a),
   apiGetHiringReport: (...a: unknown[]) => api.report(...a),
-  apiSearchCvDatabase: (...a: unknown[]) => api.cv(...a),
   apiGetCompany: (...a: unknown[]) => api.company(...a),
   apiUpdateProfile: (...a: unknown[]) => api.updateProfile(...a),
 }))
@@ -321,65 +317,6 @@ describe('joining a team', () => {
 
     expect(screen.getByRole('alert')).toHaveTextContent('missing its invitation code')
     expect(screen.queryByRole('button', { name: 'Accept invitation' })).not.toBeInTheDocument()
-  })
-})
-
-describe('the CV database', () => {
-  const entry = { id: 'p1', name: 'Ama Mensah', skills: 'Excel', experience: 'Accounts', careerStage: 'GRADUATE', institution: 'University of Ghana', programme: 'BSc Accounting', cv: { url: '/api/uploads/cv/a.pdf', fileName: 'cv.pdf' } }
-
-  it('searches opted-in people with the words and the group chosen', async () => {
-    api.cv.mockResolvedValue({ total: 1, page: 1, entries: [entry] })
-    renderAt('/cv-database', <CvDatabase />)
-
-    expect(await screen.findByText('Ama Mensah')).toBeInTheDocument()
-    expect(screen.getByText('BSc Accounting · University of Ghana')).toBeInTheDocument()
-
-    fireEvent.change(screen.getByLabelText(/skills, course or experience/i), { target: { value: 'excel' } })
-    fireEvent.change(screen.getByLabelText('Who'), { target: { value: 'nss' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Search' }))
-
-    await waitFor(() => expect(api.cv).toHaveBeenLastCalledWith({ page: '1', q: 'excel', stage: 'nss' }))
-  })
-
-  it('never shows contact details', async () => {
-    api.cv.mockResolvedValue({ total: 1, page: 1, entries: [entry] })
-    renderAt('/cv-database', <CvDatabase />)
-
-    await screen.findByText('Ama Mensah')
-    expect(document.body.textContent).not.toMatch(/@|\+233|phone|email/i)
-  })
-
-  it('without the Business plan, explains and links to the plans (the server refused it)', async () => {
-    api.cv.mockRejectedValue(Object.assign(new Error('The CV database is part of the Business plan.'), { code: 'PLAN_REQUIRED' }))
-    renderAt('/cv-database', <CvDatabase />)
-
-    expect(await screen.findByText('The CV database is part of the Business plan.')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'See plans' })).toHaveAttribute('href', '/plans')
-    expect(screen.queryByRole('button', { name: 'Search' })).not.toBeInTheDocument()
-  })
-})
-
-describe('the seeker opt-in', () => {
-  it('is off by default, saves the choice when switched on, and can be switched off', async () => {
-    auth.value = { user: { id: 's1', role: 'SEEKER', jobSeekerProfile: {} } }
-    api.updateProfile.mockResolvedValue({ success: true })
-    const { unmount } = renderAt('/', <CvVisibilityToggle />)
-
-    const box = screen.getByRole('checkbox', { name: /let employers find my cv/i })
-    expect(box).not.toBeChecked()
-    expect(screen.getByText(/Your email and phone number stay private/)).toBeInTheDocument()
-
-    fireEvent.click(box)
-    await waitFor(() => expect(api.updateProfile).toHaveBeenCalledWith({ visibleToEmployers: true }))
-    expect(refreshUser).toHaveBeenCalled()
-    unmount()
-
-    auth.value = { user: { id: 's1', role: 'SEEKER', jobSeekerProfile: { visibleToEmployers: true } } }
-    renderAt('/', <CvVisibilityToggle />)
-    const on = screen.getByRole('checkbox', { name: /let employers find my cv/i })
-    expect(on).toBeChecked()
-    fireEvent.click(on)
-    await waitFor(() => expect(api.updateProfile).toHaveBeenLastCalledWith({ visibleToEmployers: false }))
   })
 })
 

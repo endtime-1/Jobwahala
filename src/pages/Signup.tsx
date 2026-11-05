@@ -27,6 +27,7 @@ export default function Signup() {
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
   const [role, setRole] = useState<UserRole>('SEEKER')
+  const [findable, setFindable] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -38,7 +39,9 @@ export default function Signup() {
     setError('')
     setIsLoading(true)
     try {
-      await (captcha.token ? signup(email, password, role, captcha.token) : signup(email, password, role))
+      // Job seekers are Hidden unless they choose to be found by verified employers.
+      const options = role === 'SEEKER' && findable ? ({ cvVisibility: 'VERIFIED_EMPLOYERS' } as const) : undefined
+      await (options ? signup(email, password, role, captcha.token || undefined, options) : captcha.token ? signup(email, password, role, captcha.token) : signup(email, password, role))
       navigate('/onboarding')
     } catch (err) {
       // A bot-check token works once, so ask for a fresh one after any failure.
@@ -209,6 +212,26 @@ export default function Signup() {
                     <div className="mt-0.5 h-1.5 w-1.5 rounded-full bg-red-400 shrink-0" />
                     <p className="text-[13px] text-red-600 leading-snug">{error}</p>
                   </div>
+                )}
+
+                {role === 'SEEKER' && (
+                  <fieldset className="rounded-xl border border-[#dde3ec] bg-[#f7f9fc] p-3.5">
+                    <legend className="px-1 text-sm font-bold text-[#374151]">Can employers find your profile?</legend>
+                    <label className="flex cursor-pointer items-start gap-2.5 py-1.5">
+                      <input type="radio" name="cvVisibility" checked={!findable} onChange={() => setFindable(false)} className="mt-1" />
+                      <span className="text-[13px] leading-snug text-[#374151]">
+                        <strong>Hidden</strong>: nobody can find you. You can still apply to jobs.
+                      </span>
+                    </label>
+                    <label className="flex cursor-pointer items-start gap-2.5 py-1.5">
+                      <input type="radio" name="cvVisibility" checked={findable} onChange={() => setFindable(true)} className="mt-1" />
+                      <span className="text-[13px] leading-snug text-[#374151]">
+                        <strong>Visible to verified employers</strong>: verified employers on a paid plan can see your skills, experience summary, location and education.
+                        Your name, phone, email and CV stay hidden until an employer unlocks your profile, and you can see who looked and block any company.
+                      </span>
+                    </label>
+                    <p className="mt-1 text-xs text-[#6b7a8d]">You can change this any time in your dashboard.</p>
+                  </fieldset>
                 )}
 
                 <TurnstileWidget onToken={captcha.setToken} resetSignal={captcha.resetSignal} />

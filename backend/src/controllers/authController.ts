@@ -27,7 +27,7 @@ const generateSecureToken = () => crypto.randomBytes(32).toString('hex');
 
 export const register = async (req: Request, res: Response) => {
   try {
-    const { email, password, role } = req.body;
+    const { email, password, role, cvVisibility } = req.body;
     const normalizedRole = typeof role === 'string' ? role.toUpperCase() : 'SEEKER';
 
     if (!allowedRegistrationRoles.includes(normalizedRole as (typeof allowedRegistrationRoles)[number])) {
@@ -59,7 +59,7 @@ export const register = async (req: Request, res: Response) => {
 
     // Create profile based on role
     if (user.role === 'SEEKER') {
-      await prisma.jobSeekerProfile.create({ data: { userId: user.id } });
+      await prisma.jobSeekerProfile.create({ data: { userId: user.id, ...(cvVisibility === 'VERIFIED_EMPLOYERS' ? { cvVisibility, cvVisibleSince: new Date() } : {}) } });
     } else if (user.role === 'EMPLOYER') {
       await prisma.employerProfile.create({ data: { userId: user.id, companyName: 'New Company' } });
     } else if (user.role === 'FREELANCER') {
@@ -150,6 +150,18 @@ export const me = async (req: AuthRequest, res: Response) => {
 
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    // Employers can filter the CV database by when a person was last active. Once an hour is plenty.
+    if (user.role === 'SEEKER' && user.jobSeekerProfile) {
+      const last = user.jobSeekerProfile.lastActiveAt;
+      if (!last || Date.now() - last.getTime() > 60 * 60 * 1000) {
+        try {
+          await prisma.jobSeekerProfile.update({ where: { userId: user.id }, data: { lastActiveAt: new Date() } });
+        } catch {
+          // Not worth failing the page for.
+        }
+      }
     }
 
     const latestVerificationRequest = user.verificationRequests[0] || null;

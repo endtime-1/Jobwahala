@@ -920,10 +920,17 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
     normalizeNullableField('careerStage');
     normalizeNullableField('institution');
     normalizeNullableField('programme');
+    normalizeNullableField('educationLevel');
+    normalizeNullableField('availability');
 
     let updatedProfile;
 
     if (role === 'SEEKER') {
+      // Choosing to be visible starts the clock that saved-search alerts count "new" from.
+      if (updateData.cvVisibility === 'VERIFIED_EMPLOYERS') {
+        const current = await prisma.jobSeekerProfile.findUnique({ where: { userId }, select: { cvVisibility: true } });
+        if (current?.cvVisibility !== 'VERIFIED_EMPLOYERS') updateData.cvVisibleSince = new Date();
+      }
       updatedProfile = await prisma.jobSeekerProfile.update({
         where: { userId },
         data: updateData

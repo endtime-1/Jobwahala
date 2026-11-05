@@ -8,6 +8,7 @@ type RateLimitOptions = {
   max: number;
   scope: string;
   skip?: (req: Request) => boolean;
+  keyOf?: (req: Request) => string;
 };
 
 type RateLimitEntry = {
@@ -64,7 +65,7 @@ export const securityHeadersMiddleware = (_req: Request, res: Response, next: Ne
   next();
 };
 
-export const createRateLimit = ({ windowMs, max, scope, skip }: RateLimitOptions) => {
+export const createRateLimit = ({ windowMs, max, scope, skip, keyOf }: RateLimitOptions) => {
   const store = new Map<string, RateLimitEntry>();
 
   // Periodically evict expired entries to prevent memory leaks
@@ -86,7 +87,7 @@ export const createRateLimit = ({ windowMs, max, scope, skip }: RateLimitOptions
     }
 
     const now = Date.now();
-    const key = `${scope}:${req.ip || 'unknown'}`;
+    const key = `${scope}:${keyOf ? keyOf(req) : req.ip || 'unknown'}`;
     const current = store.get(key);
 
     if (!current || current.resetAt <= now) {

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { CV_VISIBILITY } from '../utils/cvDatabase';
 import { normalizeGhanaPhone } from '../utils/phone';
 
 const publicRegistrationRoles = ['SEEKER', 'EMPLOYER', 'FREELANCER'] as const;
@@ -27,6 +28,8 @@ export const registerSchema = z.object({
           (value) => (typeof value === 'string' ? value.toUpperCase() : value),
           z.enum(publicRegistrationRoles).default('SEEKER'),
         ),
+      // Job seekers are asked at sign-up whether employers may find their profile. Hidden unless they say otherwise.
+      cvVisibility: z.enum(CV_VISIBILITY).optional(),
     })
     .strict(),
 });

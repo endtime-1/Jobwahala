@@ -27,7 +27,7 @@ type ProductForm = {
   kind: Product['kind']
   name: string
   description: string
-  audience: 'EMPLOYER' | 'PROVIDER'
+  audience: 'EMPLOYER' | 'PROVIDER' | 'SEEKER'
   priceGhs: string
   durationDays: string
   featuredCredits: string
@@ -35,6 +35,7 @@ type ProductForm = {
   interval: '' | 'MONTHLY' | 'YEARLY'
   planTier: 'FREE' | 'STARTER' | 'BUSINESS'
   teamLimit: string
+  monthlyUnlocks: string
   cvDatabase: boolean
   brandedPage: boolean
   hiringReports: boolean
@@ -50,9 +51,10 @@ const KINDS: { value: Product['kind']; label: string }[] = [
   { value: 'JOB_PACK', label: 'Job pack (credits)' },
   { value: 'FEATURED_COURSE', label: 'Featured course listing' },
   { value: 'SUBSCRIPTION', label: 'Subscription plan' },
+  { value: 'PROFILE_BOOST', label: 'Job seeker profile boost' },
 ]
 
-const emptyProduct: ProductForm = { kind: 'FEATURED_JOB', name: '', description: '', audience: 'EMPLOYER', priceGhs: '', durationDays: '30', featuredCredits: '0', boostCredits: '0', interval: '', planTier: 'STARTER', teamLimit: '3', cvDatabase: false, brandedPage: false, hiringReports: false, topEmployers: false, includes: '', active: true, sortOrder: '0' }
+const emptyProduct: ProductForm = { kind: 'FEATURED_JOB', name: '', description: '', audience: 'EMPLOYER', priceGhs: '', durationDays: '30', featuredCredits: '0', boostCredits: '0', interval: '', planTier: 'STARTER', teamLimit: '3', monthlyUnlocks: '0', cvDatabase: false, brandedPage: false, hiringReports: false, topEmployers: false, includes: '', active: true, sortOrder: '0' }
 
 const toForm = (product: Product): ProductForm => ({
   id: product.id,
@@ -67,6 +69,7 @@ const toForm = (product: Product): ProductForm => ({
   interval: product.interval ?? '',
   planTier: (product as Partial<Plan>).planTier ?? 'STARTER',
   teamLimit: String((product as Partial<Plan>).teamLimit ?? 1),
+  monthlyUnlocks: String((product as Partial<Plan>).monthlyUnlocks ?? 0),
   cvDatabase: Boolean((product as Partial<Plan>).cvDatabase),
   brandedPage: Boolean((product as Partial<Plan>).brandedPage),
   hiringReports: Boolean((product as Partial<Plan>).hiringReports),
@@ -81,14 +84,14 @@ const toPayload = (form: ProductForm) => ({
   kind: form.kind,
   name: form.name.trim(),
   description: form.description.trim(),
-  audience: form.kind === 'FEATURED_COURSE' ? 'PROVIDER' : form.audience,
+  audience: form.kind === 'FEATURED_COURSE' ? 'PROVIDER' : form.kind === 'PROFILE_BOOST' ? 'SEEKER' : form.audience,
   priceGhs: Number(form.priceGhs),
   durationDays: form.durationDays.trim() === '' ? null : Number(form.durationDays),
   featuredCredits: Number(form.featuredCredits) || 0,
   boostCredits: Number(form.boostCredits) || 0,
   interval: form.kind === 'SUBSCRIPTION' && form.planTier !== 'FREE' && form.interval ? form.interval : null,
   ...(form.kind === 'SUBSCRIPTION'
-    ? { planTier: form.planTier, teamLimit: Number(form.teamLimit) || 1, cvDatabase: form.cvDatabase, brandedPage: form.brandedPage, hiringReports: form.hiringReports, topEmployers: form.topEmployers }
+    ? { planTier: form.planTier, teamLimit: Number(form.teamLimit) || 1, monthlyUnlocks: form.cvDatabase ? Number(form.monthlyUnlocks) || 0 : 0, cvDatabase: form.cvDatabase, brandedPage: form.brandedPage, hiringReports: form.hiringReports, topEmployers: form.topEmployers }
     : {}),
   includes: form.includes.split('\n').map((line) => line.trim()).filter(Boolean),
   active: form.active,
@@ -419,6 +422,10 @@ export default function AdminBillingPanel() {
                       Team members allowed (including the owner)
                       <input value={editing.teamLimit} onChange={(e) => setEditing({ ...editing, teamLimit: e.target.value })} inputMode="numeric" className={field} />
                     </label>
+                    <label className="block text-sm font-bold text-text-main">
+                      CV profile unlocks per month (needs CV database)
+                      <input value={editing.monthlyUnlocks} onChange={(e) => setEditing({ ...editing, monthlyUnlocks: e.target.value })} inputMode="numeric" disabled={!editing.cvDatabase} className={field} />
+                    </label>
                     <fieldset className="sm:col-span-2 flex flex-wrap gap-x-5 gap-y-2 text-sm font-bold text-text-main">
                       <legend className="mb-1 text-sm font-bold">Features</legend>
                       {([['brandedPage', 'Branded company page'], ['cvDatabase', 'CV database'], ['hiringReports', 'Hiring reports'], ['topEmployers', 'Top employers priority']] as const).map(([key, label]) => (
@@ -440,7 +447,7 @@ export default function AdminBillingPanel() {
                     </select>
                   </label>
                 ) : null}
-                {editing.kind === 'FEATURED_COURSE' ? null : (
+                {editing.kind === 'FEATURED_COURSE' || editing.kind === 'PROFILE_BOOST' ? null : (
                   <label className="block text-sm font-bold text-text-main">
                     For
                     <select value={editing.audience} onChange={(e) => setEditing({ ...editing, audience: e.target.value as 'EMPLOYER' | 'PROVIDER' })} className={field}>

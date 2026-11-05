@@ -9,6 +9,8 @@ const DAY_MS = 86_400_000;
 export type PlanFeatures = {
   teamLimit: number;
   cvDatabase: boolean;
+  /** Profiles that can be unlocked per calendar month in the CV database. */
+  monthlyUnlocks: number;
   brandedPage: boolean;
   hiringReports: boolean;
   topEmployers: boolean;
@@ -35,6 +37,7 @@ export type Entitlements = PlanFeatures & {
 export const FREE_FEATURES: PlanFeatures = {
   teamLimit: 1,
   cvDatabase: false,
+  monthlyUnlocks: 0,
   brandedPage: false,
   hiringReports: false,
   topEmployers: false,
@@ -50,6 +53,7 @@ type PlanProduct = {
   pricePesewas: number;
   teamLimit: number;
   cvDatabase: boolean;
+  monthlyUnlocks: number;
   brandedPage: boolean;
   hiringReports: boolean;
   topEmployers: boolean;
@@ -65,6 +69,7 @@ export const planLevel = (product: { planTier: string | null; interval: string |
 export const featuresOf = (product: PlanProduct): PlanFeatures => ({
   teamLimit: Math.max(1, product.teamLimit),
   cvDatabase: product.cvDatabase,
+  monthlyUnlocks: product.cvDatabase ? Math.max(0, product.monthlyUnlocks) : 0,
   brandedPage: product.brandedPage,
   hiringReports: product.hiringReports,
   topEmployers: product.topEmployers,
@@ -106,9 +111,9 @@ export const PLAN_NEEDED_MESSAGE: Record<keyof Pick<PlanFeatures, 'cvDatabase' |
 
 /** Starting plans for the admin to edit. The prices are placeholders. */
 export const DEFAULT_PLANS = [
-  { slug: 'plan-free', name: 'Free', planTier: 'FREE', interval: null, pricePesewas: 0, teamLimit: 1, cvDatabase: false, brandedPage: false, hiringReports: false, topEmployers: false, featuredCredits: 0, boostCredits: 0, sortOrder: 100, description: 'Everything you need to post jobs and review applicants.', includes: ['Unlimited standard job posts', 'Applicant board', '1 team member (you)'] },
-  { slug: 'plan-starter-monthly', name: 'Starter (monthly)', planTier: 'STARTER', interval: 'MONTHLY', pricePesewas: 15000, teamLimit: 3, cvDatabase: false, brandedPage: true, hiringReports: false, topEmployers: false, featuredCredits: 2, boostCredits: 1, sortOrder: 110, description: 'For employers who hire now and then and want to stand out.', includes: ['Branded company page: cover image, gallery, "Why work with us"', 'Up to 3 team members', 'Cancel any time'] },
-  { slug: 'plan-starter-yearly', name: 'Starter (yearly)', planTier: 'STARTER', interval: 'YEARLY', pricePesewas: 150000, teamLimit: 3, cvDatabase: false, brandedPage: true, hiringReports: false, topEmployers: false, featuredCredits: 2, boostCredits: 1, sortOrder: 120, description: 'Starter, paid once a year at a discount.', includes: ['Two months free', 'Credits arrive every month', 'Up to 3 team members'] },
-  { slug: 'plan-business-monthly', name: 'Business (monthly)', planTier: 'BUSINESS', interval: 'MONTHLY', pricePesewas: 45000, teamLimit: 10, cvDatabase: true, brandedPage: true, hiringReports: true, topEmployers: true, featuredCredits: 6, boostCredits: 3, sortOrder: 130, description: 'For employers who hire all the time.', includes: ['CV database access', 'Hiring reports', 'Priority in Top employers', 'Up to 10 team members'] },
-  { slug: 'plan-business-yearly', name: 'Business (yearly)', planTier: 'BUSINESS', interval: 'YEARLY', pricePesewas: 450000, teamLimit: 10, cvDatabase: true, brandedPage: true, hiringReports: true, topEmployers: true, featuredCredits: 6, boostCredits: 3, sortOrder: 140, description: 'Business, paid once a year at a discount.', includes: ['Two months free', 'Credits arrive every month', 'CV database access, hiring reports, up to 10 team members'] },
+  { slug: 'plan-free', name: 'Free', planTier: 'FREE', interval: null, pricePesewas: 0, teamLimit: 1, cvDatabase: false, monthlyUnlocks: 0, brandedPage: false, hiringReports: false, topEmployers: false, featuredCredits: 0, boostCredits: 0, sortOrder: 100, description: 'Everything you need to post jobs and review applicants.', includes: ['Unlimited standard job posts', 'Applicant board', '1 team member (you)'] },
+  { slug: 'plan-starter-monthly', name: 'Starter (monthly)', planTier: 'STARTER', interval: 'MONTHLY', pricePesewas: 15000, teamLimit: 3, cvDatabase: false, monthlyUnlocks: 0, brandedPage: true, hiringReports: false, topEmployers: false, featuredCredits: 2, boostCredits: 1, sortOrder: 110, description: 'For employers who hire now and then and want to stand out.', includes: ['Branded company page: cover image, gallery, "Why work with us"', 'Up to 3 team members', 'Cancel any time'] },
+  { slug: 'plan-starter-yearly', name: 'Starter (yearly)', planTier: 'STARTER', interval: 'YEARLY', pricePesewas: 150000, teamLimit: 3, cvDatabase: false, monthlyUnlocks: 0, brandedPage: true, hiringReports: false, topEmployers: false, featuredCredits: 2, boostCredits: 1, sortOrder: 120, description: 'Starter, paid once a year at a discount.', includes: ['Two months free', 'Credits arrive every month', 'Up to 3 team members'] },
+  { slug: 'plan-business-monthly', name: 'Business (monthly)', planTier: 'BUSINESS', interval: 'MONTHLY', pricePesewas: 45000, teamLimit: 10, cvDatabase: true, monthlyUnlocks: 50, brandedPage: true, hiringReports: true, topEmployers: true, featuredCredits: 6, boostCredits: 3, sortOrder: 130, description: 'For employers who hire all the time.', includes: ['CV database access', 'Hiring reports', 'Priority in Top employers', 'Up to 10 team members'] },
+  { slug: 'plan-business-yearly', name: 'Business (yearly)', planTier: 'BUSINESS', interval: 'YEARLY', pricePesewas: 450000, teamLimit: 10, cvDatabase: true, monthlyUnlocks: 50, brandedPage: true, hiringReports: true, topEmployers: true, featuredCredits: 6, boostCredits: 3, sortOrder: 140, description: 'Business, paid once a year at a discount.', includes: ['Two months free', 'Credits arrive every month', 'CV database access, hiring reports, up to 10 team members'] },
 ] as const;

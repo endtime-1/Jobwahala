@@ -24,6 +24,7 @@ import { singleValue } from '../utils/request';
 import { renderReceiptHtml } from '../utils/receiptRender';
 import { publicCourseWhere, isFeaturedNow } from '../utils/courses';
 import { promotionOf } from '../utils/billing';
+import { monthStart } from '../utils/cvDatabase';
 
 /** Turns a BillingError into the answer the page can act on; anything else is a plain 500. */
 export const respondBillingError = (res: Response, error: unknown) => {
@@ -33,7 +34,7 @@ export const respondBillingError = (res: Response, error: unknown) => {
 
 export const getCatalogue = async (req: AuthRequest, res: Response) => {
   try {
-    const [products, settings] = await Promise.all([listCatalogue({ id: req.user!.id }), getSettings()]);
+    const [products, settings] = await Promise.all([listCatalogue({ id: req.user!.id, role: req.user!.role }), getSettings()]);
     return res.json({ success: true, mode: paystackMode(), products, vatRatePercent: settings.vatRatePercent, pricesIncludeVat: settings.pricesIncludeVat });
   } catch (error) {
     return respondBillingError(res, error);
@@ -87,7 +88,7 @@ export const startCheckout = async (req: AuthRequest, res: Response) => {
     const user = await prisma.user.findUnique({ where: { id: req.user!.id }, select: { email: true, employerProfile: { select: { companyName: true } } } });
     if (!user?.email) throw new BillingError(400, 'EMAIL_REQUIRED', 'Add an email address to your account first: Paystack sends your receipt there.');
 
-    const checkout = await createCheckout({ userId: req.user!.id, email: user.email, name: user.employerProfile?.companyName ?? null, productId, targetId });
+    const checkout = await createCheckout({ userId: req.user!.id, role: req.user!.role, email: user.email, name: user.employerProfile?.companyName ?? null, productId, targetId });
     return res.status(201).json({ success: true, ...checkout });
   } catch (error) {
     return respondBillingError(res, error);
@@ -169,12 +170,13 @@ export const getPlans = async (req: AuthRequest, res: Response) => {
   try {
     const ownerId = req.user!.id;
     await ensureDefaultProducts();
-    const [settings, products, entitlements, credits, teamSeats] = await Promise.all([
+    const [settings, products, entitlements, credits, teamSeats, unlocksUsed] = await Promise.all([
       getSettings(),
       prisma.product.findMany({ where: { planTier: { not: null }, active: true }, orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }] }),
       getEntitlements(ownerId),
       getCreditBalance(ownerId),
       prisma.teamMember.count({ where: { ownerId, status: { in: ['ACTIVE', 'INVITED'] } } }),
+      prisma.cvUnlock.count({ where: { employerId: ownerId, createdAt: { gte: monthStart(new Date()) } } }),
     ]);
 
     return res.json({
@@ -187,7 +189,7 @@ export const getPlans = async (req: AuthRequest, res: Response) => {
         productId: entitlements.productId,
         interval: entitlements.interval,
         subscription: entitlements.subscription,
-        features: { teamLimit: entitlements.teamLimit, cvDatabase: entitlements.cvDatabase, brandedPage: entitlements.brandedPage, hiringReports: entitlements.hiringReports, topEmployers: entitlements.topEmployers },
+        features: { teamLimit: entitlements.teamLimit, cvDatabase: entitlements.cvDatabase, monthlyUnlocks: entitlements.monthlyUnlocks, brandedPage: entitlements.brandedPage, hiringReports: entitlements.hiringReports, topEmployers: entitlements.topEmployers },
       },
       usage: {
         featuredCredits: credits.featuredCredits,
@@ -198,6 +200,8 @@ export const getPlans = async (req: AuthRequest, res: Response) => {
         monthlyBoostCredits: entitlements.monthlyBoostCredits,
         teamSeatsUsed: 1 + teamSeats,
         teamLimit: entitlements.teamLimit,
+        unlocksUsed,
+        monthlyUnlocks: entitlements.monthlyUnlocks,
       },
     });
   } catch (error) {

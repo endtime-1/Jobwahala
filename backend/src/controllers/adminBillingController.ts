@@ -28,6 +28,7 @@ type ProductBody = {
   planTier?: string | null;
   teamLimit: number;
   cvDatabase: boolean;
+  monthlyUnlocks: number;
   brandedPage: boolean;
   hiringReports: boolean;
   topEmployers: boolean;
@@ -46,6 +47,7 @@ const productData = (body: ProductBody) => ({
   planTier: body.kind === 'SUBSCRIPTION' ? body.planTier ?? null : null,
   teamLimit: body.teamLimit,
   cvDatabase: body.cvDatabase,
+  monthlyUnlocks: body.monthlyUnlocks,
   brandedPage: body.brandedPage,
   hiringReports: body.hiringReports,
   topEmployers: body.topEmployers,
@@ -98,7 +100,7 @@ export const updateProduct = async (req: AuthRequest, res: Response) => {
         action: 'PRODUCT_UPDATED',
         targetType: 'Product',
         targetId: id,
-        metadata: { name: data.name, before: { pricePesewas: existing.pricePesewas, active: existing.active, durationDays: existing.durationDays, teamLimit: existing.teamLimit, featuredCredits: existing.featuredCredits, boostCredits: existing.boostCredits, cvDatabase: existing.cvDatabase, hiringReports: existing.hiringReports }, after: { pricePesewas: data.pricePesewas, active: data.active, durationDays: data.durationDays, teamLimit: data.teamLimit, featuredCredits: data.featuredCredits, boostCredits: data.boostCredits, cvDatabase: data.cvDatabase, hiringReports: data.hiringReports } },
+        metadata: { name: data.name, before: { pricePesewas: existing.pricePesewas, active: existing.active, durationDays: existing.durationDays, teamLimit: existing.teamLimit, featuredCredits: existing.featuredCredits, boostCredits: existing.boostCredits, cvDatabase: existing.cvDatabase, monthlyUnlocks: existing.monthlyUnlocks, hiringReports: existing.hiringReports }, after: { pricePesewas: data.pricePesewas, active: data.active, durationDays: data.durationDays, teamLimit: data.teamLimit, featuredCredits: data.featuredCredits, boostCredits: data.boostCredits, cvDatabase: data.cvDatabase, monthlyUnlocks: data.monthlyUnlocks, hiringReports: data.hiringReports } },
       });
     });
     return res.json({ success: true });

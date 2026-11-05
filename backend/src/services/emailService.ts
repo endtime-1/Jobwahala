@@ -364,6 +364,29 @@ export const sendGraceReminderEmail = (email: string, data: { planName: string; 
     { label: 'Fix my payment', path: '/plans' },
   );
 
+/** A saved CV database search has new matching people. Says how many; no personal details go in an email. */
+export const sendCandidateAlertEmail = (email: string, data: { searchName: string; count: number; url: string }) => {
+  const e = escapeHtml;
+  const html = wrapHtml(`
+    <div class="header">
+      <h1>${APP_NAME}</h1>
+      <p>New candidates for your saved search</p>
+    </div>
+    <div class="body">
+      <p>${data.count} new ${data.count === 1 ? 'person matches' : 'people match'} your saved search <strong>${e(data.searchName)}</strong> in the CV database.</p>
+      <p style="text-align: center; margin: 32px 0;">
+        <a href="${data.url}" class="btn">See the candidates</a>
+      </p>
+      <p class="muted">You can turn these alerts off for a search on the CV database page.</p>
+    </div>
+    <div class="footer">
+      &copy; ${new Date().getFullYear()} ${APP_NAME}. All rights reserved.
+    </div>
+  `);
+
+  return transporter.sendMail({ from: env.smtpFrom, to: email, subject: `New candidates for "${data.searchName}"`, html });
+};
+
 /** Invitation to join a company's team on JobWahala. */
 export const sendTeamInviteEmail = (email: string, data: { company: string; url: string }) => {
   const e = escapeHtml;

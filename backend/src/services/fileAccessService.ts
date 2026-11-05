@@ -82,16 +82,22 @@ export const canViewUpload = async (viewer: Viewer, ref: UploadRef): Promise<boo
       ]);
       if (sentToThisEmployer || ownCurrent) return true;
 
-      // The CV database: a company whose plan includes it may open the CV of someone who chose to be found. Both are checked.
+      // The CV database: a CV opens only for a company that UNLOCKED that person, while the person is still visible and has not
+      // blocked the company. Searching alone never opens a CV.
       if (viewer.role === 'EMPLOYER') {
-        const optedIn = await prisma.seekerCv.findFirst({
+        const unlocked = await prisma.seekerCv.findFirst({
           where: {
             OR: [{ uploadedUrl: { endsWith: tail } }, { builderUrl: { endsWith: tail } }],
-            user: { status: 'ACTIVE', jobSeekerProfile: { is: { visibleToEmployers: true } } },
+            user: {
+              status: 'ACTIVE',
+              jobSeekerProfile: { is: { cvVisibility: 'VERIFIED_EMPLOYERS' } },
+              cvUnlocksReceived: { some: { employerId: companyId } },
+              cvBlocksMade: { none: { employerId: companyId } },
+            },
           },
           select: { id: true },
         });
-        if (optedIn && (await getEntitlements(companyId)).cvDatabase) return true;
+        if (unlocked) return true;
       }
       return false;
     }

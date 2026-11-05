@@ -9,11 +9,11 @@ export const ghs = (pesewas: number) => `GHS ${(pesewas / 100).toLocaleString('e
 
 export type Product = {
   id: string
-  kind: 'FEATURED_JOB' | 'JOB_BOOST' | 'JOB_PACK' | 'FEATURED_COURSE' | 'SUBSCRIPTION'
+  kind: 'FEATURED_JOB' | 'JOB_BOOST' | 'JOB_PACK' | 'FEATURED_COURSE' | 'SUBSCRIPTION' | 'PROFILE_BOOST'
   slug: string
   name: string
   description: string
-  audience: 'EMPLOYER' | 'PROVIDER'
+  audience: 'EMPLOYER' | 'PROVIDER' | 'SEEKER'
   durationDays: number | null
   featuredCredits: number
   boostCredits: number

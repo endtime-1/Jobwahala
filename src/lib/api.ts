@@ -54,11 +54,11 @@ const handleResponse = async (res: Response) => {
 };
 
 // Auth
-export const apiRegister = (email: string, password: string, role: string, captchaToken?: string) =>
+export const apiRegister = (email: string, password: string, role: string, captchaToken?: string, options: { cvVisibility?: 'HIDDEN' | 'VERIFIED_EMPLOYERS' } = {}) =>
   fetch(`${BASE_URL}/auth/register`, {
     method: 'POST',
     headers: headers(),
-    body: JSON.stringify({ email, password, role, ...(captchaToken ? { captchaToken } : {}) }),
+    body: JSON.stringify({ email, password, role, ...(captchaToken ? { captchaToken } : {}), ...(options.cvVisibility ? { cvVisibility: options.cvVisibility } : {}) }),
   }).then(handleResponse);
 
 export const apiLogin = (email: string, password: string) =>
@@ -1148,6 +1148,21 @@ export const apiRemoveTeamMember = (id: string) => fetch(`${BASE_URL}/team/${id}
 export const apiGetHiringReport = (months = 6) => fetch(`${BASE_URL}/hiring-reports?months=${months}`, { headers: headers(true) }).then(handleResponse);
 export const apiSearchCvDatabase = (params: Record<string, string> = {}) =>
   fetch(`${BASE_URL}/cv-database?${new URLSearchParams(params).toString()}`, { headers: headers(true) }).then(handleResponse);
+
+// CV database
+export const apiGetCandidate = (id: string) => fetch(`${BASE_URL}/cv-database/profiles/${id}`, { headers: headers(true) }).then(handleResponse);
+export const apiUnlockCandidate = (id: string) => fetch(`${BASE_URL}/cv-database/profiles/${id}/unlock`, { method: 'POST', headers: headers(true) }).then(handleResponse);
+export const apiInviteCandidate = (id: string, jobId: string, message?: string) =>
+  fetch(`${BASE_URL}/cv-database/profiles/${id}/invite`, { method: 'POST', headers: headers(true), body: JSON.stringify({ jobId, ...(message ? { message } : {}) }) }).then(handleResponse);
+export const apiGetSavedCandidateSearches = () => fetch(`${BASE_URL}/cv-database/saved`, { headers: headers(true) }).then(handleResponse);
+export const apiSaveCandidateSearch = (data: { name: string; filters: Record<string, unknown>; alertsEnabled: boolean }) =>
+  fetch(`${BASE_URL}/cv-database/saved`, { method: 'POST', headers: headers(true), body: JSON.stringify(data) }).then(handleResponse);
+export const apiSetSavedSearchAlerts = (id: string, alertsEnabled: boolean) =>
+  fetch(`${BASE_URL}/cv-database/saved/${id}`, { method: 'PATCH', headers: headers(true), body: JSON.stringify({ alertsEnabled }) }).then(handleResponse);
+export const apiDeleteSavedCandidateSearch = (id: string) => fetch(`${BASE_URL}/cv-database/saved/${id}`, { method: 'DELETE', headers: headers(true) }).then(handleResponse);
+export const apiGetCvActivity = () => fetch(`${BASE_URL}/cv-database/me/activity`, { headers: headers(true) }).then(handleResponse);
+export const apiBlockCompany = (employerId: string) => fetch(`${BASE_URL}/cv-database/me/blocks`, { method: 'POST', headers: headers(true), body: JSON.stringify({ employerId }) }).then(handleResponse);
+export const apiUnblockCompany = (employerId: string) => fetch(`${BASE_URL}/cv-database/me/blocks/${employerId}`, { method: 'DELETE', headers: headers(true) }).then(handleResponse);
 
 /** Counts a view of a job page. Fire and forget: the server ignores crawlers and the company's own team. */
 export const apiTrackJobView = (jobId: string) => {

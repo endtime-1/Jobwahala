@@ -63,12 +63,11 @@ export const getSettings = async () => {
 
 /** The first time anyone looks, the catalogue starts with sensible products for the admin to edit. */
 export const ensureDefaultProducts = async () => {
-  const empty = (await prisma.product.count()) === 0;
-  if (empty) {
-    for (const product of DEFAULT_PRODUCTS) {
-      const { includes, ...rest } = product;
-      await prisma.product.create({ data: { ...rest, includesJson: JSON.stringify(includes) } });
-    }
+  // Each kind of product is added once, when the catalogue has none of that kind (so a new kind appears on its own).
+  for (const product of DEFAULT_PRODUCTS) {
+    if ((await prisma.product.count({ where: { kind: product.kind } })) > 0) continue;
+    const { includes, ...rest } = product;
+    await prisma.product.create({ data: { ...rest, includesJson: JSON.stringify(includes) } });
   }
   // Employer plans: the Free plan and the paid tiers, to start from. Added once, whenever there are none.
   if ((await prisma.product.count({ where: { planTier: { not: null } } })) === 0) {
@@ -97,6 +96,7 @@ type ProductRow = {
   planTier?: string | null;
   teamLimit?: number;
   cvDatabase?: boolean;
+  monthlyUnlocks?: number;
   brandedPage?: boolean;
   hiringReports?: boolean;
   topEmployers?: boolean;
@@ -119,6 +119,7 @@ export const serializeProduct = (product: ProductRow, settings: { vatRatePercent
     planTier: product.planTier ?? null,
     teamLimit: product.teamLimit ?? 1,
     cvDatabase: product.cvDatabase ?? false,
+    monthlyUnlocks: product.monthlyUnlocks ?? 0,
     brandedPage: product.brandedPage ?? false,
     hiringReports: product.hiringReports ?? false,
     topEmployers: product.topEmployers ?? false,
@@ -134,14 +135,15 @@ export const serializeProduct = (product: ProductRow, settings: { vatRatePercent
 };
 
 /** What this person can buy: active products for their kind of account. */
-export const listCatalogue = async (user: { id: string }) => {
+export const listCatalogue = async (user: { id: string; role?: string }) => {
   await ensureDefaultProducts();
   const [settings, profile, products] = await Promise.all([
     getSettings(),
     prisma.employerProfile.findUnique({ where: { userId: user.id }, select: { isTrainingProvider: true } }),
     prisma.product.findMany({ where: { active: true }, orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }] }),
   ]);
-  const visible = products.filter((product) => product.audience === 'EMPLOYER' || Boolean(profile?.isTrainingProvider));
+  const seeker = user.role === 'SEEKER';
+  const visible = products.filter((product) => (seeker ? product.audience === 'SEEKER' : product.audience === 'EMPLOYER' || (product.audience === 'PROVIDER' && Boolean(profile?.isTrainingProvider))));
   return visible.map((product) => serializeProduct(product, settings));
 };
 
@@ -161,11 +163,14 @@ const ensurePlan = async (product: { id: string; name: string; interval: string 
 };
 
 /** Starts a purchase: the price is worked out here, never taken from the browser. */
-export const createCheckout = async (input: { userId: string; email: string; name?: string | null; productId: string; targetId?: string }) => {
+export const createCheckout = async (input: { userId: string; role?: string; email: string; name?: string | null; productId: string; targetId?: string }) => {
   if (paystackMode() === 'off') throw new BillingError(503, 'PAYMENTS_NOT_SET_UP', 'Payments are not available right now. Please try again later.');
 
   const product = await prisma.product.findUnique({ where: { id: input.productId } });
   if (!product || !product.active) throw new BillingError(404, 'PRODUCT_NOT_FOUND', 'That product is not available.');
+
+  // Job seekers buy seeker products (a profile boost); everyone else buys the rest.
+  if ((input.role === 'SEEKER') !== (product.audience === 'SEEKER')) throw new BillingError(403, 'NOT_FOR_YOU', 'That product is not for your kind of account.');
 
   if (product.audience === 'PROVIDER') {
     const profile = await prisma.employerProfile.findUnique({ where: { userId: input.userId }, select: { isTrainingProvider: true } });
@@ -181,6 +186,10 @@ export const createCheckout = async (input: { userId: string; email: string; nam
     targetType = 'COURSE';
     const course = input.targetId ? await prisma.course.findFirst({ where: { id: input.targetId, providerId: input.userId, ...publicCourseWhere() }, select: { id: true } }) : null;
     if (!course) throw new BillingError(400, 'COURSE_REQUIRED', 'Choose one of your live courses.');
+  } else if (product.kind === 'PROFILE_BOOST') {
+    const profile = await prisma.jobSeekerProfile.findUnique({ where: { userId: input.userId }, select: { cvVisibility: true } });
+    if (!profile) throw new BillingError(403, 'SEEKER_ONLY', 'A profile boost is for job seekers.');
+    if (profile.cvVisibility !== 'VERIFIED_EMPLOYERS') throw new BillingError(400, 'PROFILE_HIDDEN', 'Your profile is hidden, so a boost would show it to nobody. Set it to "Visible to verified employers" first.');
   } else if (product.kind === 'SUBSCRIPTION') {
     if (product.planTier === 'FREE' || product.pricePesewas <= 0) throw new BillingError(400, 'FREE_PLAN', 'The Free plan costs nothing. To move to it, cancel your paid plan.');
 
@@ -326,6 +335,9 @@ const applyBenefits = async (tx: Tx, payment: PaymentRow, now: Date, info: Payme
         data: { featuredFrom: running ? course.featuredFrom : now, featuredUntil: extendPromotion(course.featuredUntil, product?.durationDays ?? DEFAULT_FEATURED_DAYS, now) },
       });
     }
+  } else if (kind === 'PROFILE_BOOST' && product) {
+    const profile = await tx.jobSeekerProfile.findUnique({ where: { userId: payment.userId }, select: { profileBoostedUntil: true } });
+    if (profile) await tx.jobSeekerProfile.update({ where: { userId: payment.userId }, data: { profileBoostedUntil: extendPromotion(profile.profileBoostedUntil, product.durationDays ?? 30, now) } });
   } else if (kind === 'SUBSCRIPTION' && product && product.interval) {
     const interval = product.interval as 'MONTHLY' | 'YEARLY';
     let subscriptionId = payment.subscriptionId;
@@ -769,6 +781,8 @@ export const refundPayment = async (input: { admin: Admin; paymentId: string; am
           await tx.subscription.update({ where: { id: payment.subscriptionId }, data: { status: 'CANCELLED', cancelAtPeriodEnd: true, cancelledAt: new Date(), currentPeriodEnd: new Date(), pendingProductId: null } });
         }
         await expirePlanCredits(payment.userId, tx as never);
+      } else if (payment.productKind === 'PROFILE_BOOST') {
+        await tx.jobSeekerProfile.update({ where: { userId: payment.userId }, data: { profileBoostedUntil: null } });
       } else if (payment.targetId && payment.productKind === 'FEATURED_JOB') {
         await tx.job.update({ where: { id: payment.targetId }, data: { featuredUntil: null } });
       } else if (payment.targetId && payment.productKind === 'JOB_BOOST') {

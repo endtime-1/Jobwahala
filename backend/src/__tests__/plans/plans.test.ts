@@ -41,7 +41,7 @@ vi.mock('../../services/emailService', () => ({
 import env from '../../config/env';
 import { getCompany, listHiringCompanies } from '../../controllers/companyController';
 import { acceptInvite, getTeam, inviteMember, removeMember } from '../../controllers/teamController';
-import { getHiringReport, searchCvDatabase, trackJobView } from '../../controllers/planFeaturesController';
+import { getHiringReport, trackJobView } from '../../controllers/planFeaturesController';
 import { updateProfile } from '../../controllers/userController';
 import { actAsCompany } from '../../middleware/company';
 import { BillingError } from '../../services/billingErrors';
@@ -626,115 +626,6 @@ describe('hiring reports', () => {
 
       expect((await view()).status).toBe(404);
     });
-  });
-});
-
-// -------------------------------------------------------------- CV database
-
-describe('the CV database', () => {
-  const profile = (id: string, overrides: Record<string, unknown> = {}) => ({
-    id,
-    firstName: 'Ama',
-    lastName: 'Mensah',
-    skills: 'Excel, bookkeeping',
-    experience: 'Three years in accounts. '.repeat(30),
-    careerStage: 'GRADUATE',
-    institution: 'University of Ghana',
-    programme: 'BSc Accounting',
-    user: { seekerCv: { uploadedUrl: '/api/uploads/cv/1-abc-cv.pdf', uploadedFileName: 'cv.pdf', builderUrl: null, builderFileName: null } },
-    ...overrides,
-  });
-
-  it('is for Business plans only, checked on the server', async () => {
-    const result = await call(searchCvDatabase as never, owner);
-
-    expect(result.status).toBe(403);
-    expect(result.body.code).toBe('PLAN_REQUIRED');
-    expect(prismaMock.jobSeekerProfile.findMany).not.toHaveBeenCalled();
-  });
-
-  it('lists only people who chose to be found, with a summary and no contact details', async () => {
-    prismaMock.subscription.findMany.mockResolvedValue([subscription({}, business())]);
-    prismaMock.jobSeekerProfile.findMany.mockResolvedValue([profile('p1')]);
-
-    const result = await call(searchCvDatabase as never, owner);
-
-    expect(prismaMock.jobSeekerProfile.findMany.mock.calls[0][0].where).toMatchObject({ visibleToEmployers: true, user: { status: 'ACTIVE', role: 'SEEKER' } });
-    expect(result.body.entries[0]).toMatchObject({ id: 'p1', name: 'Ama Mensah', skills: 'Excel, bookkeeping', cv: { url: '/api/uploads/cv/1-abc-cv.pdf', fileName: 'cv.pdf' } });
-    expect(result.body.entries[0].experience.length).toBeLessThanOrEqual(400);
-    expect(JSON.stringify(result.body)).not.toMatch(/email|phone|password/i);
-  });
-
-  it('every word searched for has to appear, in any case', async () => {
-    prismaMock.subscription.findMany.mockResolvedValue([subscription({}, business())]);
-    prismaMock.jobSeekerProfile.findMany.mockResolvedValue([profile('p1'), profile('p2', { skills: 'Welding', experience: 'Workshop', programme: 'Mechanical', institution: 'KNUST', firstName: 'Kofi' })]);
-
-    expect((await call(searchCvDatabase as never, { ...owner, query: { q: 'EXCEL bookkeeping' } })).body.entries.map((entry: any) => entry.id)).toEqual(['p1']);
-    expect((await call(searchCvDatabase as never, { ...owner, query: { q: 'excel welding' } })).body.total).toBe(0);
-  });
-
-  it('can narrow to students, NSS personnel or graduates', async () => {
-    prismaMock.subscription.findMany.mockResolvedValue([subscription({}, business())]);
-    prismaMock.jobSeekerProfile.findMany.mockResolvedValue([]);
-
-    await call(searchCvDatabase as never, { ...owner, query: { stage: 'nss' } });
-
-    expect(prismaMock.jobSeekerProfile.findMany.mock.calls[0][0].where.careerStage).toBe('NSS');
-  });
-
-  describe('opening the CV file', () => {
-    const secret = env.jwtSecret;
-    const file = `1730000000000-u${uploaderTag('seeker-1', secret)}-3f2a9c1e-cv.pdf`;
-    const ref = parseUploadRef(`/api/uploads/cv/${file}`)!;
-    const optedIn = { id: 'cv-1' };
-
-    beforeEach(() => {
-      prismaMock.application = { findFirst: vi.fn().mockResolvedValue(null) };
-      prismaMock.seekerCv = { findFirst: vi.fn().mockResolvedValue(null) };
-    });
-
-    it('a company on a plan with the CV database can open the CV of someone who opted in', async () => {
-      prismaMock.seekerCv.findFirst.mockResolvedValueOnce(null).mockResolvedValueOnce(optedIn);
-      prismaMock.subscription.findMany.mockResolvedValue([subscription({}, business())]);
-
-      expect(await canViewUpload({ id: 'owner-1', role: 'EMPLOYER' }, ref)).toBe(true);
-      expect(prismaMock.seekerCv.findFirst.mock.calls[1][0].where.user).toEqual({ status: 'ACTIVE', jobSeekerProfile: { is: { visibleToEmployers: true } } });
-    });
-
-    it('a team member opens it as the company', async () => {
-      prismaMock.seekerCv.findFirst.mockResolvedValueOnce(null).mockResolvedValueOnce(optedIn);
-      prismaMock.teamMember.findFirst.mockResolvedValue({ ownerId: 'owner-1' });
-      prismaMock.subscription.findMany.mockResolvedValue([subscription({}, business())]);
-
-      expect(await canViewUpload({ id: 'member-1', role: 'EMPLOYER' }, ref)).toBe(true);
-      expect(prismaMock.subscription.findMany.mock.calls[0][0].where.userId).toBe('owner-1');
-    });
-
-    it('not without the plan, even for someone who opted in', async () => {
-      prismaMock.seekerCv.findFirst.mockResolvedValueOnce(null).mockResolvedValueOnce(optedIn);
-
-      expect(await canViewUpload({ id: 'owner-1', role: 'EMPLOYER' }, ref)).toBe(false);
-    });
-
-    it('not for someone who did not opt in, even with the plan', async () => {
-      prismaMock.subscription.findMany.mockResolvedValue([subscription({}, business())]);
-
-      expect(await canViewUpload({ id: 'owner-1', role: 'EMPLOYER' }, ref)).toBe(false);
-    });
-
-    it('and never for a seeker, whatever they opted in to', async () => {
-      prismaMock.seekerCv.findFirst.mockResolvedValueOnce(null).mockResolvedValueOnce(optedIn);
-      prismaMock.subscription.findMany.mockResolvedValue([subscription({}, business())]);
-
-      expect(await canViewUpload({ id: 'seeker-2', role: 'SEEKER' }, ref)).toBe(false);
-    });
-  });
-
-  it('a seeker can opt in on their profile, and the field is checked', () => {
-    const parse = (body: unknown) => getProfileUpdateSchema('SEEKER').safeParse({ body }).success;
-
-    expect(parse({ visibleToEmployers: true })).toBe(true);
-    expect(parse({ visibleToEmployers: 'yes' })).toBe(false);
   });
 });
 

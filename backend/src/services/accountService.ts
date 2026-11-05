@@ -364,6 +364,12 @@ export const deleteAccount = async (
 
     // A company's team: its members lose access, and the member's own seat on someone else's team goes.
     await tx.teamMember.deleteMany({ where: { OR: [{ ownerId: userId }, { userId }] } });
+    // CV database: unlocks, views, blocks, invitations and saved searches, on either side.
+    await tx.cvUnlock.deleteMany({ where: { OR: [{ employerId: userId }, { seekerId: userId }] } });
+    await tx.cvProfileView.deleteMany({ where: { OR: [{ employerId: userId }, { seekerId: userId }] } });
+    await tx.cvBlock.deleteMany({ where: { OR: [{ employerId: userId }, { seekerId: userId }] } });
+    await tx.candidateInvite.deleteMany({ where: { OR: [{ employerId: userId }, { seekerId: userId }] } });
+    await tx.savedCandidateSearch.deleteMany({ where: { employerId: userId } });
     await tx.creditAccount.deleteMany({ where: { userId } });
 
     // Private employer notes: the ones this member wrote, and the ones written about them.

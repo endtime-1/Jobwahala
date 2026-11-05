@@ -30,6 +30,15 @@ model User {
   billingPayments     BillingPayment[] @relation("BillingPayments")
   teamMembers         TeamMember[] @relation("TeamOwner")
   teamMemberships     TeamMember[] @relation("TeamMembership")
+  cvUnlocksMade       CvUnlock[] @relation("CvUnlocksByEmployer")
+  cvUnlocksReceived   CvUnlock[] @relation("CvUnlocksOfSeeker")
+  cvViewsMade         CvProfileView[] @relation("CvViewsByEmployer")
+  cvViewsReceived     CvProfileView[] @relation("CvViewsOfSeeker")
+  cvBlocksMade        CvBlock[] @relation("CvBlocksBySeeker")
+  cvBlocksReceived    CvBlock[] @relation("CvBlocksAgainstEmployer")
+  savedCandidateSearches SavedCandidateSearch[] @relation("SavedCandidateSearches")
+  candidateInvitesSent     CandidateInvite[] @relation("CandidateInvitesSent")
+  candidateInvitesReceived CandidateInvite[] @relation("CandidateInvitesReceived")
   subscriptions       Subscription[] @relation("Subscriptions")
   creditAccount       CreditAccount? @relation("CreditAccount")
   learnerCourses      LearnerCourse[] @relation("LearnerCourses")
@@ -90,13 +99,25 @@ model JobSeekerProfile {
   experience  String?
   resumeFileUrl String?
   // Early career: STUDENT, NSS or GRADUATE, used to show the most relevant internships and graduate jobs first.
-  // Opt-in: employers on a plan with CV database access may find this profile and open its CV.
-  visibleToEmployers Boolean @default(false)
+  // CV database: HIDDEN (the default) or VERIFIED_EMPLOYERS. Name, phone, email and the CV file stay private until an employer unlocks the profile.
+  cvVisibility   String  @default("HIDDEN")
+  headline       String?
+  location       String?
+  educationLevel String? // SECONDARY, CERTIFICATE, DIPLOMA, BACHELORS, MASTERS, DOCTORATE
+  availability   String? // IMMEDIATELY, NSS, INTERNSHIP, FULL_TIME
+  yearsExperience Int?
+  jobCategory    String?
+  lastActiveAt   DateTime?
+  cvVisibleSince DateTime? // when the person last chose to be visible: what saved-search alerts count as new
+  // A paid boost shows this profile higher in CV database results, marked "Boosted", until this time.
+  profileBoostedUntil DateTime?
   careerStage    String?
   institution    String?
   programme      String?
   completionYear Int?
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([cvVisibility, profileBoostedUntil])
 }
 
 model EmployerProfile {
@@ -196,6 +217,7 @@ model Job {
   reports      Report[]      @relation("ReportedJob")
   savedBy      SavedJob[]
   views        JobView[]
+  candidateInvites CandidateInvite[]
 
   @@index([employerId])
   @@index([postedByAdminId])
@@ -949,6 +971,7 @@ model Product {
   // Employer plans: FREE, STARTER or BUSINESS. The credits above are per month for a plan.
   planTier      String?
   teamLimit     Int     @default(1) // seats, the owner included
+  monthlyUnlocks Int    @default(0) // CV database profile unlocks per calendar month
   cvDatabase    Boolean @default(false)
   brandedPage   Boolean @default(false)
   hiringReports Boolean @default(false)
@@ -1127,4 +1150,82 @@ model JobView {
 
   @@unique([jobId, visitorHash])
   @@index([jobId, createdAt])
+}
+
+// ---------------------------------------------------------------- CV database
+
+// Every time a company unlocks a profile (name, phone, email and CV become visible). One row per company and person, so opening it again is free.
+model CvUnlock {
+  id         String   @id @default(uuid())
+  employerId String
+  seekerId   String
+  actorId    String? // the team member who clicked, if not the owner
+  createdAt  DateTime @default(now())
+
+  employer User @relation("CvUnlocksByEmployer", fields: [employerId], references: [id], onDelete: Cascade)
+  seeker   User @relation("CvUnlocksOfSeeker", fields: [seekerId], references: [id], onDelete: Cascade)
+
+  @@unique([employerId, seekerId])
+  @@index([employerId, createdAt])
+  @@index([seekerId, createdAt])
+}
+
+// A company opened a person's limited profile. One row per company, person and day. Shown to the person.
+model CvProfileView {
+  id         String   @id @default(uuid())
+  employerId String
+  seekerId   String
+  day        String // YYYY-MM-DD
+  createdAt  DateTime @default(now())
+
+  employer User @relation("CvViewsByEmployer", fields: [employerId], references: [id], onDelete: Cascade)
+  seeker   User @relation("CvViewsOfSeeker", fields: [seekerId], references: [id], onDelete: Cascade)
+
+  @@unique([employerId, seekerId, day])
+  @@index([seekerId, createdAt])
+}
+
+// A person has blocked a company: it cannot find, open, unlock or invite them.
+model CvBlock {
+  id         String   @id @default(uuid())
+  seekerId   String
+  employerId String
+  createdAt  DateTime @default(now())
+
+  seeker   User @relation("CvBlocksBySeeker", fields: [seekerId], references: [id], onDelete: Cascade)
+  employer User @relation("CvBlocksAgainstEmployer", fields: [employerId], references: [id], onDelete: Cascade)
+
+  @@unique([seekerId, employerId])
+  @@index([employerId])
+}
+
+model SavedCandidateSearch {
+  id            String    @id @default(uuid())
+  employerId    String
+  name          String
+  filtersJson   String    @default("{}")
+  alertsEnabled Boolean   @default(true)
+  lastAlertAt   DateTime?
+  createdAt     DateTime  @default(now())
+
+  employer User @relation("SavedCandidateSearches", fields: [employerId], references: [id], onDelete: Cascade)
+
+  @@index([employerId])
+  @@index([alertsEnabled])
+}
+
+model CandidateInvite {
+  id         String   @id @default(uuid())
+  employerId String
+  seekerId   String
+  jobId      String
+  message    String?
+  createdAt  DateTime @default(now())
+
+  employer User @relation("CandidateInvitesSent", fields: [employerId], references: [id], onDelete: Cascade)
+  seeker   User @relation("CandidateInvitesReceived", fields: [seekerId], references: [id], onDelete: Cascade)
+  job      Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@unique([employerId, seekerId, jobId])
+  @@index([seekerId, createdAt])
 }

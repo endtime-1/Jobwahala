@@ -22,19 +22,21 @@ const router = Router();
 router.post('/webhooks/paystack', handlePaystackBillingWebhook);
 
 // Everything else is for signed-in employers (training providers are employer accounts).
-router.use(authMiddleware, roleMiddleware(['EMPLOYER']));
+// Job seekers can use the catalogue, checkout and receipts too (for a profile boost). Plans, promotions and subscriptions are employers only.
+router.use(authMiddleware, roleMiddleware(['EMPLOYER', 'SEEKER']));
+const employersOnly = roleMiddleware(['EMPLOYER']);
 
 const checkoutLimit = createRateLimit({ windowMs: 15 * 60 * 1000, max: 20, scope: 'billing-checkout' });
 const statusLimit = createRateLimit({ windowMs: 60 * 1000, max: 30, scope: 'billing-status' });
 
 router.get('/catalogue', getCatalogue);
 router.get('/me', getMyBilling);
-router.get('/plans', getPlans);
-router.post('/plans/change', validate(changePlanSchema), changePlan);
+router.get('/plans', employersOnly, getPlans);
+router.post('/plans/change', employersOnly, validate(changePlanSchema), changePlan);
 router.post('/checkout', checkoutLimit, validate(checkoutSchema), startCheckout);
 router.get('/payments/:reference/status', statusLimit, validate(referenceSchema), getPaymentStatus);
 router.get('/payments/:id/receipt', validate(idSchema), downloadReceipt);
-router.post('/jobs/:id/promote', validate(promoteSchema), promoteJob);
-router.post('/subscriptions/:id/cancel', validate(idSchema), cancelMySubscription);
+router.post('/jobs/:id/promote', employersOnly, validate(promoteSchema), promoteJob);
+router.post('/subscriptions/:id/cancel', employersOnly, validate(idSchema), cancelMySubscription);
 
 export default router;

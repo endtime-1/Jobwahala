@@ -6,6 +6,7 @@ export type Plan = Product & {
   planTier: PlanTier
   teamLimit: number
   cvDatabase: boolean
+  monthlyUnlocks: number
   brandedPage: boolean
   hiringReports: boolean
   topEmployers: boolean
@@ -20,7 +21,7 @@ export type PlansResponse = {
     productId: string | null
     interval: 'MONTHLY' | 'YEARLY' | null
     subscription: { id: string; status: string; currentPeriodEnd: string; graceEndsAt: string | null; cancelAtPeriodEnd: boolean; pendingPlanName: string | null } | null
-    features: { teamLimit: number; cvDatabase: boolean; brandedPage: boolean; hiringReports: boolean; topEmployers: boolean }
+    features: { teamLimit: number; cvDatabase: boolean; monthlyUnlocks?: number; brandedPage: boolean; hiringReports: boolean; topEmployers: boolean }
   }
   usage: {
     featuredCredits: number
@@ -31,6 +32,8 @@ export type PlansResponse = {
     monthlyBoostCredits: number
     teamSeatsUsed: number
     teamLimit: number
+    unlocksUsed?: number
+    monthlyUnlocks?: number
   }
 }
 
@@ -51,13 +54,13 @@ export const yearlySavingPercent = (plans: Plan[], tier: PlanTier) => {
   return saving > 0 ? Math.round(saving * 100) : 0
 }
 
-export const featureLines = (plan: Pick<Plan, 'planTier' | 'teamLimit' | 'cvDatabase' | 'brandedPage' | 'hiringReports' | 'topEmployers' | 'featuredCredits' | 'boostCredits'>) => {
+export const featureLines = (plan: Pick<Plan, 'planTier' | 'teamLimit' | 'cvDatabase' | 'monthlyUnlocks' | 'brandedPage' | 'hiringReports' | 'topEmployers' | 'featuredCredits' | 'boostCredits'>) => {
   const lines = ['Unlimited standard job posts', 'Applicant board']
   if (plan.featuredCredits > 0) lines.push(`${plan.featuredCredits} featured-job credit${plan.featuredCredits === 1 ? '' : 's'} every month`)
   if (plan.boostCredits > 0) lines.push(`${plan.boostCredits} "Urgently hiring" boost${plan.boostCredits === 1 ? '' : 's'} every month`)
   if (plan.brandedPage) lines.push('Branded company page: cover image, gallery and "Why work with us"')
   lines.push(plan.teamLimit === 1 ? '1 team member (you)' : `Up to ${plan.teamLimit} team members`)
-  if (plan.cvDatabase) lines.push('CV database access')
+  if (plan.cvDatabase) lines.push(plan.monthlyUnlocks > 0 ? `CV database: ${plan.monthlyUnlocks} profile unlocks every month` : 'CV database access')
   if (plan.hiringReports) lines.push('Hiring reports')
   if (plan.topEmployers) lines.push('Priority in "Top employers"')
   return lines

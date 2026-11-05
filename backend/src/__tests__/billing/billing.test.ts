@@ -17,6 +17,7 @@ const prismaMock = vi.hoisted(() => {
     job: m('findFirst', 'findUnique', 'update'),
     course: m('findFirst', 'findUnique', 'update'),
     employerProfile: m('findUnique'),
+    jobSeekerProfile: m('findUnique', 'update'),
     user: m('findUnique', 'findFirst'),
     notification: m('create'),
     adminActionLog: m('create'),
@@ -207,7 +208,7 @@ describe('money and VAT', () => {
   });
 
   it('starts the catalogue with the one-off products, and the Free, Starter and Business plans (monthly and yearly)', () => {
-    expect(new Set(DEFAULT_PRODUCTS.map((item) => item.kind))).toEqual(new Set(['FEATURED_JOB', 'JOB_BOOST', 'JOB_PACK', 'FEATURED_COURSE']));
+    expect(new Set(DEFAULT_PRODUCTS.map((item) => item.kind))).toEqual(new Set(['FEATURED_JOB', 'JOB_BOOST', 'JOB_PACK', 'FEATURED_COURSE', 'PROFILE_BOOST']));
     expect(DEFAULT_PLANS.map((plan) => `${plan.planTier}/${plan.interval}`)).toEqual(['FREE/null', 'STARTER/MONTHLY', 'STARTER/YEARLY', 'BUSINESS/MONTHLY', 'BUSINESS/YEARLY']);
   });
 });
@@ -1181,5 +1182,80 @@ describe('receipts', () => {
 
     prismaMock.billingPayment.findUnique.mockResolvedValue(payment());
     expect((await run('emp-1')).status).toBe(404);
+  });
+});
+
+// ------------------------------------------------------------ job seeker profile boost
+
+describe('the job seeker profile boost', () => {
+  const boost = (overrides: Record<string, unknown> = {}) => product({ id: 'boost-1', kind: 'PROFILE_BOOST', slug: 'profile-boost', name: 'Profile boost (30 days)', audience: 'SEEKER', pricePesewas: 2000, durationDays: 30, ...overrides });
+  const seeker = { userId: 'seeker-1', role: 'SEEKER', email: 'ama@example.com', name: null };
+
+  beforeEach(() => {
+    prismaMock.product.findUnique.mockResolvedValue(boost());
+    prismaMock.jobSeekerProfile.findUnique.mockResolvedValue({ cvVisibility: 'VERIFIED_EMPLOYERS', profileBoostedUntil: null });
+  });
+
+  it('is bought through the normal Paystack checkout, priced on the server', async () => {
+    const result = await createCheckout({ ...seeker, productId: 'boost-1' });
+
+    expect(result.authorizationUrl).toBeTruthy();
+    expect(prismaMock.billingPayment.create.mock.calls[0][0].data).toMatchObject({ userId: 'seeker-1', productKind: 'PROFILE_BOOST', totalPesewas: 2000, targetType: null, targetId: null });
+  });
+
+  it('is refused while the profile is hidden, since a boost would show it to nobody', async () => {
+    prismaMock.jobSeekerProfile.findUnique.mockResolvedValue({ cvVisibility: 'HIDDEN', profileBoostedUntil: null });
+
+    await expect(createCheckout({ ...seeker, productId: 'boost-1' })).rejects.toMatchObject({ code: 'PROFILE_HIDDEN' });
+    expect(prismaMock.billingPayment.create).not.toHaveBeenCalled();
+  });
+
+  it('seeker products are for seekers only, and seekers cannot buy employer products', async () => {
+    await expect(createCheckout({ userId: 'emp-1', role: 'EMPLOYER', email: 'hr@acme.example', productId: 'boost-1' })).rejects.toMatchObject({ code: 'NOT_FOR_YOU' });
+
+    prismaMock.product.findUnique.mockResolvedValue(product());
+    await expect(createCheckout({ ...seeker, productId: 'prod-1', targetId: 'job-1' })).rejects.toMatchObject({ code: 'NOT_FOR_YOU' });
+  });
+
+  it('the catalogue shows seekers the boost and employers never see it', async () => {
+    prismaMock.product.findMany.mockResolvedValue([product(), boost()]);
+
+    expect((await listCatalogue({ id: 'seeker-1', role: 'SEEKER' })).map((item) => item.id)).toEqual(['boost-1']);
+    expect((await listCatalogue({ id: 'emp-1', role: 'EMPLOYER' })).map((item) => item.id)).toEqual(['prod-1']);
+  });
+
+  it('a paid boost lasts 30 days, and buying again adds to what is left', async () => {
+    prismaMock.billingPayment.findUnique.mockResolvedValue(payment({ userId: 'seeker-1', productKind: 'PROFILE_BOOST', productId: 'boost-1', targetType: null, targetId: null }));
+
+    await confirmPayment('JWB-REF-1', NOW);
+    expect(prismaMock.jobSeekerProfile.update.mock.calls[0][0].data.profileBoostedUntil.getTime()).toBe(NOW.getTime() + 30 * DAY);
+
+    prismaMock.jobSeekerProfile.findUnique.mockResolvedValue({ profileBoostedUntil: new Date(NOW.getTime() + 10 * DAY) });
+    await confirmPayment('JWB-REF-1', NOW);
+    expect(prismaMock.jobSeekerProfile.update.mock.calls[1][0].data.profileBoostedUntil.getTime()).toBe(NOW.getTime() + 40 * DAY);
+  });
+
+  it('a refund that takes back the benefit ends the boost', async () => {
+    prismaMock.billingPayment.findUnique.mockResolvedValue(payment({ status: 'PAID', userId: 'seeker-1', productKind: 'PROFILE_BOOST', productId: 'boost-1', targetType: null, targetId: null, totalPesewas: 2000, subtotalPesewas: 1739, vatPesewas: 261 }));
+
+    await refundPayment({ admin: { id: 'admin-1', email: 'admin@jobwahala.com' }, paymentId: 'pay-1', reason: 'Asked for it', reverseBenefits: true });
+
+    expect(prismaMock.jobSeekerProfile.update).toHaveBeenCalledWith({ where: { userId: 'seeker-1' }, data: { profileBoostedUntil: null } });
+  });
+
+  it('admins can price it, but it must be a seeker product with a length in days', () => {
+    const body = { kind: 'PROFILE_BOOST', name: 'Profile boost', description: '', audience: 'SEEKER', priceGhs: 20, durationDays: 30, includes: [], active: true, sortOrder: 0 };
+
+    expect(createProductSchema.safeParse({ body }).success).toBe(true);
+    expect(createProductSchema.safeParse({ body: { ...body, audience: 'EMPLOYER' } }).success).toBe(false);
+    expect(createProductSchema.safeParse({ body: { ...body, durationDays: null } }).success).toBe(false);
+    expect(createProductSchema.safeParse({ body: { ...body, kind: 'JOB_PACK', featuredCredits: 5, durationDays: null } }).success).toBe(false);
+  });
+
+  it('plans can set how many CV unlocks a month they include', () => {
+    const plan = { kind: 'SUBSCRIPTION', name: 'Business (monthly)', description: '', audience: 'EMPLOYER', priceGhs: 450, interval: 'MONTHLY', planTier: 'BUSINESS', teamLimit: 10, cvDatabase: true, monthlyUnlocks: 50, includes: [], active: true, sortOrder: 0 };
+
+    expect(createProductSchema.safeParse({ body: plan }).success).toBe(true);
+    expect(createProductSchema.safeParse({ body: { ...plan, monthlyUnlocks: -1 } }).success).toBe(false);
   });
 });

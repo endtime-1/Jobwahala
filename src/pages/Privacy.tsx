@@ -92,6 +92,57 @@ export default function Privacy() {
           ),
         },
         {
+          heading: 'The CV database: who can see what',
+          body: (
+            <>
+              <p>
+                The CV database lets employers search for job seekers. It is your choice, and it is <strong>Hidden</strong> unless you switch it on. You choose
+                when you sign up, and you can change it at any time in your dashboard. If you switch it to Hidden, you stop appearing in searches straight away.
+              </p>
+              <p>If you choose &quot;Visible to verified employers&quot;:</p>
+              <ul className="list-disc space-y-1 pl-5">
+                <li>
+                  <strong>Who can search:</strong> only employers whose business we have verified and who are on a paid plan that includes the CV database.
+                  Job seekers, unverified employers and the public cannot.
+                </li>
+                <li>
+                  <strong>What they see before unlocking:</strong> a limited profile: your headline, skills, a short summary of your experience, location, education
+                  level, availability, years of experience, when you were last active, and whether you hold a verified certificate. We remove email addresses, phone
+                  numbers and web links that you may have typed into those free-text fields.
+                </li>
+                <li>
+                  <strong>What stays hidden until they unlock your profile:</strong> your name, phone number, email address and CV file. An employer unlocks a profile
+                  using a limited monthly allowance that comes with their plan. We keep a record of every unlock (which employer, which profile, when, and which team
+                  member), and we tell you when your profile is unlocked.
+                </li>
+                <li>
+                  <strong>Who looked:</strong> you can see which companies viewed or unlocked your profile, and you can block any company. A blocked company can no
+                  longer find, view, unlock or invite you, and can no longer open your CV.
+                </li>
+                <li>
+                  <strong>Invitations:</strong> an employer can invite you to apply to one of their jobs. You get a notification; no contact details are shared by an
+                  invitation.
+                </li>
+                <li>
+                  <strong>Limits:</strong> searches and unlocks are rate limited, results only go a few pages deep, and there is no way to export contact details in bulk.
+                </li>
+                <li>
+                  <strong>Email alerts:</strong> employers can save a search and get an email saying how many new people match. The email never names or describes
+                  anyone.
+                </li>
+                <li>
+                  <strong>Profile boost:</strong> if you pay for a boost, your profile appears higher in results for 30 days and is marked &quot;Boosted&quot; to
+                  employers. A boost does not show anything extra about you; it only changes the order.
+                </li>
+              </ul>
+              <p>
+                An employer who unlocks your details becomes responsible for how they use them and must use them only for hiring. [Lawyer to confirm the employer
+                terms that say this.] Deleting your account removes your profile from the CV database, along with the records of who viewed and unlocked it.
+              </p>
+            </>
+          ),
+        },
+        {
           heading: 'Who we share it with',
           body: (
             <>
