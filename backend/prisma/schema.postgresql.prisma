@@ -8,7 +8,10 @@ datasource db {
 
 model User {
   id            String   @id @default(uuid())
-  email         String   @unique
+  email         String?  @unique   // empty for people who signed up with a phone number
+  // Ghanaian mobile in +233 format. Saved only after the number has been confirmed with a code.
+  phone         String?  @unique
+  phoneVerifiedAt DateTime?
   password      String
   role          String   @default("SEEKER")
   status        String   @default("ACTIVE") // ACTIVE, FLAGGED, SUSPENDED
@@ -396,6 +399,7 @@ model VerificationRequest {
   contactPhone String?
   address     String?
   contactVerifiedAt DateTime?
+  contactVerifiedVia String?   // EMAIL or PHONE
   reviewNote  String?
   internalNote String?
   reviewedAt  DateTime?
@@ -688,4 +692,22 @@ model AdminActionLog {
   @@index([targetType, targetId, createdAt])
   @@index([adminId, createdAt])
   @@index([createdAt])
+}
+
+// One-time codes sent by SMS: sign-up, log-in, adding a phone to an account, and employer verification.
+// Only a keyed hash of the code is stored. requestIp lets us cap sends per IP address.
+model PhoneOtp {
+  id         String   @id @default(uuid())
+  phone      String
+  purpose    String   // SIGNUP, LOGIN, ADD_PHONE, EMPLOYER_VERIFICATION
+  subjectId  String?  // the user (ADD_PHONE) or verification request (EMPLOYER_VERIFICATION) the code is for
+  codeHash   String
+  expiresAt  DateTime
+  attempts   Int      @default(0)
+  consumedAt DateTime?
+  requestIp  String?
+  createdAt  DateTime @default(now())
+
+  @@index([phone, createdAt])
+  @@index([requestIp, createdAt])
 }

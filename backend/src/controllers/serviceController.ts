@@ -307,7 +307,7 @@ export const getFreelancerComparison = async (req: AuthRequest, res: Response) =
       [freelancerProfile.freelancerProfile?.firstName, freelancerProfile.freelancerProfile?.lastName]
         .filter(Boolean)
         .join(' ')
-        .trim() || freelancerProfile.email;
+        .trim() || freelancerProfile.email || 'Freelancer';
 
     const viewedServiceMatches = freelancerProfile.freelanceServices
       .map((service) => ({
@@ -365,7 +365,7 @@ export const getFreelancerComparison = async (req: AuthRequest, res: Response) =
           [service.freelancer.freelancerProfile?.firstName, service.freelancer.freelancerProfile?.lastName]
             .filter(Boolean)
             .join(' ')
-            .trim() || service.freelancer.email;
+            .trim() || service.freelancer.email || 'Freelancer';
 
         return {
           freelancerName: alternativeName,
@@ -541,7 +541,7 @@ export const compareMarketplaceFreelancers = async (req: AuthRequest, res: Respo
           [option.freelancer.freelancerProfile?.firstName, option.freelancer.freelancerProfile?.lastName]
             .filter(Boolean)
             .join(' ')
-            .trim() || option.freelancer.email;
+            .trim() || option.freelancer.email || 'Freelancer';
 
         return {
           freelancerName,
@@ -814,7 +814,7 @@ export const getServiceRequestCoaching = async (req: AuthRequest, res: Response)
       [service.freelancer.freelancerProfile?.firstName, service.freelancer.freelancerProfile?.lastName]
         .filter(Boolean)
         .join(' ')
-        .trim() || service.freelancer.email;
+        .trim() || service.freelancer.email || 'Freelancer';
 
     const coaching = await generateServiceRequestCoaching({
       clientRole: user?.role || req.user!.role,

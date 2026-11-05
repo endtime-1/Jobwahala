@@ -52,7 +52,7 @@ describe('BusinessVerificationForm', () => {
     for (const label of ['Registrar-General registration number', 'Registration certificate', 'Company email', 'Physical address']) {
       expect(screen.getByLabelText(label)).toBeInTheDocument()
     }
-    expect(screen.getByText(/phone confirmation by sms is coming soon/i)).toBeInTheDocument()
+    expect(screen.getByText(/we can text the code to it/i)).toBeInTheDocument()
   })
 
   it('will not send without the certificate', () => {
@@ -84,6 +84,26 @@ describe('BusinessVerificationForm', () => {
     )
   })
 
+  it('accepts a phone number instead of an email', async () => {
+    render(<BusinessVerificationForm isSubmitting={false} onCancel={onCancel} onSubmit={onSubmit} />)
+    fillForm({ 'Company email': '' })
+    fireEvent.change(screen.getByLabelText(/company phone/i), { target: { value: '024 123 4567' } })
+
+    fireEvent.click(screen.getByRole('button', { name: /submit request/i }))
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ contactEmail: '', contactPhone: '024 123 4567' })))
+  })
+
+  it('needs at least an email or a phone', () => {
+    render(<BusinessVerificationForm isSubmitting={false} onCancel={onCancel} onSubmit={onSubmit} />)
+    fillForm({ 'Company email': '' })
+
+    fireEvent.click(screen.getByRole('button', { name: /submit request/i }))
+
+    expect(screen.getByRole('alert')).toHaveTextContent(/company email or a company phone/i)
+    expect(onSubmit).not.toHaveBeenCalled()
+  })
+
   it('fills in what was sent last time when the employer is asked for more', () => {
     render(
       <BusinessVerificationForm
@@ -108,7 +128,8 @@ describe('ContactCodeStep', () => {
     apiRequestCodeMock.mockResolvedValue({ success: true })
   })
 
-  const renderStep = () => render(<ContactCodeStep requestId="ver-1" email="hr@achiba.example" onConfirmed={onConfirmed} />)
+  const renderStep = (props: { email?: string | null; phone?: string | null } = { email: 'hr@achiba.example' }) =>
+    render(<ContactCodeStep requestId="ver-1" onConfirmed={onConfirmed} {...props} />)
 
   it('says where the code was sent and only allows six digits', () => {
     renderStep()
@@ -144,12 +165,31 @@ describe('ContactCodeStep', () => {
 
   it('sends a new code on request, and shows a wait message if asked too soon', async () => {
     renderStep()
-    fireEvent.click(screen.getByRole('button', { name: /send a new code/i }))
+    fireEvent.click(screen.getByRole('button', { name: /email me a new code/i }))
     expect(await screen.findByRole('status')).toHaveTextContent(/new code is on its way to hr@achiba.example/i)
+    expect(apiRequestCodeMock).toHaveBeenCalledWith('ver-1', 'EMAIL')
 
     apiRequestCodeMock.mockRejectedValue(new Error('Please wait 40 seconds before asking for another code.'))
-    fireEvent.click(screen.getByRole('button', { name: /send a new code/i }))
+    fireEvent.click(screen.getByRole('button', { name: /email me a new code/i }))
     expect(await screen.findByRole('alert')).toHaveTextContent(/wait 40 seconds/i)
+  })
+
+  it('offers a text message when the company gave a phone, and asks for it by SMS', async () => {
+    renderStep({ email: 'hr@achiba.example', phone: '+233241234567' })
+
+    expect(screen.getByRole('button', { name: /email me a new code/i })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /text me a new code/i }))
+
+    expect(await screen.findByRole('status')).toHaveTextContent(/by text to \+233241234567/i)
+    expect(apiRequestCodeMock).toHaveBeenCalledWith('ver-1', 'PHONE')
+  })
+
+  it('works for a company that only gave a phone number', () => {
+    renderStep({ email: null, phone: '+233241234567' })
+
+    expect(screen.getByText('+233241234567')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /email me a new code/i })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /text me a new code/i })).toBeInTheDocument()
   })
 })
 
@@ -200,8 +240,18 @@ describe('VerificationPanel for employers', () => {
       latestVerificationRequest: { id: 'ver-1', status: 'PENDING', contactEmail: 'hr@achiba.example', contactVerifiedAt: null },
     })
 
-    expect(screen.getByText(/confirm your company email/i)).toBeInTheDocument()
+    expect(screen.getByText(/confirm your company contact/i)).toBeInTheDocument()
     expect(screen.getByLabelText('6-digit code')).toBeInTheDocument()
+  })
+
+  it('asks for the texted code on a request that only has a phone', () => {
+    renderPanel({
+      verificationStatus: 'PENDING',
+      latestVerificationRequest: { id: 'ver-1', status: 'PENDING', contactEmail: null, contactPhone: '+233241234567', contactVerifiedAt: null },
+    })
+
+    expect(screen.getByText(/confirm your company contact/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /text me a new code/i })).toBeInTheDocument()
   })
 
   it('says the email is confirmed once it is', () => {
@@ -210,7 +260,7 @@ describe('VerificationPanel for employers', () => {
       latestVerificationRequest: { id: 'ver-1', status: 'PENDING', contactEmail: 'hr@achiba.example', contactVerifiedAt: '2026-03-21T00:00:00Z' },
     })
 
-    expect(screen.getByText(/company email confirmed: hr@achiba.example/i)).toBeInTheDocument()
+    expect(screen.getByText(/company contact confirmed: hr@achiba.example/i)).toBeInTheDocument()
     expect(screen.queryByLabelText('6-digit code')).not.toBeInTheDocument()
   })
 

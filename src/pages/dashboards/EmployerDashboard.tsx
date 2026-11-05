@@ -7,6 +7,7 @@ import { subscribeToRealtimeEvents } from '../../lib/realtime'
 import VerifiedBadge from '../../components/VerifiedBadge'
 import type { VerificationSubmission } from '../../components/VerificationPanel'
 import { useFeatures } from '../../lib/features'
+import AddPhonePanel from '../../components/AddPhonePanel'
 import VerificationPanel from '../../components/VerificationPanel'
 
 import { useEmployerDashboard, useJobApplicants } from './employer/hooks'
@@ -207,6 +208,8 @@ export default function EmployerDashboard() {
               paymentActionItems={paymentActionItems}
               onReviewApplicants={handleSelectJob}
             />
+
+            <AddPhonePanel />
 
             <VerificationPanel
               type="employer"

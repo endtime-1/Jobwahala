@@ -162,13 +162,16 @@ export default function VerificationPanel({
               <Link2 className="h-3.5 w-3.5" /> Review linked evidence
             </EvidenceLink>
           ) : null}
-          {type === 'employer' && latestRequest?.contactEmail ? (
+          {type === 'employer' && (latestRequest?.contactEmail || latestRequest?.contactPhone) ? (
             latestRequest.contactVerifiedAt ? (
-              <p className="mt-3 text-xs font-bold text-success">Company email confirmed: {latestRequest.contactEmail}</p>
+              <p className="mt-3 text-xs font-bold text-success">
+                Company contact confirmed: {latestRequest.contactEmail || latestRequest.contactPhone}
+              </p>
             ) : latestRequest.id ? (
               <ContactCodeStep
                 requestId={latestRequest.id}
                 email={latestRequest.contactEmail}
+                phone={latestRequest.contactPhone}
                 onConfirmed={() => onVerificationChanged?.()}
               />
             ) : null

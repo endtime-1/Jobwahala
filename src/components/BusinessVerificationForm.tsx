@@ -41,6 +41,10 @@ export default function BusinessVerificationForm({ initial, isSubmitting, onCanc
       setProblem('Upload your business registration certificate.')
       return
     }
+    if (!values.contactEmail.trim() && !values.contactPhone.trim()) {
+      setProblem('Add a company email or a company phone number.')
+      return
+    }
     setProblem('')
     await onSubmit(values)
   }
@@ -79,14 +83,13 @@ export default function BusinessVerificationForm({ initial, isSubmitting, onCanc
             type="email"
             value={values.contactEmail}
             onChange={(event) => set('contactEmail')(event.target.value)}
-            required
             className={inputClass}
             placeholder="hr@yourcompany.com"
           />
-          <p className="mt-1.5 text-[11px] font-semibold text-text-muted">We email a 6-digit code to confirm it.</p>
+          <p className="mt-1.5 text-[11px] font-semibold text-text-muted">Add an email, a phone or both. We send a 6-digit code to confirm it.</p>
         </div>
         <div>
-          <label htmlFor="bv-phone" className={labelClass}>Company phone (optional)</label>
+          <label htmlFor="bv-phone" className={labelClass}>Company phone</label>
           <input
             id="bv-phone"
             type="tel"
@@ -95,7 +98,7 @@ export default function BusinessVerificationForm({ initial, isSubmitting, onCanc
             className={inputClass}
             placeholder="024 123 4567"
           />
-          <p className="mt-1.5 text-[11px] font-semibold text-text-muted">Phone confirmation by SMS is coming soon.</p>
+          <p className="mt-1.5 text-[11px] font-semibold text-text-muted">A Ghana mobile number; we can text the code to it.</p>
         </div>
       </div>
 

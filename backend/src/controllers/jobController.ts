@@ -270,7 +270,7 @@ export const compareJobsForSeeker = async (req: AuthRequest, res: Response) => {
 
     const summary = await generateSeekerJobComparisonSummary({
       options: rankedJobs.map((job) => ({
-        companyName: job.employer.employerProfile?.companyName || job.employer.email,
+        companyName: job.employer.employerProfile?.companyName || job.employer.email || 'An employer',
         jobTitle: job.title,
         matchScore: job.matchScore,
         matchReasons: job.matchReasons,
@@ -547,7 +547,7 @@ export const generateJobApplicantDecisionBrief = async (req: AuthRequest, res: R
         [application.seeker.jobSeekerProfile?.firstName, application.seeker.jobSeekerProfile?.lastName]
           .filter(Boolean)
           .join(' ')
-          .trim() || application.seeker.email,
+          .trim() || application.seeker.email || 'Candidate',
       applicationStatus: application.status,
       fitScore: rankedApplication.fitScore,
       fitReasons: rankedApplication.fitReasons,
@@ -619,7 +619,7 @@ export const generateJobShortlistSummary = async (req: AuthRequest, res: Respons
           [application.seeker.jobSeekerProfile?.firstName, application.seeker.jobSeekerProfile?.lastName]
             .filter(Boolean)
             .join(' ')
-            .trim() || application.seeker.email,
+            .trim() || application.seeker.email || 'Candidate',
         status: application.status,
         fitScore: application.fitScore,
         fitReasons: application.fitReasons,
@@ -687,7 +687,7 @@ export const generateJobApplicantComparison = async (req: AuthRequest, res: Resp
           [application.seeker.jobSeekerProfile?.firstName, application.seeker.jobSeekerProfile?.lastName]
             .filter(Boolean)
             .join(' ')
-            .trim() || application.seeker.email,
+            .trim() || application.seeker.email || 'Candidate',
         status: application.status,
         fitScore: application.fitScore,
         fitReasons: application.fitReasons,
@@ -931,7 +931,8 @@ export const updateApplicationStatus = async (req: AuthRequest, res: Response) =
     });
 
     // The email goes out after the change is saved, and never holds up (or fails) the employer's action.
-    if (statusMessage) {
+    // Phone-only members have no email; they still get the in-app notification.
+    if (statusMessage && application.seeker.email) {
       void sendApplicationStatusEmail(application.seeker.email, {
         ...statusMessage,
         jobTitle: application.job.title,

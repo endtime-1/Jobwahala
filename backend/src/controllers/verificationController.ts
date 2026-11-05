@@ -10,7 +10,7 @@ import { createNotification } from '../utils/notifications';
 import { recordAdminAction } from '../utils/adminAudit';
 import { sendVerificationDecisionEmail } from '../services/emailService';
 import { confirmContactCode, sendContactCode } from '../services/contactVerificationService';
-import { normalizePhone } from '../validation/interestSchemas';
+import { normalizeGhanaPhone } from '../utils/phone';
 import {
   describeVerificationDecision,
   normalizeRegistrationNumber,
@@ -214,13 +214,24 @@ export const createVerificationRequest = async (req: AuthRequest, res: Response)
 
     // A contact already confirmed on an earlier request does not need confirming again.
     let contactVerifiedAt: Date | null = null;
-    if (isBusiness && body.contactEmail) {
+    let contactVerifiedVia: string | null = null;
+    if (isBusiness && (body.contactEmail || body.contactPhone)) {
+      const phone = body.contactPhone ? normalizeGhanaPhone(body.contactPhone) : null;
       const earlier = await prisma.verificationRequest.findFirst({
-        where: { userId, type: 'BUSINESS', contactEmail: body.contactEmail, contactVerifiedAt: { not: null } },
+        where: {
+          userId,
+          type: 'BUSINESS',
+          contactVerifiedAt: { not: null },
+          OR: [
+            ...(body.contactEmail ? [{ contactEmail: body.contactEmail }] : []),
+            ...(phone ? [{ contactPhone: phone }] : []),
+          ],
+        },
         orderBy: { createdAt: 'desc' },
-        select: { contactVerifiedAt: true },
+        select: { contactVerifiedAt: true, contactVerifiedVia: true },
       });
       contactVerifiedAt = earlier?.contactVerifiedAt ?? null;
+      contactVerifiedVia = earlier?.contactVerifiedVia ?? null;
     }
 
     const details =
@@ -237,9 +248,10 @@ export const createVerificationRequest = async (req: AuthRequest, res: Response)
           ? {
               registrationNumber,
               contactEmail: body.contactEmail,
-              contactPhone: body.contactPhone ? normalizePhone(body.contactPhone) : null,
+              contactPhone: body.contactPhone ? normalizeGhanaPhone(body.contactPhone) : null,
               address: body.address?.trim() || null,
               contactVerifiedAt,
+              contactVerifiedVia,
             }
           : {}),
       },
@@ -248,7 +260,7 @@ export const createVerificationRequest = async (req: AuthRequest, res: Response)
     // Email the confirmation code straight away, so the employer can finish in one sitting.
     let codeSent = false;
     if (isBusiness && !contactVerifiedAt) {
-      const sent = await sendContactCode(verification.id, userId).catch(() => null);
+      const sent = await sendContactCode(verification.id, userId, new Date(), { ip: req.ip }).catch(() => null);
       codeSent = Boolean(sent?.ok);
     }
 
@@ -429,9 +441,11 @@ export const updateVerificationRequestStatus = async (req: AuthRequest, res: Res
     });
 
     // The email goes out after the decision is saved and never holds it up.
-    void sendVerificationDecisionEmail(verification.user.email, decision).catch((error) =>
-      logger.error('verification_decision_email_failed', { verificationId, error: getErrorMessage(error) }),
-    );
+    if (verification.user.email) {
+      void sendVerificationDecisionEmail(verification.user.email, decision).catch((error) =>
+        logger.error('verification_decision_email_failed', { verificationId, error: getErrorMessage(error) }),
+      );
+    }
 
     return res.json({ success: true, verification: updatedVerification });
   } catch (error) {
@@ -443,9 +457,16 @@ export const updateVerificationRequestStatus = async (req: AuthRequest, res: Res
 export const requestContactCode = async (req: AuthRequest, res: Response) => {
   try {
     const id = singleValue(req.params.id);
-    const result = await sendContactCode(id || '', req.user!.id);
+    const channel = (req.body as { channel?: 'EMAIL' | 'PHONE' } | undefined)?.channel;
+    const result = await sendContactCode(id || '', req.user!.id, new Date(), { channel, ip: req.ip });
 
-    if (result.ok) return res.json({ success: true, message: 'We have emailed you a 6-digit code.' });
+    if (result.ok) {
+      return res.json({
+        success: true,
+        channel: result.channel,
+        message: result.channel === 'PHONE' ? 'We have texted you a 6-digit code.' : 'We have emailed you a 6-digit code.',
+      });
+    }
 
     switch (result.reason) {
       case 'NOT_FOUND':
@@ -456,6 +477,8 @@ export const requestContactCode = async (req: AuthRequest, res: Response) => {
         return res.json({ success: true, alreadyConfirmed: true, message: 'This contact is already confirmed.' });
       case 'NO_EMAIL':
         return res.status(400).json({ success: false, message: 'Add a company email address to your request first.' });
+      case 'NO_PHONE':
+        return res.status(400).json({ success: false, message: 'Add a company phone number to your request first.' });
       case 'COOLDOWN':
         return res.status(429).json({
           success: false,
@@ -465,7 +488,7 @@ export const requestContactCode = async (req: AuthRequest, res: Response) => {
       case 'TOO_MANY':
         return res.status(429).json({ success: false, message: 'Too many codes requested. Try again in an hour.' });
       default:
-        return res.status(502).json({ success: false, message: 'We could not send the email just now. Please try again.' });
+        return res.status(502).json({ success: false, message: 'We could not send the code just now. Please try again.' });
     }
   } catch (error) {
     return res.status(500).json({ success: false, message: getErrorMessage(error) });
@@ -479,7 +502,7 @@ export const submitContactCode = async (req: AuthRequest, res: Response) => {
     const { code } = req.body as { code: string };
     const result = await confirmContactCode(id || '', req.user!.id, code);
 
-    if (result.ok) return res.json({ success: true, message: 'Your company email is confirmed.' });
+    if (result.ok) return res.json({ success: true, channel: result.channel, message: 'Your company contact is confirmed.' });
 
     switch (result.reason) {
       case 'NOT_FOUND':

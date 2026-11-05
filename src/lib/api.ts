@@ -42,7 +42,13 @@ const handleResponse = async (res: Response) => {
     }
   }
 
-  if (!res.ok) throw new Error(data.message || 'Something went wrong');
+  if (!res.ok) {
+    // Keep the extra hints the server sends (how long to wait, how many tries are left).
+    throw Object.assign(new Error(data.message || 'Something went wrong'), {
+      retryAfterSeconds: data.retryAfterSeconds as number | undefined,
+      attemptsLeft: data.attemptsLeft as number | undefined,
+    });
+  }
   return data;
 };
 
@@ -59,6 +65,41 @@ export const apiLogin = (email: string, password: string) =>
     method: 'POST',
     headers: headers(),
     body: JSON.stringify({ email, password }),
+  }).then(handleResponse);
+
+export const apiSendPhoneCode = (phone: string, purpose: 'LOGIN' | 'SIGNUP') =>
+  fetch(`${BASE_URL}/auth/phone/send-code`, {
+    method: 'POST',
+    headers: headers(),
+    body: JSON.stringify({ phone, purpose }),
+  }).then(handleResponse);
+
+export const apiLoginWithPhone = (phone: string, code: string) =>
+  fetch(`${BASE_URL}/auth/phone/login`, {
+    method: 'POST',
+    headers: headers(),
+    body: JSON.stringify({ phone, code }),
+  }).then(handleResponse);
+
+export const apiSignupWithPhone = (phone: string, code: string, role: string) =>
+  fetch(`${BASE_URL}/auth/phone/signup`, {
+    method: 'POST',
+    headers: headers(),
+    body: JSON.stringify({ phone, code, role }),
+  }).then(handleResponse);
+
+export const apiSendAddPhoneCode = (phone: string) =>
+  fetch(`${BASE_URL}/users/phone/send-code`, {
+    method: 'POST',
+    headers: headers(true),
+    body: JSON.stringify({ phone }),
+  }).then(handleResponse);
+
+export const apiConfirmAddPhone = (phone: string, code: string) =>
+  fetch(`${BASE_URL}/users/phone/confirm`, {
+    method: 'POST',
+    headers: headers(true),
+    body: JSON.stringify({ phone, code }),
   }).then(handleResponse);
 
 export const apiGetMe = () =>
@@ -747,8 +788,12 @@ export const apiCreateVerificationRequest = (data: Record<string, string | undef
     body: JSON.stringify(data),
   }).then(handleResponse);
 
-export const apiRequestVerificationCode = (requestId: string) =>
-  fetch(`${BASE_URL}/users/verification/${requestId}/code`, { method: 'POST', headers: headers(true) }).then(handleResponse);
+export const apiRequestVerificationCode = (requestId: string, channel?: 'EMAIL' | 'PHONE') =>
+  fetch(`${BASE_URL}/users/verification/${requestId}/code`, {
+    method: 'POST',
+    headers: headers(true),
+    body: JSON.stringify(channel ? { channel } : {}),
+  }).then(handleResponse);
 
 export const apiConfirmVerificationCode = (requestId: string, code: string) =>
   fetch(`${BASE_URL}/users/verification/${requestId}/confirm`, {

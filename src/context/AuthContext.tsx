@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import { apiGetMe, apiLogin, apiRegister } from '../lib/api';
+import { apiGetMe, apiLogin, apiLoginWithPhone, apiRegister, apiSignupWithPhone } from '../lib/api';
 import { emailHandle, getDisplayName } from '../lib/display';
 
 export type UserRole = 'SEEKER' | 'EMPLOYER' | 'FREELANCER' | 'ADMIN';
@@ -31,7 +31,9 @@ interface FreelancerProfile {
 
 export interface AuthUser {
   id: string;
-  email: string;
+  // Empty for people who signed up with just a phone number.
+  email: string | null;
+  phone?: string | null;
   role: UserRole;
   emailVerified?: boolean;
   verificationStatus?: string | null;
@@ -52,6 +54,8 @@ interface AuthContextType {
   role: UserRole | null;
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, role: UserRole) => Promise<void>;
+  loginWithPhone: (phone: string, code: string) => Promise<void>;
+  signupWithPhone: (phone: string, code: string, role: UserRole) => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<void>;
 }
@@ -156,6 +160,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const startSession = async (data: { token: string; user: AuthUser }, isNewAccount: boolean) => {
+    persistToken(data.token);
+
+    try {
+      await syncCurrentUser();
+    } catch {
+      setUser(data.user);
+      setIsOnboarded(isNewAccount ? false : hasCompletedOnboarding(data.user));
+    }
+  };
+
+  const loginWithPhone = async (phone: string, code: string) => {
+    await startSession(await apiLoginWithPhone(phone, code), false);
+  };
+
+  const signupWithPhone = async (phone: string, code: string, role: UserRole) => {
+    await startSession(await apiSignupWithPhone(phone, code, role), true);
+  };
+
   const logout = () => {
     clearSession();
   };
@@ -166,11 +189,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const userName =
     user?.role === 'EMPLOYER'
-      ? user.employerProfile?.companyName || emailHandle(user.email)
+      ? user.employerProfile?.companyName || emailHandle(user.email ?? user.phone)
       : getDisplayName(
           user?.jobSeekerProfile?.firstName || user?.freelancerProfile?.firstName,
           user?.jobSeekerProfile?.lastName || user?.freelancerProfile?.lastName,
-          user?.email,
+          user?.email ?? user?.phone,
         );
 
   return (
@@ -185,6 +208,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         role: user?.role || null,
         login,
         signup,
+        loginWithPhone,
+        signupWithPhone,
         logout,
         refreshUser,
       }}

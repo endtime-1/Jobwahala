@@ -2,11 +2,13 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react'
 import { AuthAside, AuthMobileBanner } from '../components/AuthShell'
+import PhoneCodeFlow from '../components/PhoneCodeFlow'
 import { useAuth } from '../context/AuthContext'
 import { isApiUnavailableMessage } from '../lib/apiStatus'
 import { getErrorMessage } from '../lib/errors'
 
 export default function Login() {
+  const [method, setMethod] = useState<'email' | 'phone'>('email')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -50,6 +52,29 @@ export default function Login() {
                 <p className="text-base text-[#6b7a8d]">Sign in to continue to your account</p>
               </div>
 
+              <div role="tablist" aria-label="How to sign in" className="mb-5 grid grid-cols-2 rounded-xl bg-[#eaeff5] p-1">
+                {(
+                  [
+                    ['email', 'Email'],
+                    ['phone', 'Phone'],
+                  ] as const
+                ).map(([value, label]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    role="tab"
+                    aria-selected={method === value}
+                    onClick={() => { setMethod(value); setError('') }}
+                    className={`h-10 rounded-lg text-sm font-bold transition-all ${method === value ? 'bg-white text-[#111c2d] shadow-sm' : 'text-[#6b7a8d] hover:text-[#111c2d]'}`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              {method === 'phone' ? (
+                <PhoneCodeFlow mode="login" onDone={() => navigate('/dashboard')} />
+              ) : (
               <form onSubmit={handleLogin} className="space-y-4">
                 <div>
                   <label className="block text-[13px] font-semibold text-[#374151] mb-1.5">
@@ -120,6 +145,7 @@ export default function Login() {
                   )}
                 </button>
               </form>
+              )}
             </div>
 
             <p className="mt-5 text-center text-[13px] text-[#6b7a8d]">

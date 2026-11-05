@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Mail, Lock, User, Eye, EyeOff, ArrowRight, Briefcase, Laptop, Users } from 'lucide-react'
 import { AuthAside, AuthMobileBanner } from '../components/AuthShell'
+import PhoneCodeFlow from '../components/PhoneCodeFlow'
+import { useFeatures } from '../lib/features'
 import { useAuth, type UserRole } from '../context/AuthContext'
 import { isApiUnavailableMessage } from '../lib/apiStatus'
 import { getErrorMessage } from '../lib/errors'
@@ -13,6 +15,10 @@ const ROLES: { value: UserRole; label: string; description: string; icon: typeof
 ]
 
 export default function Signup() {
+  const [method, setMethod] = useState<'email' | 'phone'>('email')
+  const { freelanceEnabled } = useFeatures()
+  // Freelancer accounts open when freelance gigs do.
+  const roles = ROLES.filter((item) => item.value !== 'FREELANCER' || freelanceEnabled)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
@@ -58,6 +64,48 @@ export default function Signup() {
                 <p className="text-base text-[#6b7a8d]">Get started — it only takes a minute</p>
               </div>
 
+              <div role="tablist" aria-label="How to sign up" className="mb-5 grid grid-cols-2 rounded-xl bg-[#eaeff5] p-1">
+                {(
+                  [
+                    ['email', 'Email'],
+                    ['phone', 'Phone'],
+                  ] as const
+                ).map(([value, label]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    role="tab"
+                    aria-selected={method === value}
+                    onClick={() => { setMethod(value); setError('') }}
+                    className={`h-10 rounded-lg text-sm font-bold transition-all ${method === value ? 'bg-white text-[#111c2d] shadow-sm' : 'text-[#6b7a8d] hover:text-[#111c2d]'}`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              {method === 'phone' ? (
+                <div className="space-y-5">
+                  <div>
+                    <p className="mb-2 block text-sm font-bold text-[#374151]">I am a…</p>
+                    <div className="grid gap-2" role="group" aria-label="Account type">
+                      {roles.map(({ value, label, description }) => (
+                        <button
+                          key={value}
+                          type="button"
+                          onClick={() => setRole(value)}
+                          aria-pressed={role === value}
+                          className={`rounded-xl border-2 px-3.5 py-2.5 text-left transition-all ${role === value ? 'border-[#2f6df6] bg-[#edf4ff]' : 'border-[#dde3ec] bg-[#f7f9fc] hover:border-[#b8c8dc]'}`}
+                        >
+                          <span className="block text-base font-bold leading-tight text-[#111c2d]">{label}</span>
+                          <span className="block text-sm text-[#6b7a8d]">{description}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <PhoneCodeFlow mode="signup" role={role} onDone={() => navigate('/onboarding')} />
+                </div>
+              ) : (
               <form onSubmit={handleSignup} className="space-y-4">
                 {/* Full name */}
                 <div>
@@ -123,7 +171,7 @@ export default function Signup() {
                 <div>
                   <label className="block text-sm font-bold text-[#374151] mb-2">I am a…</label>
                   <div className="space-y-2.5">
-                    {ROLES.map(({ value, label, description, icon: Icon }) => (
+                    {roles.map(({ value, label, description, icon: Icon }) => (
                       <button
                         key={value}
                         type="button"
@@ -177,6 +225,7 @@ export default function Signup() {
                   <Link to="/privacy" className="text-[#6b7a8d] underline underline-offset-2 hover:text-[#111c2d]">Privacy Policy</Link>.
                 </p>
               </form>
+              )}
             </div>
 
             <p className="mt-5 text-center text-[13px] text-[#6b7a8d]">

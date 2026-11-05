@@ -69,7 +69,7 @@ export const notifyJobAlerts = async (job: NewJob) => {
         data: { lastAlertedAt: new Date() },
       });
 
-      if (first.user.emailVerified && matches.some((match) => match.emailAlerts)) {
+      if (first.user.email && first.user.emailVerified && matches.some((match) => match.emailAlerts)) {
         sendJobAlertEmail(first.user.email, {
           alertName,
           jobTitle: job.title,

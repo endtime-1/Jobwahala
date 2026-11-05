@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { isPlausibleRegistrationNumber } from '../utils/verification';
-import { normalizePhone } from './interestSchemas';
+import { ghanaPhoneSchema } from './authSchemas';
 
 const verificationStatusValues = ['APPROVED', 'REJECTED', 'NEEDS_INFO'] as const;
 
@@ -46,28 +46,35 @@ export const createBusinessVerificationRequestSchema = z.object({
         .trim()
         .refine(isPlausibleRegistrationNumber, 'Enter your Registrar-General registration number'),
       documentUrl: z.string().trim().min(1, 'Upload your registration certificate').url('Upload your registration certificate').max(500),
-      contactEmail: z
-        .string()
-        .trim()
-        .email('Enter the company email address')
-        .max(254)
-        .transform((value) => value.toLowerCase()),
-      contactPhone: z.preprocess(
+      contactEmail: z.preprocess(
         blankToUndefined,
         z
           .string()
           .trim()
-          .max(30)
-          .refine((value) => normalizePhone(value) !== null, 'Enter a valid phone number')
+          .email('Enter the company email address')
+          .max(254)
+          .transform((value) => value.toLowerCase())
           .optional(),
       ),
+      // A Ghanaian mobile number; it can receive the confirmation code by SMS.
+      contactPhone: z.preprocess(blankToUndefined, ghanaPhoneSchema.optional()),
       address: z.string().trim().min(10, 'Enter the full physical address').max(300),
       details: z.preprocess(blankToUndefined, z.string().trim().max(2000).optional()),
     })
-    .strict(),
+    .strict()
+    .refine((body) => Boolean(body.contactEmail || body.contactPhone), {
+      message: 'Add a company email or a company phone number',
+      path: ['contactEmail'],
+    }),
 });
 
 export const verificationCodeParamsSchema = z.object({ params: idParamsSchema });
+
+/** Which way to send the code. Left out means email if there is one, otherwise the phone. */
+export const requestVerificationCodeSchema = z.object({
+  params: idParamsSchema,
+  body: z.object({ channel: z.enum(['EMAIL', 'PHONE']).optional() }).strict().default({}),
+});
 
 export const confirmVerificationCodeSchema = z.object({
   params: idParamsSchema,

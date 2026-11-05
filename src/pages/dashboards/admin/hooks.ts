@@ -40,7 +40,7 @@ export type AdminVerification = {
   documentUrl?: string | null; reviewNote?: string | null; internalNote?: string | null
   reviewedAt?: string | null; createdAt: string; submissionCount?: number
   registrationNumber?: string | null; contactEmail?: string | null; contactPhone?: string | null
-  address?: string | null; contactVerifiedAt?: string | null
+  address?: string | null; contactVerifiedAt?: string | null; contactVerifiedVia?: string | null
   auditTrail?: Array<{ action: string; adminEmail: string; reason?: string | null; createdAt: string }>
   history?: Array<{
     id: string; type: string; status: string; details: string

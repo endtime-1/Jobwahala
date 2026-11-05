@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const prismaMock = vi.hoisted(() => {
   const mock: Record<string, any> = {
     verificationRequest: { findFirst: vi.fn(), findUnique: vi.fn(), findMany: vi.fn(), create: vi.fn(), update: vi.fn() },
+    phoneOtp: { findMany: vi.fn(), findFirst: vi.fn(), count: vi.fn(), create: vi.fn(), update: vi.fn(), updateMany: vi.fn(), delete: vi.fn() },
     contactVerificationCode: { findMany: vi.fn(), findFirst: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn() },
     adminActionLog: { create: vi.fn(), findMany: vi.fn() },
     user: { findUnique: vi.fn(), update: vi.fn() },
@@ -171,7 +172,7 @@ describe('confirming the company email with a code', () => {
   it('stores only a hash of the code that it emails', async () => {
     const result = await sendContactCode('ver-1', 'emp-1');
 
-    expect(result).toEqual({ ok: true });
+    expect(result).toEqual({ ok: true, channel: 'EMAIL' });
     const emailed = emailMock.code.mock.calls[0][1] as string;
     const saved = prismaMock.contactVerificationCode.create.mock.calls[0][0].data;
     expect(saved.codeHash).toBe(hashOtp(emailed, 'ver-1', secret));
@@ -206,10 +207,10 @@ describe('confirming the company email with a code', () => {
   it('confirms the contact when the code is right', async () => {
     prismaMock.contactVerificationCode.findFirst.mockResolvedValue(storedCode('482913'));
 
-    expect(await confirmContactCode('ver-1', 'emp-1', '482913')).toEqual({ ok: true });
+    expect(await confirmContactCode('ver-1', 'emp-1', '482913')).toEqual({ ok: true, channel: 'EMAIL' });
     expect(prismaMock.verificationRequest.update).toHaveBeenCalledWith({
       where: { id: 'ver-1' },
-      data: { contactVerifiedAt: expect.any(Date) },
+      data: { contactVerifiedAt: expect.any(Date), contactVerifiedVia: 'EMAIL' },
     });
     expect(prismaMock.contactVerificationCode.update).toHaveBeenCalledWith({
       where: { id: 'code-1' },

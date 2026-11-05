@@ -102,7 +102,7 @@ const getProposalUserName = (user?: ProposalWithRelations['creator'] | null) => 
     .join(' ')
     .trim();
 
-  return user.employerProfile?.companyName || fullName || user.email;
+  return user.employerProfile?.companyName || fullName || user.email || 'Someone';
 };
 
 const getProposalSourceLabel = (proposal: ProposalWithRelations) => {

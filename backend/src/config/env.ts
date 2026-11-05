@@ -88,6 +88,11 @@ const smtpUser = process.env.SMTP_USER || '';
 const smtpPass = process.env.SMTP_PASS || '';
 const smtpFrom = process.env.SMTP_FROM || 'noreply@jobwahala.com';
 
+// Text messages (one-time codes). ARKESEL sends for real; CONSOLE only logs and is refused in production.
+const smsProvider = (process.env.SMS_PROVIDER || (isProduction ? 'ARKESEL' : 'CONSOLE')).trim().toUpperCase();
+const arkeselApiKey = (process.env.ARKESEL_API_KEY || '').trim();
+const arkeselSenderId = (process.env.ARKESEL_SENDER_ID || 'JobWahala').trim().slice(0, 11);
+
 if (isProduction && !smtpUser) {
   console.warn('[jobwahala] SMTP_USER is not set. Email sending will likely fail in production.');
 }
@@ -109,6 +114,9 @@ const env = {
   smtpUser,
   smtpPass,
   smtpFrom,
+  smsProvider,
+  arkeselApiKey,
+  arkeselSenderId,
   paymentProvider: paymentProvider as 'SANDBOX' | 'PAYSTACK',
   paymentDefaultCurrency: (process.env.PAYMENT_DEFAULT_CURRENCY || 'GHS').trim().toUpperCase(),
   paystackSecretKey: process.env.PAYSTACK_SECRET_KEY || '',

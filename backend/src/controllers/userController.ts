@@ -9,7 +9,7 @@ import { publicJobWhere } from '../utils/jobLifecycle';
 
 type DashboardAgreementUser = {
   id: string;
-  email: string;
+  email: string | null;
   employerProfile?: {
     companyName?: string | null;
   } | null;
@@ -32,7 +32,7 @@ const getDashboardUserName = (user: DashboardAgreementUser) => {
     user.jobSeekerProfile?.lastName || user.freelancerProfile?.lastName || '';
   const fullName = [firstName, lastName].filter(Boolean).join(' ').trim();
 
-  return user.employerProfile?.companyName || fullName || user.email;
+  return user.employerProfile?.companyName || fullName || user.email || 'Unknown';
 };
 
 const getAgreementParticipantWhere = (userId: string) => ({

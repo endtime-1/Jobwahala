@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Briefcase, MessageSquare, CheckCircle, ShieldCheck, Lock, FileText, Handshake, Sparkles } from 'lucide-react'
 import VerifiedBadge from '../../components/VerifiedBadge'
 import { useFeatures } from '../../lib/features'
+import AddPhonePanel from '../../components/AddPhonePanel'
 import CompanyLogo from '../../components/CompanyLogo'
 import VerificationPanel from '../../components/VerificationPanel'
 import { Link } from 'react-router-dom'
@@ -371,6 +372,8 @@ export default function SeekerDashboard() {
               pendingPaymentActions={data?.pendingPaymentActions ?? 0}
               paymentActionItems={data?.paymentActionItems ?? []}
             />
+
+            <AddPhonePanel />
 
             <VerificationPanel type="seeker" verification={data?.verification ?? null} isSubmitting={isActing} onSubmit={handleSubmitVerification} />
 

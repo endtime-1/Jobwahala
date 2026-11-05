@@ -48,6 +48,16 @@ SMTP_PASS=
 SMTP_FROM=noreply@your-domain
 ```
 
+Phone sign-up, phone log-in and phone confirmation for employer verification send one-time codes by SMS through Arkesel. Without these, those buttons show "We could not send the code" and email sign-up keeps working:
+
+```env
+SMS_PROVIDER=ARKESEL
+ARKESEL_API_KEY=
+ARKESEL_SENDER_ID=JobWahala
+```
+
+Register the sender name with Arkesel first (11 characters at most). `SMS_PROVIDER=CONSOLE` only prints codes in the log and is refused in production.
+
 For live payments set `PAYMENT_PROVIDER=PAYSTACK`, the Paystack keys, and point the Paystack dashboard webhook at `https://your-web-domain/api/payments/webhooks/paystack`. Ghana cedi checkouts offer mobile money first, so enable mobile money on the Paystack account.
 
 Also set any feature-specific secrets you are using:

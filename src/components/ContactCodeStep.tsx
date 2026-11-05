@@ -5,12 +5,13 @@ import { getErrorMessage } from '../lib/errors'
 
 type Props = {
   requestId: string
-  email: string
+  email?: string | null
+  phone?: string | null
   onConfirmed: () => void
 }
 
-/** The "enter the 6-digit code we emailed you" step of business verification. */
-export default function ContactCodeStep({ requestId, email, onConfirmed }: Props) {
+/** The "enter the 6-digit code we sent you" step of business verification, by email or by text message. */
+export default function ContactCodeStep({ requestId, email, phone, onConfirmed }: Props) {
   const [code, setCode] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -31,13 +32,17 @@ export default function ContactCodeStep({ requestId, email, onConfirmed }: Props
     }
   }
 
-  const resend = async () => {
+  const resend = async (channel: 'EMAIL' | 'PHONE') => {
     setError('')
     setNotice('')
     setBusy(true)
     try {
-      await apiRequestVerificationCode(requestId)
-      setNotice(`A new code is on its way to ${email}.`)
+      await apiRequestVerificationCode(requestId, channel)
+      setNotice(
+        channel === 'PHONE'
+          ? `A new code is on its way by text to ${phone}.`
+          : `A new code is on its way to ${email}.`,
+      )
     } catch (err) {
       setError(getErrorMessage(err, 'We could not send a new code. Please try again.'))
     } finally {
@@ -45,13 +50,15 @@ export default function ContactCodeStep({ requestId, email, onConfirmed }: Props
     }
   }
 
+  const firstTarget = email || phone
+
   return (
     <form onSubmit={(event) => void confirm(event)} className="mt-4 rounded-2xl border border-secondary/20 bg-secondary/5 p-4">
       <p className="flex items-center gap-2 text-sm font-black text-text-main">
-        <MailCheck className="h-4 w-4 text-secondary" aria-hidden /> Confirm your company email
+        <MailCheck className="h-4 w-4 text-secondary" aria-hidden /> Confirm your company contact
       </p>
       <p className="mt-1 text-xs font-semibold text-text-muted">
-        We sent a 6-digit code to <strong>{email}</strong>. Our team can only review your request once it is confirmed.
+        We sent a 6-digit code to <strong>{firstTarget}</strong>. Our team can only review your request once it is confirmed.
       </p>
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <label htmlFor={`code-${requestId}`} className="sr-only">
@@ -70,9 +77,18 @@ export default function ContactCodeStep({ requestId, email, onConfirmed }: Props
         <button type="submit" disabled={busy || code.length !== 6} className="btn btn-primary btn-sm disabled:opacity-60">
           Confirm
         </button>
-        <button type="button" disabled={busy} onClick={() => void resend()} className="text-[10px] font-black uppercase tracking-widest text-primary hover:underline disabled:opacity-60">
-          Send a new code
-        </button>
+      </div>
+      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
+        {email ? (
+          <button type="button" disabled={busy} onClick={() => void resend('EMAIL')} className="text-[10px] font-black uppercase tracking-widest text-primary hover:underline disabled:opacity-60">
+            Email me a new code
+          </button>
+        ) : null}
+        {phone ? (
+          <button type="button" disabled={busy} onClick={() => void resend('PHONE')} className="text-[10px] font-black uppercase tracking-widest text-primary hover:underline disabled:opacity-60">
+            Text me a new code
+          </button>
+        ) : null}
       </div>
       {error ? (
         <p role="alert" className="mt-2 text-sm font-bold text-error">

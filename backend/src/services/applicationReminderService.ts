@@ -24,7 +24,7 @@ export const runApplicationReminders = async (now: Date = new Date()) => {
   const byEmployer = new Map<string, Group>();
   for (const application of stale) {
     const { job } = application;
-    if (job.employer.status !== 'ACTIVE') continue;
+    if (job.employer.status !== 'ACTIVE' || !job.employer.email) continue;
 
     const group: Group = byEmployer.get(job.employerId) ?? { email: job.employer.email, ids: [], jobs: new Map() };
     group.ids.push(application.id);

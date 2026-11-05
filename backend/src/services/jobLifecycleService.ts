@@ -36,7 +36,7 @@ export const runJobLifecycleSweep = async (now: Date = new Date()) => {
 
   let warned = 0;
   for (const job of closingSoon) {
-    if (job.employer.status !== 'ACTIVE') continue;
+    if (job.employer.status !== 'ACTIVE' || !job.employer.email) continue;
 
     // Claim the job first so two overlapping runs cannot both send the email.
     const claim = await prisma.job.updateMany({

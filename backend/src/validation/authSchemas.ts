@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { normalizeGhanaPhone } from '../utils/phone';
 
 const publicRegistrationRoles = ['SEEKER', 'EMPLOYER', 'FREELANCER'] as const;
 
@@ -70,4 +71,48 @@ export const resetPasswordSchema = z.object({
       password: passwordSchema,
     })
     .strict(),
+});
+
+/** A Ghanaian mobile number typed any usual way; becomes +233XXXXXXXXX. */
+export const ghanaPhoneSchema = z
+  .string()
+  .trim()
+  .min(1, 'Enter your phone number')
+  .max(30)
+  .transform((value, ctx) => {
+    const phone = normalizeGhanaPhone(value);
+    if (!phone) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Enter a Ghanaian mobile number, like 024 123 4567' });
+      return z.NEVER;
+    }
+    return phone;
+  });
+
+const otpCodeSchema = z.string().trim().regex(/^\d{6}$/, 'Enter the 6-digit code');
+
+export const sendPhoneCodeSchema = z.object({
+  body: z.object({ phone: ghanaPhoneSchema, purpose: z.enum(['LOGIN', 'SIGNUP']) }).strict(),
+});
+
+export const phoneLoginSchema = z.object({
+  body: z.object({ phone: ghanaPhoneSchema, code: otpCodeSchema }).strict(),
+});
+
+export const phoneSignupSchema = z.object({
+  body: z
+    .object({
+      phone: ghanaPhoneSchema,
+      code: otpCodeSchema,
+      role: z.preprocess(
+        (value) => (typeof value === 'string' ? value.toUpperCase() : value),
+        z.enum(publicRegistrationRoles).default('SEEKER'),
+      ),
+    })
+    .strict(),
+});
+
+export const addPhoneSchema = z.object({ body: z.object({ phone: ghanaPhoneSchema }).strict() });
+
+export const confirmAddPhoneSchema = z.object({
+  body: z.object({ phone: ghanaPhoneSchema, code: otpCodeSchema }).strict(),
 });
