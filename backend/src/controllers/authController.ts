@@ -345,7 +345,7 @@ export const resetPassword = async (req: Request, res: Response) => {
 
 const LOGIN_CODE_NOTICE = 'If this number has an account, we have texted it a 6-digit code.';
 
-const respondToIssue = (res: Response, result: IssueResult) => {
+export const respondToIssue = (res: Response, result: IssueResult) => {
   if (result.ok) return res.json({ success: true, message: 'We have texted you a 6-digit code.' });
 
   switch (result.reason) {
@@ -364,7 +364,7 @@ const respondToIssue = (res: Response, result: IssueResult) => {
   }
 };
 
-const respondToWrongCode = (res: Response, result: Exclude<VerifyResult, { ok: true }>) => {
+export const respondToWrongCode = (res: Response, result: Exclude<VerifyResult, { ok: true }>) => {
   switch (result.reason) {
     case 'NO_CODE':
       return res.status(400).json({ success: false, message: 'Ask for a code first.' });

@@ -5,7 +5,7 @@ import { getErrorMessage } from '../utils/errors';
 import { OTP_MAX_ATTEMPTS, generateOtp, hashOtp, otpMatches } from '../utils/otp';
 import { sendSms } from './sms';
 
-export const PHONE_OTP_PURPOSES = ['SIGNUP', 'LOGIN', 'ADD_PHONE', 'EMPLOYER_VERIFICATION'] as const;
+export const PHONE_OTP_PURPOSES = ['SIGNUP', 'LOGIN', 'ADD_PHONE', 'EMPLOYER_VERIFICATION', 'DELETE_ACCOUNT'] as const;
 export type PhoneOtpPurpose = (typeof PHONE_OTP_PURPOSES)[number];
 
 /** Codes sent by SMS last 5 minutes. */

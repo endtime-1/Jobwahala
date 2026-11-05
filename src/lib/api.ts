@@ -102,6 +102,29 @@ export const apiConfirmAddPhone = (phone: string, code: string) =>
     body: JSON.stringify({ phone, code }),
   }).then(handleResponse);
 
+export const apiDownloadMyData = async (): Promise<{ blob: Blob; filename: string }> => {
+  const res = await fetch(`${BASE_URL}/users/me/export`, { headers: headers(true) });
+  if (!res.ok) {
+    await handleResponse(res); // throws with the server's message
+  }
+  const disposition = res.headers.get('Content-Disposition') || '';
+  const filename = /filename="([^"]+)"/.exec(disposition)?.[1] || 'jobwahala-my-data.json';
+  return { blob: await res.blob(), filename };
+};
+
+export const apiGetDeletionPreview = () =>
+  fetch(`${BASE_URL}/users/me/deletion-preview`, { headers: headers(true) }).then(handleResponse);
+
+export const apiSendDeletionCode = () =>
+  fetch(`${BASE_URL}/users/me/delete-code`, { method: 'POST', headers: headers(true) }).then(handleResponse);
+
+export const apiDeleteMyAccount = (data: { confirm: 'DELETE'; password?: string; code?: string; acknowledgeCompany?: boolean }) =>
+  fetch(`${BASE_URL}/users/me/delete`, {
+    method: 'POST',
+    headers: headers(true),
+    body: JSON.stringify(data),
+  }).then(handleResponse);
+
 export const apiGetMe = () =>
   fetch(`${BASE_URL}/auth/me`, { headers: headers(true) }).then(handleResponse);
 

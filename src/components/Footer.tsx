@@ -10,6 +10,7 @@ const footerColumns = [
       ['Browse jobs', '/jobs'],
       ['Freelance gigs (coming soon)', '/#freelance-gigs'],
       ['My applications', '/applications'],
+      ['Account and data settings', '/settings'],
       ['Build a free CV', '/cv-generator'],
       ['My dashboard', '/dashboard'],
     ],

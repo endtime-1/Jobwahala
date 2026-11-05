@@ -1,7 +1,8 @@
 import { Router } from 'express';
 import { getProfile, updateProfile, getAllUsers, getDashboardData, getWorkspaceSignals, getDashboardWorkflowSummary, getDashboardOverview, getProfileOptimization } from '../controllers/userController';
 import { sendAddPhoneCode, confirmAddPhone } from '../controllers/authController';
-import { addPhoneSchema, confirmAddPhoneSchema } from '../validation/authSchemas';
+import { deleteMyAccount, exportMyData, getMyDeletionPreview, sendDeletionCode } from '../controllers/accountController';
+import { addPhoneSchema, confirmAddPhoneSchema, deleteAccountSchema } from '../validation/authSchemas';
 import { createVerificationRequest, getMyVerification, requestContactCode, submitContactCode } from '../controllers/verificationController';
 import { authMiddleware, roleMiddleware } from '../middleware/auth';
 import { validate, validateWith } from '../middleware/validate';
@@ -41,6 +42,14 @@ const addPhoneSendLimit = createRateLimit({ windowMs: 60 * 60 * 1000, max: 20, s
 const addPhoneCheckLimit = createRateLimit({ windowMs: 60 * 60 * 1000, max: 60, scope: 'sms-check' });
 router.post('/phone/send-code', authMiddleware, addPhoneSendLimit, validate(addPhoneSchema), sendAddPhoneCode);
 router.post('/phone/confirm', authMiddleware, addPhoneCheckLimit, validate(confirmAddPhoneSchema), confirmAddPhone);
+
+// Your data: download it, or delete the account. Both are rate limited; deleting also re-checks who you are.
+const exportLimit = createRateLimit({ windowMs: 60 * 60 * 1000, max: 10, scope: 'data-export' });
+const deleteLimit = createRateLimit({ windowMs: 60 * 60 * 1000, max: 10, scope: 'account-delete' });
+router.get('/me/export', authMiddleware, exportLimit, exportMyData);
+router.get('/me/deletion-preview', authMiddleware, getMyDeletionPreview);
+router.post('/me/delete-code', authMiddleware, addPhoneSendLimit, sendDeletionCode);
+router.post('/me/delete', authMiddleware, deleteLimit, validate(deleteAccountSchema), deleteMyAccount);
 
 router.get('/profile', authMiddleware, getProfile);
 router.put('/profile', authMiddleware, validateWith((req) => getProfileUpdateSchema((req as any).user?.role)), updateProfile);

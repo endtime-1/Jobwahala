@@ -116,3 +116,15 @@ export const addPhoneSchema = z.object({ body: z.object({ phone: ghanaPhoneSchem
 export const confirmAddPhoneSchema = z.object({
   body: z.object({ phone: ghanaPhoneSchema, code: otpCodeSchema }).strict(),
 });
+
+/** Deleting an account: typed confirmation, plus a password (email accounts) or a texted code (phone-only accounts). */
+export const deleteAccountSchema = z.object({
+  body: z
+    .object({
+      confirm: z.literal('DELETE', { message: 'Type DELETE to confirm' }),
+      password: z.string().max(200).optional(),
+      code: otpCodeSchema.optional(),
+      acknowledgeCompany: z.boolean().optional(),
+    })
+    .strict(),
+});

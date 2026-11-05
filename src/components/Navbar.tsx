@@ -372,6 +372,12 @@ export default function Navbar() {
                           </div>
 
                           <div className="border-t border-surface-border bg-white/66 p-2">
+                            <Link
+                              to="/settings"
+                              className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-xs font-black text-text-main transition-colors hover:bg-surface-alt/70"
+                            >
+                              <UserCircle2 className="h-4 w-4" /> Account settings
+                            </Link>
                             <button
                               type="button"
                               onClick={handleLogout}
@@ -486,6 +492,9 @@ export default function Navbar() {
                     Complete Setup
                   </Link>
                 ) : null}
+                <Link to="/settings" className="btn btn-outline w-full">
+                  Account settings
+                </Link>
                 <button type="button" onClick={handleLogout} className="btn w-full bg-error/10 text-error">
                   Logout
                 </button>

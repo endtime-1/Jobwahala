@@ -38,6 +38,13 @@ describe('phone routes on the real app', () => {
     expect((await post('/api/users/phone/confirm', { phone: '0241234567', code: '123456' })).status).toBe(401);
   });
 
+  it('keeps downloading and deleting your data behind a login', async () => {
+    expect((await fetch(base + '/api/users/me/export')).status).toBe(401);
+    expect((await fetch(base + '/api/users/me/deletion-preview')).status).toBe(401);
+    expect((await post('/api/users/me/delete-code', {})).status).toBe(401);
+    expect((await post('/api/users/me/delete', { confirm: 'DELETE', password: 'x' })).status).toBe(401);
+  });
+
   it('keeps the employer code routes behind a login too', async () => {
     expect((await post('/api/users/verification/abc/code', {})).status).toBe(401);
   });
