@@ -14,6 +14,9 @@ export type SeoJob = {
   type: string;
   category?: string | null;
   salary?: string | null;
+  /** Pay in Ghana cedis a month, when the employer gave numbers. */
+  salaryMin?: number | null;
+  salaryMax?: number | null;
   createdAt: Date;
   /** Last day to apply; becomes validThrough in the JobPosting data. */
   closesAt?: Date;
@@ -90,6 +93,21 @@ export const buildJobPostingJsonLd = (job: SeoJob, siteUrl: string) => {
     description: paragraphs(job.description) || `<p>${e(job.title)}</p>`,
     datePosted: job.createdAt.toISOString(),
     ...(job.closesAt ? { validThrough: job.closesAt.toISOString() } : {}),
+    // Google can show the pay in search results when it is given as numbers.
+    ...(job.salaryMin != null || job.salaryMax != null
+      ? {
+          baseSalary: {
+            '@type': 'MonetaryAmount',
+            currency: 'GHS',
+            value: {
+              '@type': 'QuantitativeValue',
+              ...(job.salaryMin != null ? { minValue: job.salaryMin } : {}),
+              ...(job.salaryMax != null ? { maxValue: job.salaryMax } : job.salaryMin != null ? { maxValue: job.salaryMin } : {}),
+              unitText: 'MONTH',
+            },
+          },
+        }
+      : {}),
     employmentType: mapEmploymentType(job.type),
     url: `${siteUrl}/jobs/${job.id}`,
     hiringOrganization: {

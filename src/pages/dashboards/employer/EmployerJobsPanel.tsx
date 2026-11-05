@@ -5,7 +5,7 @@ import { apiCreateJob, apiGenerateJobDraft } from '../../../lib/api'
 import { latestClosingDate, toDateInputValue } from '../../../lib/jobLifecycle'
 import EmployerJobCard from './EmployerJobCard'
 import type { EmployerJob, JobCopilotDraft } from './types'
-import { makeInitialJobForm } from './utils'
+import { makeInitialJobForm, toJobPayload } from './utils'
 import { getErrorMessage } from '../../../lib/errors'
 
 type Props = {
@@ -42,7 +42,8 @@ export default function EmployerJobsPanel({
     setIsCreatingJob(true)
 
     try {
-      await apiCreateJob(asDraft ? { ...jobForm, status: 'DRAFT' } : jobForm)
+      const payload = toJobPayload(jobForm)
+      await apiCreateJob(asDraft ? { ...payload, status: 'DRAFT' } : payload)
       setJobForm(makeInitialJobForm())
       setJobCopilotDraft(null)
       onToggleCreateForm()
@@ -70,7 +71,7 @@ export default function EmployerJobsPanel({
 
     try {
       // The closing date is not part of the writing help.
-      const { closesAt: _closesAt, ...draftInput } = jobForm
+      const { closesAt: _closesAt, salaryMin: _salaryMin, salaryMax: _salaryMax, ...draftInput } = jobForm
       const data = await apiGenerateJobDraft({
         ...draftInput,
         focus: jobForm.description || undefined,
@@ -173,9 +174,37 @@ export default function EmployerJobsPanel({
               </select>
             </div>
             <div className="space-y-1.5">
-              <label htmlFor="job-salary" className="block text-base font-bold text-text-main">Pay</label>
+              <p className="block text-base font-bold text-text-main">Pay (GHS a month)</p>
+              <div className="grid grid-cols-2 gap-3">
+                <input
+                  id="job-salary-min"
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  placeholder="From, e.g. 3000"
+                  aria-label="Pay from (GHS a month)"
+                  value={jobForm.salaryMin}
+                  onChange={(e) => setJobForm((c) => ({ ...c, salaryMin: e.target.value }))}
+                  className="h-14 text-base font-semibold"
+                />
+                <input
+                  id="job-salary-max"
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  placeholder="To (optional)"
+                  aria-label="Pay to (GHS a month)"
+                  value={jobForm.salaryMax}
+                  onChange={(e) => setJobForm((c) => ({ ...c, salaryMax: e.target.value }))}
+                  className="h-14 text-base font-semibold"
+                />
+              </div>
+              <p className="text-sm text-text-muted">Candidates can search by pay, so give numbers if you can.</p>
+            </div>
+            <div className="space-y-1.5">
+              <label htmlFor="job-salary" className="block text-base font-bold text-text-main">Pay as shown on the job</label>
               <input id="job-salary" type="text" placeholder="Salary" value={jobForm.salary} onChange={(e) => setJobForm((c) => ({ ...c, salary: e.target.value }))} className="h-14 text-base font-semibold" />
-              <p className="text-sm text-text-muted">Include the currency, e.g. GHS 3,000 - 4,500 a month.</p>
+              <p className="text-sm text-text-muted">Optional. Left empty, we write it from the numbers, e.g. GHS 3,000 - 4,500 a month.</p>
             </div>
             <div className="space-y-1.5">
               <label htmlFor="job-closes" className="block text-base font-bold text-text-main">Closing date</label>

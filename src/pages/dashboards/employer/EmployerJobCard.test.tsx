@@ -146,6 +146,44 @@ describe('EmployerJobCard', () => {
     )
   })
 
+  it('changing only the pay numbers leaves the shown pay out, so the server rewrites it to match', async () => {
+    renderCard(makeJob({ salary: 'GHS 3,000 a month', salaryMin: 3000, salaryMax: null }))
+
+    fireEvent.click(screen.getByRole('button', { name: /^edit$/i }))
+    expect(screen.getByLabelText(/pay from/i)).toHaveValue(3000)
+    fireEvent.change(screen.getByLabelText(/pay to/i), { target: { value: '4500' } })
+    fireEvent.click(screen.getByRole('button', { name: /save changes/i }))
+
+    await waitFor(() => expect(apiUpdateJobMock).toHaveBeenCalled())
+    const sent = apiUpdateJobMock.mock.calls[0][1]
+    expect(sent).toMatchObject({ salaryMin: 3000, salaryMax: 4500 })
+    expect(sent).not.toHaveProperty('salary')
+  })
+
+  it('changing the shown pay sends it as typed', async () => {
+    renderCard(makeJob({ salary: 'GHS 3,000 a month', salaryMin: 3000, salaryMax: null }))
+
+    fireEvent.click(screen.getByRole('button', { name: /^edit$/i }))
+    fireEvent.change(screen.getByLabelText(/pay as shown/i), { target: { value: 'GHS 3,000 plus transport' } })
+    fireEvent.click(screen.getByRole('button', { name: /save changes/i }))
+
+    await waitFor(() => expect(apiUpdateJobMock).toHaveBeenCalled())
+    const sent = apiUpdateJobMock.mock.calls[0][1]
+    expect(sent.salary).toBe('GHS 3,000 plus transport')
+    expect(sent).not.toHaveProperty('salaryMin')
+  })
+
+  it('clearing the numbers sends null so the server forgets them', async () => {
+    renderCard(makeJob({ salary: 'GHS 3,000 a month', salaryMin: 3000, salaryMax: null }))
+
+    fireEvent.click(screen.getByRole('button', { name: /^edit$/i }))
+    fireEvent.change(screen.getByLabelText(/pay from/i), { target: { value: '' } })
+    fireEvent.click(screen.getByRole('button', { name: /save changes/i }))
+
+    await waitFor(() => expect(apiUpdateJobMock).toHaveBeenCalled())
+    expect(apiUpdateJobMock.mock.calls[0][1]).toMatchObject({ salaryMin: null, salaryMax: null })
+  })
+
   it('does not let an expired job change its date by editing', async () => {
     renderCard(makeJob({ status: 'EXPIRED', closesAt: inDays(-2) }))
 

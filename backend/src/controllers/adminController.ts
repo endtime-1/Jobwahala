@@ -1,4 +1,5 @@
 import { Response } from 'express';
+import { resolvePay } from '../utils/salary';
 import { notifyJobAlerts } from '../services/jobAlertService';
 import { AuthRequest } from '../middleware/auth';
 import prisma from '../config/prisma';
@@ -96,7 +97,8 @@ export const createAdminJob = async (req: AuthRequest, res: Response) => {
           description,
           location: location || null,
           type,
-          salary: salary || null,
+          ...resolvePay({ salary }),
+          salaryParsedAt: new Date(),
           category: category || null,
         },
         include: {

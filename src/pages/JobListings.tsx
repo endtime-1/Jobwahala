@@ -17,7 +17,7 @@ import { useAuth } from '../context/AuthContext'
 import SEO from '../components/SEO'
 import JobAlerts from '../components/JobAlerts'
 import { alertCriteriaFromFilters } from '../lib/jobAlerts'
-import { countryFromSlug, matchesJobField, parseJobType } from '../lib/jobSearch'
+import { countryFromSlug, matchesJobField, matchesSalaryFloor, parseJobType, parseSalaryFloor, salaryFloorOptions } from '../lib/jobSearch'
 import { getErrorMessage } from '../lib/errors'
 
 type JobRecord = {
@@ -26,6 +26,8 @@ type JobRecord = {
   description: string
   location?: string | null
   salary?: string | null
+  salaryMin?: number | null
+  salaryMax?: number | null
   currency?: string | null
   type: string
   category?: string | null
@@ -71,6 +73,7 @@ export default function JobListings() {
   })
   const [selectedLocation, setSelectedLocation] = useState('All of Africa')
   const [onlyVerified, setOnlyVerified] = useState(() => searchParams.get('verified') === '1')
+  const [minSalary, setMinSalary] = useState(() => parseSalaryFloor(searchParams.get('minSalary')))
   const [selectedJobIds, setSelectedJobIds] = useState<string[]>([])
   const [comparison, setComparison] = useState<JobComparisonRecord | null>(null)
   const [comparisonError, setComparisonError] = useState('')
@@ -134,10 +137,11 @@ export default function JobListings() {
         location.toLowerCase().includes(selectedLocation.toLowerCase())
 
       const matchesVerified = !onlyVerified || Boolean(job.employer.isVerified)
+      const matchesPay = matchesSalaryFloor(job, minSalary)
 
-      return matchesSearch && matchesType && matchesLocation && matchesTown && matchesField && matchesVerified
+      return matchesSearch && matchesType && matchesLocation && matchesTown && matchesField && matchesVerified && matchesPay
     })
-  }, [jobs, search, selectedLocation, selectedTypes, town, category, onlyVerified])
+  }, [jobs, search, selectedLocation, selectedTypes, town, category, onlyVerified, minSalary])
 
   const remoteCount = useMemo(
     () => jobs.filter((job) => isRemoteJob(job.location)).length,
@@ -203,6 +207,7 @@ export default function JobListings() {
     Boolean(category.trim()) ||
     selectedLocation !== 'All of Africa' ||
     onlyVerified ||
+    minSalary > 0 ||
     selectedTypes.length !== jobTypes.length
 
   const clearFilters = () => {
@@ -211,6 +216,7 @@ export default function JobListings() {
     setCategory('')
     setSelectedLocation('All of Africa')
     setOnlyVerified(false)
+    setMinSalary(0)
     setSelectedTypes(jobTypes)
   }
 
@@ -350,6 +356,22 @@ export default function JobListings() {
                 {type}
               </button>
             ))}
+            <label className="inline-flex items-center gap-2 text-sm font-bold text-text-muted">
+              <span>Pay from</span>
+              <select
+                value={minSalary}
+                onChange={(event) => setMinSalary(Number(event.target.value))}
+                aria-label="Pay from"
+                className="h-10 rounded-full border border-surface-border bg-white px-3 text-sm font-bold text-text-main"
+              >
+                {salaryFloorOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <span className="sr-only">a month. Jobs that do not show pay as numbers are hidden while this is on.</span>
+            </label>
             <button
               type="button"
               onClick={() => setOnlyVerified((value) => !value)}

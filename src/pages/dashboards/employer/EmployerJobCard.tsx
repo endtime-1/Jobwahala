@@ -45,6 +45,8 @@ export default function EmployerJobCard({ job, highlighted = false, onChanged, o
     location: job.location ?? '',
     type: job.type ?? 'Full-time',
     salary: job.salary ?? '',
+    salaryMin: job.salaryMin != null ? String(job.salaryMin) : '',
+    salaryMax: job.salaryMax != null ? String(job.salaryMax) : '',
     category: job.category ?? '',
     closesAt: toDateInputValue(new Date(job.closesAt ?? Date.now())),
   })
@@ -75,6 +77,10 @@ export default function EmployerJobCard({ job, highlighted = false, onChanged, o
 
   const saveEdit = async (event: React.FormEvent) => {
     event.preventDefault()
+    // If only the numbers changed, leave the shown pay out so the server rewrites it to match.
+    const numbersChanged = form.salaryMin !== (job.salaryMin != null ? String(job.salaryMin) : '') || form.salaryMax !== (job.salaryMax != null ? String(job.salaryMax) : '')
+    const textChanged = form.salary !== (job.salary ?? '')
+    const toNumber = (value: string) => (value.trim() === '' ? null : Math.round(Number(value)))
     const saved = await run(
       () =>
         apiUpdateJob(job.id, {
@@ -82,7 +88,8 @@ export default function EmployerJobCard({ job, highlighted = false, onChanged, o
           description: form.description,
           location: form.location,
           type: form.type,
-          salary: form.salary,
+          ...(textChanged || !numbersChanged ? { salary: form.salary } : {}),
+          ...(numbersChanged ? { salaryMin: toNumber(form.salaryMin), salaryMax: toNumber(form.salaryMax) } : {}),
           category: form.category,
           // An expired job gets a new date through Extend.
           ...(status === 'EXPIRED' ? {} : { closesAt: form.closesAt }),
@@ -246,7 +253,15 @@ export default function EmployerJobCard({ job, highlighted = false, onChanged, o
               </select>
             </label>
             <label className="space-y-1.5 text-sm font-bold text-text-main">
-              Pay
+              Pay from (GHS a month)
+              <input type="number" min={0} inputMode="numeric" value={form.salaryMin} onChange={(e) => setForm((c) => ({ ...c, salaryMin: e.target.value }))} className="h-12 text-base font-semibold" />
+            </label>
+            <label className="space-y-1.5 text-sm font-bold text-text-main">
+              Pay to (GHS a month)
+              <input type="number" min={0} inputMode="numeric" value={form.salaryMax} onChange={(e) => setForm((c) => ({ ...c, salaryMax: e.target.value }))} className="h-12 text-base font-semibold" />
+            </label>
+            <label className="space-y-1.5 text-sm font-bold text-text-main">
+              Pay as shown on the job
               <input value={form.salary} onChange={(e) => setForm((c) => ({ ...c, salary: e.target.value }))} className="h-12 text-base font-semibold" />
             </label>
             <label className="space-y-1.5 text-sm font-bold text-text-main">

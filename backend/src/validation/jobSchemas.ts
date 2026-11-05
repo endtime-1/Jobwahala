@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { MAX_SALARY, salaryRangeProblem } from '../utils/salary';
 
 export const applicationStatusValues = ['SUBMITTED', 'SHORTLISTED', 'INTERVIEW', 'OFFERED', 'REJECTED', 'HIRED'] as const;
 export const ownerJobStatusValues = ['ACTIVE', 'PAUSED', 'CLOSED'] as const;
@@ -8,6 +9,14 @@ const trimmedOptionalString = (max: number) =>
     (value) => (typeof value === 'string' ? value.trim() : value),
     z.string().max(max).optional(),
   );
+
+/** Pay in Ghana cedis per month, as a whole number. null clears it. */
+const salaryNumber = z.number().int().min(0).max(MAX_SALARY).nullable().optional();
+
+const rejectBackwardsPay = (body: { salaryMin?: number | null; salaryMax?: number | null }, ctx: z.RefinementCtx) => {
+  const problem = salaryRangeProblem(body.salaryMin, body.salaryMax);
+  if (problem) ctx.addIssue({ code: z.ZodIssueCode.custom, message: problem, path: ['salaryMax'] });
+};
 
 const jobIdParams = z.object({
   id: z.string().min(1),
@@ -26,8 +35,11 @@ export const createJobSchema = z.object({
       closesAt: trimmedOptionalString(40),
       // Save without publishing.
       status: z.enum(['DRAFT', 'ACTIVE']).optional(),
+      salaryMin: salaryNumber,
+      salaryMax: salaryNumber,
     })
-    .strict(),
+    .strict()
+    .superRefine(rejectBackwardsPay),
 });
 
 export const updateJobSchema = z.object({
@@ -41,8 +53,11 @@ export const updateJobSchema = z.object({
       salary: trimmedOptionalString(120),
       category: trimmedOptionalString(120),
       closesAt: trimmedOptionalString(40),
+      salaryMin: salaryNumber,
+      salaryMax: salaryNumber,
     })
     .strict()
+    .superRefine(rejectBackwardsPay)
     .refine((body) => Object.values(body).some((value) => value !== undefined), { message: 'Nothing to change' }),
 });
 

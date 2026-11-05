@@ -30,6 +30,8 @@ const seoJobSelect = {
   type: true,
   category: true,
   salary: true,
+  salaryMin: true,
+  salaryMax: true,
   createdAt: true,
   closesAt: true,
   employer: { select: { employerProfile: { select: { companyName: true, logoUrl: true, website: true } } } },
@@ -43,6 +45,8 @@ type SeoJobRow = {
   type: string;
   category: string | null;
   salary: string | null;
+  salaryMin: number | null;
+  salaryMax: number | null;
   createdAt: Date;
   closesAt: Date;
   employer: { employerProfile: { companyName: string; logoUrl: string | null; website: string | null } | null };
@@ -59,6 +63,8 @@ const toSeoJob = (row: SeoJobRow, siteUrl: string): SeoJob => {
     type: row.type,
     category: row.category,
     salary: row.salary,
+    salaryMin: row.salaryMin,
+    salaryMax: row.salaryMax,
     createdAt: row.createdAt,
     closesAt: row.closesAt,
     employerName: row.employer.employerProfile?.companyName || 'A company on JobWahala',

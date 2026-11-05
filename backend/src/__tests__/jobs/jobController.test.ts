@@ -194,9 +194,10 @@ describe('editing a job', () => {
     const result = await call(updateOwnedJob as never, { body: { title: '  Head Receptionist ', salary: '' } });
 
     expect(result.status).toBe(200);
+    // Clearing the pay text also clears the pay numbers, so they cannot disagree.
     expect(prismaMock.job.update).toHaveBeenCalledWith({
       where: { id: 'job-1' },
-      data: { title: 'Head Receptionist', salary: null },
+      data: { title: 'Head Receptionist', salary: null, salaryMin: null, salaryMax: null, salaryParsedAt: expect.any(Date) },
     });
     applicationsUntouched();
   });

@@ -79,6 +79,28 @@ describe('Job form closing date and drafts', () => {
     )
   })
 
+  it('sends pay as numbers when they are typed', async () => {
+    renderPanel()
+    fillRequired()
+    fireEvent.change(screen.getByLabelText(/pay from/i), { target: { value: '3000' } })
+    fireEvent.change(screen.getByLabelText(/pay to/i), { target: { value: '4500' } })
+
+    fireEvent.click(screen.getByRole('button', { name: /publish job/i }))
+
+    await waitFor(() => expect(apiCreateJobMock).toHaveBeenCalledWith(expect.objectContaining({ title: 'Cook', salaryMin: 3000, salaryMax: 4500 })))
+  })
+
+  it('sends no pay numbers when the boxes are empty', async () => {
+    renderPanel()
+    fillRequired()
+
+    fireEvent.click(screen.getByRole('button', { name: /publish job/i }))
+
+    await waitFor(() => expect(apiCreateJobMock).toHaveBeenCalled())
+    expect(apiCreateJobMock.mock.calls[0][0]).not.toHaveProperty('salaryMin')
+    expect(apiCreateJobMock.mock.calls[0][0]).not.toHaveProperty('salaryMax')
+  })
+
   it('does not save a draft that is missing the basics', () => {
     renderPanel()
 

@@ -9,9 +9,25 @@ export const makeInitialJobForm = () => ({
   location: '',
   type: 'Full-time',
   salary: '',
+  // Pay as numbers, in Ghana cedis a month (typed as text in the form, sent as numbers).
+  salaryMin: '',
+  salaryMax: '',
   category: '',
   closesAt: defaultClosingDate(),
 })
+
+const toWholeNumber = (value: string) => {
+  const number = Number(value.replace(/[,\s]/g, ''))
+  return value.trim() !== '' && Number.isFinite(number) ? Math.round(number) : null
+}
+
+/** The job form as the API wants it: pay as numbers when typed, and nothing extra when not. */
+export const toJobPayload = (form: ReturnType<typeof makeInitialJobForm>) => {
+  const { salaryMin, salaryMax, ...rest } = form
+  const min = toWholeNumber(salaryMin)
+  const max = toWholeNumber(salaryMax)
+  return { ...rest, ...(min !== null ? { salaryMin: min } : {}), ...(max !== null ? { salaryMax: max } : {}) }
+}
 
 export const applicationStatuses = ['SUBMITTED', 'SHORTLISTED', 'INTERVIEW', 'OFFERED', 'REJECTED', 'HIRED']
 

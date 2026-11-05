@@ -136,7 +136,11 @@ model Job {
   description String
   location    String?
   type        String   // Full-time, Part-time, Contract, etc.
-  salary      String?
+  salary      String?   // the pay as the employer wrote it, shown to people
+  // The same pay as numbers, in Ghana cedis per month, so jobs can be searched by salary. salaryMax empty = a single figure.
+  salaryMin   Int?
+  salaryMax   Int?
+  salaryParsedAt DateTime? // set once we have tried to read numbers out of old text pay
   currency    String   @default("GHS")
   category    String?
   status      String   @default("ACTIVE") // DRAFT, ACTIVE, PAUSED, CLOSED, EXPIRED (owner); FLAGGED, SUSPENDED (admin)
@@ -159,6 +163,7 @@ model Job {
   @@index([type, status])
   @@index([createdAt])
   @@index([status, closesAt])
+  @@index([salaryMax])
 }
 
 model Application {

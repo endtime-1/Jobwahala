@@ -21,6 +21,7 @@ import {
 } from '../utils/jobLifecycle';
 import { approvedBusinessVerificationQuery, publicEmployerVerification, rankJobsByVerification, verifiedEmployerFilter } from '../utils/verification';
 import { getErrorMessage } from '../utils/errors';
+import { resolvePay } from '../utils/salary';
 import logger from '../config/logger';
 import { createNotification } from '../utils/notifications';
 import { sendApplicationStatusEmail } from '../services/emailService';
@@ -62,7 +63,7 @@ const mapRankedApplications = <
 
 export const createJob = async (req: AuthRequest, res: Response) => {
   try {
-    const { title, description, location, type, salary, category, closesAt: closesAtInput, status: requestedStatus } = req.body;
+    const { title, description, location, type, salary, category, closesAt: closesAtInput, status: requestedStatus, salaryMin, salaryMax } = req.body;
     if (!title?.trim() || !description?.trim() || !type?.trim()) {
       return res.status(400).json({ success: false, message: 'Title, description, and type are required' });
     }
@@ -87,7 +88,9 @@ export const createJob = async (req: AuthRequest, res: Response) => {
         description: description.trim(),
         location: location?.trim() || null,
         type: type.trim(),
-        salary: salary?.trim() || null,
+        // Pay: the numbers if they were given, otherwise read from the text, so the job can be found by salary.
+        ...resolvePay({ salary, salaryMin, salaryMax }),
+        salaryParsedAt: new Date(),
         category: category?.trim() || null,
         employerId: req.user!.id
       }
@@ -168,6 +171,21 @@ export const getJobs = async (req: AuthRequest, res: Response) => {
 
     if (location) {
       where.location = { contains: location };
+    }
+
+    // Salary, in Ghana cedis a month: jobs whose pay range reaches ?salaryMin and/or stays within ?salaryMax.
+    // Jobs that never gave numbers cannot be matched, so they drop out while a salary filter is on.
+    const wantedMin = Number(singleValue(req.query.salaryMin as string | string[] | undefined));
+    const wantedMax = Number(singleValue(req.query.salaryMax as string | string[] | undefined));
+    const and: any[] = [];
+    if (Number.isFinite(wantedMin) && wantedMin > 0) {
+      and.push({ OR: [{ salaryMax: { gte: Math.floor(wantedMin) } }, { salaryMax: null, salaryMin: { gte: Math.floor(wantedMin) } }] });
+    }
+    if (Number.isFinite(wantedMax) && wantedMax > 0) {
+      and.push({ OR: [{ salaryMin: { lte: Math.floor(wantedMax) } }, { salaryMin: null, salaryMax: { lte: Math.floor(wantedMax) } }] });
+    }
+    if (and.length > 0) {
+      where.AND = and;
     }
 
     const jobs = await prisma.job.findMany({
@@ -1068,8 +1086,21 @@ export const updateOwnedJob = async (req: AuthRequest, res: Response) => {
     for (const key of ['title', 'description', 'type'] as const) {
       if (body[key] !== undefined) data[key] = body[key]!.trim();
     }
-    for (const key of ['location', 'salary', 'category'] as const) {
+    for (const key of ['location', 'category'] as const) {
       if (body[key] !== undefined) data[key] = body[key]!.trim() || null;
+    }
+
+    // Pay. Numbers win; with only new text, the numbers are read from it; with only new numbers, the text is rewritten.
+    const rawBody = req.body as { salary?: string; salaryMin?: number | null; salaryMax?: number | null };
+    if (rawBody.salary !== undefined || rawBody.salaryMin !== undefined || rawBody.salaryMax !== undefined) {
+      const numbersGiven = rawBody.salaryMin !== undefined || rawBody.salaryMax !== undefined;
+      const pay = resolvePay({
+        salary: rawBody.salary !== undefined ? rawBody.salary : numbersGiven ? null : undefined,
+        ...(numbersGiven
+          ? { salaryMin: rawBody.salaryMin !== undefined ? rawBody.salaryMin : job.salaryMin, salaryMax: rawBody.salaryMax !== undefined ? rawBody.salaryMax : job.salaryMax }
+          : {}),
+      });
+      Object.assign(data, pay, { salaryParsedAt: new Date() });
     }
 
     if (body.closesAt !== undefined && body.closesAt !== '') {
@@ -1108,6 +1139,9 @@ export const duplicateOwnedJob = async (req: AuthRequest, res: Response) => {
         location: job.location,
         type: job.type,
         salary: job.salary,
+        salaryMin: job.salaryMin,
+        salaryMax: job.salaryMax,
+        salaryParsedAt: new Date(),
         currency: job.currency,
         category: job.category,
         status: 'DRAFT',

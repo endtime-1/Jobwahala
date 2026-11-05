@@ -10,6 +10,7 @@ import { processPayout } from './controllers/agreementController';
 import { getErrorMessage } from './utils/errors';
 import { JOB_SWEEP_INTERVAL_MS, runJobLifecycleSweepSafely } from './services/jobLifecycleService';
 import { runApplicationRemindersSafely } from './services/applicationReminderService';
+import { backfillJobSalariesSafely } from './services/salaryBackfillService';
 
 const httpServer = createServer(app);
 initSocket(httpServer);
@@ -68,6 +69,8 @@ const payoutTask = setInterval(async () => {
 const runDailySweeps = async () => {
   await runJobLifecycleSweepSafely();
   await runApplicationRemindersSafely();
+  // Reads numbers out of older jobs' pay text. Finishes once, then finds nothing to do.
+  await backfillJobSalariesSafely();
 };
 const jobSweepFirstRun = setTimeout(() => void runDailySweeps(), 60 * 1000);
 const jobSweepTask = setInterval(() => void runDailySweeps(), JOB_SWEEP_INTERVAL_MS);

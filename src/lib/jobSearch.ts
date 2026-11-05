@@ -74,3 +74,29 @@ export const buildFieldTiles = (jobs: { category?: string | null }[]): FieldTile
 
   return live.length >= 3 ? live : jobFieldOptions.slice(0, 8).map((name) => ({ name, count: null }))
 }
+
+/** "Pay from" choices for the job board, in Ghana cedis a month. 0 means no filter. */
+export const salaryFloorOptions = [
+  { value: 0, label: 'Any pay' },
+  { value: 1000, label: 'GHS 1,000+' },
+  { value: 2000, label: 'GHS 2,000+' },
+  { value: 3000, label: 'GHS 3,000+' },
+  { value: 5000, label: 'GHS 5,000+' },
+  { value: 8000, label: 'GHS 8,000+' },
+  { value: 12000, label: 'GHS 12,000+' },
+] as const
+
+/** The pay level named in a link (?minSalary=3000), or 0 for none or nonsense. */
+export const parseSalaryFloor = (value: string | null | undefined) => {
+  const number = Number(value)
+  return Number.isFinite(number) && number > 0 ? Math.floor(number) : 0
+}
+
+type JobPay = { salaryMin?: number | null; salaryMax?: number | null }
+
+/** Does this job's pay reach the level asked for? Pay that was never given as numbers cannot be matched. */
+export const matchesSalaryFloor = (job: JobPay, floor: number) => {
+  if (floor <= 0) return true
+  const top = job.salaryMax ?? job.salaryMin
+  return typeof top === 'number' && top >= floor
+}

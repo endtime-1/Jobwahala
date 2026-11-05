@@ -99,6 +99,8 @@ export const buildUserDataExport = async (userId: string, now: Date = new Date()
         location: true,
         type: true,
         salary: true,
+        salaryMin: true,
+        salaryMax: true,
         currency: true,
         category: true,
         status: true,
