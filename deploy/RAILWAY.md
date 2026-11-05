@@ -69,6 +69,25 @@ VITE_TURNSTILE_SITE_KEY=
 
 **Set both before launch.** With no secret in production the protected forms stay closed (they answer "temporarily unavailable"), on purpose, so the check can never be silently off. If only the site key is missing, people cannot get past the form.
 
+"Continue with Google" needs a Google OAuth client (Google Cloud Console -> APIs & Services -> Credentials -> OAuth client ID, type Web application; add your site address under Authorised JavaScript origins). Use the same client id on both services; leave both empty to hide the button. The website value is baked in at build time, so redeploy after adding it:
+
+```env
+# backend service
+GOOGLE_CLIENT_ID=
+# website (frontend) service
+VITE_GOOGLE_CLIENT_ID=
+```
+
+An account made with email and password, or a phone number, is linked to Google automatically when the person signs in with Google using the same verified email.
+
+WhatsApp channel links (footer and dashboards) are also baked into the website at build time. Create the channels in WhatsApp, then set the links on the website service. A link that is empty, or still has REPLACE in it, is not shown:
+
+```env
+VITE_WHATSAPP_CHANNEL_JOBS=https://whatsapp.com/channel/...
+VITE_WHATSAPP_CHANNEL_INTERNSHIPS=https://whatsapp.com/channel/...
+VITE_WHATSAPP_CHANNEL_EMPLOYERS=https://whatsapp.com/channel/...
+```
+
 Errors are reported to Sentry, with personal data removed first. Both are optional; leave them empty to turn reporting off:
 
 ```env

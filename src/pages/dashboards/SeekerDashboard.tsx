@@ -5,6 +5,7 @@ import { useFeatures } from '../../lib/features'
 import AddPhonePanel from '../../components/AddPhonePanel'
 import CvManager from '../../components/CvManager'
 import EarlyCareerProfile from '../../components/EarlyCareerProfile'
+import WhatsAppChannels from '../../components/WhatsAppChannels'
 import CompanyLogo from '../../components/CompanyLogo'
 import VerificationPanel from '../../components/VerificationPanel'
 import { Link } from 'react-router-dom'
@@ -374,6 +375,8 @@ export default function SeekerDashboard() {
               pendingPaymentActions={data?.pendingPaymentActions ?? 0}
               paymentActionItems={data?.paymentActionItems ?? []}
             />
+
+            <WhatsAppChannels only={['jobs', 'internships']} />
 
             <EarlyCareerProfile />
 

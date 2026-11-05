@@ -9,6 +9,7 @@ import { serializeVerificationStatus } from '../utils/verification';
 import { sendVerificationEmail, sendPasswordResetEmail } from '../services/emailService';
 import logger from '../config/logger';
 import { getErrorMessage } from '../utils/errors';
+import { GoogleAuthError, verifyGoogleIdToken } from '../services/googleAuth';
 import { IssueResult, VerifyResult, issuePhoneOtp, verifyPhoneOtp } from '../services/phoneOtpService';
 
 const allowedRegistrationRoles = ['SEEKER', 'EMPLOYER', 'FREELANCER'] as const;
@@ -509,6 +510,105 @@ export const confirmAddPhone = async (req: AuthRequest, res: Response) => {
     }
 
     return res.json({ success: true, phone, message: 'Your phone number is confirmed.' });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
+  }
+};
+
+// ── Continue with Google ──────────────────────────────────────────────
+
+const unusablePasswordHash = () => bcrypt.hash(crypto.randomBytes(32).toString('hex'), 10);
+
+/**
+ * Sign up or log in with a Google account. The token is checked with Google first. Then:
+ * - someone who used Google before is logged in;
+ * - someone with an account on the same verified email gets Google linked to it and is logged in;
+ * - otherwise a new account is made (the person must say whether they want a job or are hiring).
+ * Email and phone log-in keep working as they were.
+ */
+export const continueWithGoogle = async (req: Request, res: Response) => {
+  try {
+    if (!env.googleClientId) {
+      return res.status(503).json({ success: false, code: 'GOOGLE_NOT_CONFIGURED', message: 'Google sign-in is not available right now. Use your email or phone instead.' });
+    }
+
+    const { credential, role } = req.body as { credential: string; role?: 'SEEKER' | 'EMPLOYER' };
+
+    let identity;
+    try {
+      identity = await verifyGoogleIdToken(credential, env.googleClientId);
+    } catch (error) {
+      if (error instanceof GoogleAuthError) return res.status(401).json({ success: false, message: error.message });
+      throw error;
+    }
+
+    // Only an email Google has confirmed belongs to the person can be trusted to find or make an account.
+    if (!identity.emailVerified) {
+      return res.status(400).json({ success: false, message: 'Your Google email address is not verified, so we cannot use it. Use your email or phone instead.' });
+    }
+
+    const respond = (user: { id: string; email: string | null; phone?: string | null; role: string; tokenVersion: number }, status: number, isNew: boolean) =>
+      res.status(status).json({
+        success: true,
+        token: generateToken(user.id, user.role, user.tokenVersion),
+        isNew,
+        user: { id: user.id, email: user.email, phone: user.phone ?? null, role: user.role, emailVerified: true },
+      });
+
+    const byGoogle = await prisma.user.findUnique({ where: { googleId: identity.subject } });
+    const user = byGoogle ?? (await prisma.user.findUnique({ where: { email: identity.email } }));
+
+    if (user) {
+      if (user.status !== 'ACTIVE') {
+        return res.status(403).json({ success: false, message: 'Account is not active' });
+      }
+      // The email matches an account that is already tied to a different Google account.
+      if (user.googleId && user.googleId !== identity.subject) {
+        return res.status(409).json({ success: false, message: 'This email is already linked to another Google account.' });
+      }
+
+      if (!user.googleId) {
+        // Linking. If the email was never confirmed on the old account, whoever made it may not own it, so the
+        // old password is replaced and every old session ends: only Google (or a password reset) gets in now.
+        const unconfirmed = !user.emailVerified;
+        const updated = await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            googleId: identity.subject,
+            emailVerified: true,
+            ...(unconfirmed ? { password: await unusablePasswordHash(), tokenVersion: { increment: 1 } } : {}),
+          },
+        });
+        return respond(updated, 200, false);
+      }
+
+      return respond(user, 200, false);
+    }
+
+    // A new person: we need to know what they came for.
+    if (!role) {
+      return res.status(404).json({ success: false, code: 'ROLE_REQUIRED', message: 'No account yet. Tell us whether you want a job or are hiring to create one.' });
+    }
+
+    let created;
+    try {
+      created = await prisma.user.create({
+        data: { email: identity.email, googleId: identity.subject, emailVerified: true, password: await unusablePasswordHash(), role },
+      });
+    } catch (error) {
+      if ((error as { code?: string }).code === 'P2002') {
+        return res.status(409).json({ success: false, message: 'This account already exists. Please try again.' });
+      }
+      throw error;
+    }
+
+    if (created.role === 'SEEKER') {
+      await prisma.jobSeekerProfile.create({ data: { userId: created.id, firstName: identity.givenName, lastName: identity.familyName } });
+    } else {
+      await createProfileForRole(created.id, created.role);
+    }
+
+    return respond(created, 201, true);
   } catch (error) {
     return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }

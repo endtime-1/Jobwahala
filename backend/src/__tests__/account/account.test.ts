@@ -274,6 +274,7 @@ describe('deleting an account', () => {
       email: null,
       phone: null,
       phoneVerifiedAt: null,
+      googleId: null,
       status: 'DELETED',
       emailVerified: false,
       identityVerified: false,

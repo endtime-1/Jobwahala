@@ -10,6 +10,7 @@ import {
   sendPhoneCode,
   loginWithPhone,
   signupWithPhone,
+  continueWithGoogle,
 } from '../controllers/authController';
 import { authMiddleware } from '../middleware/auth';
 import { validate } from '../middleware/validate';
@@ -25,6 +26,7 @@ import {
   sendPhoneCodeSchema,
   phoneLoginSchema,
   phoneSignupSchema,
+  googleAuthSchema,
 } from '../validation/authSchemas';
 
 const router = Router();
@@ -38,6 +40,10 @@ const captcha = requireCaptcha();
 router.post('/phone/send-code', smsSendLimit, captcha, validate(sendPhoneCodeSchema), sendPhoneCode);
 router.post('/phone/login', smsCheckLimit, validate(phoneLoginSchema), loginWithPhone);
 router.post('/phone/signup', smsCheckLimit, validate(phoneSignupSchema), signupWithPhone);
+
+// "Continue with Google". Google does the bot checking; the limit stops someone hammering the endpoint.
+const googleLimit = createRateLimit({ windowMs: 15 * 60 * 1000, max: 60, scope: 'google-auth' });
+router.post('/google', googleLimit, validate(googleAuthSchema), continueWithGoogle);
 
 router.post('/register', captcha, validate(registerSchema), register);
 router.post('/login', validate(loginSchema), login);

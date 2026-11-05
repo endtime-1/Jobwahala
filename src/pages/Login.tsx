@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react'
 import { AuthAside, AuthMobileBanner } from '../components/AuthShell'
+import GoogleSignIn from '../components/GoogleSignIn'
 import PhoneCodeFlow from '../components/PhoneCodeFlow'
 import { useAuth } from '../context/AuthContext'
 import { isApiUnavailableMessage } from '../lib/apiStatus'
@@ -51,6 +52,8 @@ export default function Login() {
                 <h1 className="text-3xl font-black tracking-tight text-[#111c2d] mb-1">Welcome back</h1>
                 <p className="text-base text-[#6b7a8d]">Sign in to continue to your account</p>
               </div>
+
+              <GoogleSignIn onDone={(isNew) => navigate(isNew ? '/onboarding' : '/dashboard')} />
 
               <div role="tablist" aria-label="How to sign in" className="mb-5 grid grid-cols-2 rounded-xl bg-[#eaeff5] p-1">
                 {(

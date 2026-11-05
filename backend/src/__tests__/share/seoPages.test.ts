@@ -78,6 +78,39 @@ describe('renderJobPage', () => {
     expect(html).toContain('application/ld+json');
   });
 
+  it('has a WhatsApp-ready preview: title, description with the key facts, canonical link and picture', () => {
+    const html = renderJobPage({ ...job, location: 'Accra', salary: 'GHS 2,000 a month', type: 'Full-time' }, 'https://www.jobwahala.com');
+
+    expect(html).toContain('<meta property="og:title" content="Customer Support Agent at Sunrise Microfinance">');
+    expect(html).toMatch(/<meta property="og:description" content="Accra · GHS 2,000 a month · Full-time\. /);
+    expect(html).toContain('<meta property="og:url" content="https://www.jobwahala.com/jobs/job-1">');
+    expect(html).toContain('<meta property="og:type" content="article">');
+    expect(html).toContain('<meta property="og:site_name" content="JobWahala">');
+  });
+
+  it('uses the company logo as the picture when it has a normal one', () => {
+    const html = renderJobPage(job, 'https://www.jobwahala.com');
+
+    expect(html).toContain('<meta property="og:image" content="https://www.jobwahala.com/api/uploads/logo/x.png">');
+    expect(html).toContain('<meta property="og:image:alt" content="Sunrise Microfinance logo">');
+  });
+
+  it('falls back to the JobWahala card when there is no logo, or the logo is an SVG that apps cannot show', () => {
+    for (const employerLogoUrl of [null, undefined, '', 'https://www.jobwahala.com/api/uploads/logo/x.svg']) {
+      const html = renderJobPage({ ...job, employerLogoUrl }, 'https://www.jobwahala.com');
+
+      expect(html).toContain('<meta property="og:image" content="https://www.jobwahala.com/og-image.jpg">');
+      expect(html).toContain('<meta property="og:image:width" content="1200">');
+      expect(html).toContain('<meta name="twitter:card" content="summary_large_image">');
+    }
+  });
+
+  it('says "Unpaid" in the preview of an unpaid role', () => {
+    const html = renderJobPage({ ...job, unpaid: true, salary: 'Unpaid', type: 'Internship', location: 'Accra' }, 'https://www.jobwahala.com');
+
+    expect(html).toContain('Accra · Unpaid · Internship.');
+  });
+
   it('escapes anything a poster typed', () => {
     const html = renderJobPage({ ...job, title: '<script>alert(1)</script>' }, 'https://x.test');
 

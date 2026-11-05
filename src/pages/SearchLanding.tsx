@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ChevronRight, MapPin } from 'lucide-react'
 import SEO from '../components/SEO'
+import ShareOnWhatsApp from '../components/ShareOnWhatsApp'
 import { apiGetLandingPage } from '../lib/api'
 import { formatRelativeTime } from '../lib/display'
 import { looksLikeLandingSlug } from '../lib/landingSlug'
@@ -121,11 +122,14 @@ export default function SearchLanding() {
           <ul aria-label="Open jobs" className="mt-8 space-y-3">
             {page.jobs.map((job) => (
               <li key={job.id} className="rounded-2xl border border-surface-border bg-white p-4 transition-all hover:border-secondary/40 sm:p-5">
-                <h2 className="text-lg font-extrabold leading-snug text-text-main">
-                  <Link to={`/jobs/${job.id}`} className="hover:text-secondary hover:underline">
-                    {job.title}
-                  </Link>
-                </h2>
+                <div className="flex items-start justify-between gap-3">
+                  <h2 className="text-lg font-extrabold leading-snug text-text-main">
+                    <Link to={`/jobs/${job.id}`} className="hover:text-secondary hover:underline">
+                      {job.title}
+                    </Link>
+                  </h2>
+                  <ShareOnWhatsApp job={{ id: job.id, title: job.title, companyName: job.employerName, location: job.location, salary: job.salary }} />
+                </div>
                 <p className="mt-0.5 text-sm font-bold text-text-muted">{job.employerName}</p>
                 <p className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm font-semibold text-text-muted">
                   {job.location ? (

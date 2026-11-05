@@ -12,6 +12,8 @@ model User {
   // Ghanaian mobile in +233 format. Saved only after the number has been confirmed with a code.
   phone         String?  @unique
   phoneVerifiedAt DateTime?
+  // Google account linked for "Continue with Google" (Google permanent id for the person).
+  googleId      String?  @unique
   password      String
   role          String   @default("SEEKER")
   status        String   @default("ACTIVE") // ACTIVE, FLAGGED, SUSPENDED

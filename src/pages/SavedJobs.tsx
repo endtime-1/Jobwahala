@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import ShareOnWhatsApp from '../components/ShareOnWhatsApp'
 import { Link } from 'react-router-dom'
 import { Bookmark, MapPin } from 'lucide-react'
 import CompanyLogo from '../components/CompanyLogo'
@@ -129,6 +130,9 @@ export default function SavedJobs() {
                       <Link to={`/jobs/${entry.job.id}`} className="btn btn-primary btn-sm">
                         View job
                       </Link>
+                    ) : null}
+                    {entry.job.isOpen ? (
+                      <ShareOnWhatsApp job={{ id: entry.job.id, title: entry.job.title, companyName: entry.company.name, location: entry.job.location, salary: entry.job.salary }} />
                     ) : null}
                     <button type="button" onClick={() => void remove(entry.job.id)} className="btn btn-outline btn-sm bg-white">
                       Remove

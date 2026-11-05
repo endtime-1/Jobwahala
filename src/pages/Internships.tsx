@@ -6,6 +6,7 @@ import EarlyCareerChips from '../components/EarlyCareerChips'
 import JobAlerts from '../components/JobAlerts'
 import SEO from '../components/SEO'
 import SaveJobButton from '../components/SaveJobButton'
+import ShareOnWhatsApp from '../components/ShareOnWhatsApp'
 import UnverifiedEmployerLabel from '../components/UnverifiedEmployerLabel'
 import VerifiedBadge from '../components/VerifiedBadge'
 import { useAuth } from '../context/AuthContext'
@@ -266,6 +267,7 @@ export default function Internships() {
                           {company}
                         </Link>
                       </div>
+                      <ShareOnWhatsApp job={{ id: job.id, title: job.title, companyName: company, location: job.location, salary: job.salary, unpaid: job.unpaid }} />
                       <SaveJobButton jobId={job.id} className="flex-none" />
                     </div>
 

@@ -128,3 +128,16 @@ export const deleteAccountSchema = z.object({
     })
     .strict(),
 });
+
+export const googleAuthSchema = z.object({
+  body: z
+    .object({
+      // The ID token the Google button gives the browser.
+      credential: z.string().min(20).max(4000),
+      // Needed only to create a new account; log-in does not need it.
+      role: z
+        .preprocess((value) => (typeof value === 'string' ? value.toUpperCase() : value), z.enum(['SEEKER', 'EMPLOYER']))
+        .optional(),
+    })
+    .strict(),
+});

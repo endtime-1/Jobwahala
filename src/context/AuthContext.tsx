@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import { apiGetMe, apiLogin, apiLoginWithPhone, apiRegister, apiSignupWithPhone } from '../lib/api';
+import { apiGetMe, apiGoogleAuth, apiLogin, apiLoginWithPhone, apiRegister, apiSignupWithPhone } from '../lib/api';
 import { emailHandle, getDisplayName } from '../lib/display';
 
 export type UserRole = 'SEEKER' | 'EMPLOYER' | 'FREELANCER' | 'ADMIN';
@@ -60,6 +60,8 @@ interface AuthContextType {
   signup: (email: string, password: string, role: UserRole, captchaToken?: string) => Promise<void>;
   loginWithPhone: (phone: string, code: string) => Promise<void>;
   signupWithPhone: (phone: string, code: string, role: UserRole) => Promise<void>;
+  /** Log in (or sign up) with a Google ID token. Says whether the account is new. */
+  continueWithGoogle: (credential: string, role?: 'SEEKER' | 'EMPLOYER') => Promise<{ isNew: boolean }>;
   logout: () => void;
   refreshUser: () => Promise<void>;
 }
@@ -183,6 +185,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await startSession(await apiSignupWithPhone(phone, code, role), true);
   };
 
+  const continueWithGoogle = async (credential: string, role?: 'SEEKER' | 'EMPLOYER') => {
+    const data = await apiGoogleAuth(credential, role);
+    await startSession(data, Boolean(data.isNew));
+    return { isNew: Boolean(data.isNew) };
+  };
+
   const logout = () => {
     clearSession();
   };
@@ -215,6 +223,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loginWithPhone,
         signupWithPhone,
         logout,
+        continueWithGoogle,
         refreshUser,
       }}
     >

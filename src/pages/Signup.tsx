@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Mail, Lock, User, Eye, EyeOff, ArrowRight, Briefcase, Laptop, Users } from 'lucide-react'
 import { AuthAside, AuthMobileBanner } from '../components/AuthShell'
+import GoogleSignIn from '../components/GoogleSignIn'
 import PhoneCodeFlow from '../components/PhoneCodeFlow'
 import TurnstileWidget from '../components/TurnstileWidget'
 import { useCaptcha } from '../lib/captcha'
@@ -68,6 +69,8 @@ export default function Signup() {
                 <h1 className="text-3xl font-black tracking-tight text-[#111c2d] mb-1">Create your account</h1>
                 <p className="text-base text-[#6b7a8d]">Get started — it only takes a minute</p>
               </div>
+
+              <GoogleSignIn onDone={(isNew) => navigate(isNew ? '/onboarding' : '/dashboard')} />
 
               <div role="tablist" aria-label="How to sign up" className="mb-5 grid grid-cols-2 rounded-xl bg-[#eaeff5] p-1">
                 {(

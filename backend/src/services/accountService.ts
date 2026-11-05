@@ -375,6 +375,7 @@ export const deleteAccount = async (
         email: null,
         phone: null,
         phoneVerifiedAt: null,
+        googleId: null,
         password: unusablePassword,
         status: 'DELETED',
         emailVerified: false,

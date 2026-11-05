@@ -6,6 +6,7 @@ import CompanyLogo from '../components/CompanyLogo'
 import VerifiedBadge from '../components/VerifiedBadge'
 import UnverifiedEmployerLabel from '../components/UnverifiedEmployerLabel'
 import SaveJobButton from '../components/SaveJobButton'
+import ShareOnWhatsApp from '../components/ShareOnWhatsApp'
 import { apiApplyForJob, apiDeleteApplication, apiGetJobApplicationCoaching, apiGetJobById, apiGetMyJobApplication } from '../lib/api'
 import { emailHandle, formatRelativeTime } from '../lib/display'
 import { closingSummary } from '../lib/jobLifecycle'
@@ -253,6 +254,7 @@ export default function JobDetails() {
           >
             <Share2 className="h-5 w-5" />
           </button>
+          <ShareOnWhatsApp job={{ id: job.id, title: job.title, companyName, location: job.location, salary: job.salary, unpaid: job.unpaid }} />
           <SaveJobButton jobId={job.id} />
         </div>
       </div>
@@ -504,6 +506,7 @@ export default function JobDetails() {
                       <Send className="h-5 w-5" />
                     </button>
                     <SaveJobButton jobId={job.id} variant="labelled" />
+                    <ShareOnWhatsApp job={{ id: job.id, title: job.title, companyName, location: job.location, salary: job.salary, unpaid: job.unpaid }} variant="labelled" />
                   </div>
                 </>
               )}

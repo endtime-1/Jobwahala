@@ -47,6 +47,7 @@ const handleResponse = async (res: Response) => {
     throw Object.assign(new Error(data.message || 'Something went wrong'), {
       retryAfterSeconds: data.retryAfterSeconds as number | undefined,
       attemptsLeft: data.attemptsLeft as number | undefined,
+      code: data.code as string | undefined,
     });
   }
   return data;
@@ -72,6 +73,14 @@ export const apiSendPhoneCode = (phone: string, purpose: 'LOGIN' | 'SIGNUP', cap
     method: 'POST',
     headers: headers(),
     body: JSON.stringify({ phone, purpose, ...(captchaToken ? { captchaToken } : {}) }),
+  }).then(handleResponse);
+
+// "Continue with Google": the ID token from Google's button, plus the role when creating a new account.
+export const apiGoogleAuth = (credential: string, role?: 'SEEKER' | 'EMPLOYER') =>
+  fetch(`${BASE_URL}/auth/google`, {
+    method: 'POST',
+    headers: headers(),
+    body: JSON.stringify({ credential, ...(role ? { role } : {}) }),
   }).then(handleResponse);
 
 export const apiLoginWithPhone = (phone: string, code: string) =>

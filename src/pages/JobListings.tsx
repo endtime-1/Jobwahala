@@ -6,6 +6,7 @@ import CompanyLogo from '../components/CompanyLogo'
 import VerifiedBadge from '../components/VerifiedBadge'
 import UnverifiedEmployerLabel from '../components/UnverifiedEmployerLabel'
 import SaveJobButton from '../components/SaveJobButton'
+import ShareOnWhatsApp from '../components/ShareOnWhatsApp'
 import { apiCompareJobs, apiGetJobs } from '../lib/api'
 import { emailHandle, formatMoney, formatRelativeTime } from '../lib/display'
 import {
@@ -595,6 +596,7 @@ export default function JobListings() {
                           {companyName}
                         </Link>
                       </div>
+                      <ShareOnWhatsApp job={{ id: job.id, title: job.title, companyName, location: job.location, salary: job.salary, unpaid: job.unpaid }} />
                       <SaveJobButton jobId={job.id} className="flex-none" />
                       <button
                         onClick={(event) => {

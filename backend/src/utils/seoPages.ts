@@ -153,10 +153,12 @@ type PageShell = {
   jsonLd?: unknown;
   /** Tells search engines to leave the page out of their results. */
   noindex?: boolean;
+  /** The preview picture. Defaults to the JobWahala card (1200x630). */
+  image?: { url: string; alt?: string; width?: number; height?: number };
   body: string;
 };
 
-export const renderShell = ({ title, description, url, siteUrl, ogType = 'website', jsonLd, noindex = false, body }: PageShell) => `<!doctype html>
+export const renderShell = ({ title, description, url, siteUrl, ogType = 'website', jsonLd, noindex = false, image, body }: PageShell) => `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -168,11 +170,12 @@ ${noindex ? '<meta name="robots" content="noindex, follow">\n' : ''}<link rel="c
 <meta property="og:title" content="${e(title)}">
 <meta property="og:description" content="${e(description)}">
 <meta property="og:url" content="${e(url)}">
-<meta property="og:image" content="${e(`${siteUrl}/og-image.jpg`)}">
-<meta name="twitter:card" content="summary_large_image">
+<meta property="og:image" content="${e(image?.url ?? `${siteUrl}/og-image.jpg`)}">
+${image ? `<meta property="og:image:alt" content="${e(image.alt ?? title)}">\n` : '<meta property="og:image:width" content="1200">\n<meta property="og:image:height" content="630">\n'}${image?.width && image?.height ? `<meta property="og:image:width" content="${image.width}">\n<meta property="og:image:height" content="${image.height}">\n` : ''}<meta property="og:locale" content="en_GH">
+<meta name="twitter:card" content="${image ? 'summary' : 'summary_large_image'}">
 <meta name="twitter:title" content="${e(title)}">
 <meta name="twitter:description" content="${e(description)}">
-<meta name="twitter:image" content="${e(`${siteUrl}/og-image.jpg`)}">
+<meta name="twitter:image" content="${e(image?.url ?? `${siteUrl}/og-image.jpg`)}">
 ${jsonLd ? `<script type="application/ld+json">${safeJson(jsonLd)}</script>` : ''}
 </head>
 <body>
@@ -183,11 +186,23 @@ ${body}
 </body>
 </html>`;
 
+/**
+ * The picture shown when a job link is shared: the company's own logo when it has one WhatsApp and other
+ * apps can show (a normal picture, not an SVG), otherwise the JobWahala card.
+ */
+export const jobPreviewImage = (job: Pick<SeoJob, 'employerLogoUrl' | 'employerName'>) => {
+  const logo = job.employerLogoUrl ?? '';
+  if (!/^https?:\/\//i.test(logo) || /\.svg(\?|$)/i.test(logo)) return undefined;
+  return { url: logo, alt: `${job.employerName} logo` };
+};
+
 export const renderJobPage = (job: SeoJob, siteUrl: string) => {
   const url = `${siteUrl}/jobs/${job.id}`;
   const facts = [job.type, job.location, job.salary].filter(Boolean).join(' · ');
+  // What shows under the title when the link is shared: the facts people look for first, then the start of the ad.
+  const pay = job.unpaid ? 'Unpaid' : job.salary;
   const description = clip(
-    `${job.title} at ${job.employerName}${job.location ? ` in ${job.location}` : ''}. ${job.description}`,
+    `${[job.location, pay, job.type].filter(Boolean).join(' · ')}${facts ? '. ' : ''}${job.description}`,
     200,
   );
 
@@ -197,6 +212,7 @@ export const renderJobPage = (job: SeoJob, siteUrl: string) => {
     url,
     siteUrl,
     ogType: 'article',
+    image: jobPreviewImage(job),
     jsonLd: buildJobPostingJsonLd(job, siteUrl),
     body: `<h1>${e(job.title)}</h1>
 <p>${e(job.employerName)}${facts ? ` · ${e(facts)}` : ''}</p>

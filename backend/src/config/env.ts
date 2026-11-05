@@ -95,6 +95,9 @@ const sentryRelease = (process.env.SENTRY_RELEASE || process.env.RAILWAY_GIT_COM
 // Cloudflare Turnstile secret, for the bot check on sign-up, the waitlist and reporting.
 const turnstileSecretKey = (process.env.TURNSTILE_SECRET_KEY || '').trim();
 
+// "Continue with Google": the OAuth client id from Google Cloud. Empty means the button is off.
+const googleClientId = (process.env.GOOGLE_CLIENT_ID || '').trim();
+
 // Text messages (one-time codes). ARKESEL sends for real; CONSOLE only logs and is refused in production.
 const smsProvider = (process.env.SMS_PROVIDER || (isProduction ? 'ARKESEL' : 'CONSOLE')).trim().toUpperCase();
 const arkeselApiKey = (process.env.ARKESEL_API_KEY || '').trim();
@@ -125,6 +128,7 @@ const env = {
   sentryDsn,
   sentryRelease,
   turnstileSecretKey,
+  googleClientId,
   arkeselApiKey,
   arkeselSenderId,
   paymentProvider: paymentProvider as 'SANDBOX' | 'PAYSTACK',
