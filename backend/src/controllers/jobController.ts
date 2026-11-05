@@ -500,7 +500,9 @@ export const getJobApplicants = async (req: AuthRequest, res: Response) => {
         },
         seeker: {
           select: { id: true, email: true, jobSeekerProfile: true }
-        }
+        },
+        // The employer's private notes and rating. Only this route (job owner) ever returns it.
+        review: { select: { rating: true, note: true, updatedAt: true } }
       }
     });
 
@@ -813,15 +815,16 @@ export const getJobApplicationCoaching = async (req: AuthRequest, res: Response)
   }
 };
 
-export const updateApplicationStatus = async (req: AuthRequest, res: Response) => {
-  try {
-    const applicationId = singleValue(req.params.applicationId);
-    const { status } = req.body as { status: string };
+type StatusChangeResult =
+  | { ok: true; changed: boolean; application: { id: string; status: string } }
+  | { ok: false; code: 400 | 403; message: string };
 
-    if (!applicationId) {
-      return res.status(400).json({ success: false, message: 'Application id is required' });
-    }
-
+/**
+ * Moves one application to a new stage for the employer who owns the job: saves it, tracks the response
+ * time, notifies the applicant in-app and by email, and keeps any agreement in step. One place, so the
+ * single change and "reject several" behave exactly the same (including the polite rejection wording).
+ */
+export const changeApplicationStatus = async (applicationId: string, status: string, employerId: string): Promise<StatusChangeResult> => {
     const application = await prisma.application.findUnique({
       where: { id: applicationId },
       include: {
@@ -837,13 +840,13 @@ export const updateApplicationStatus = async (req: AuthRequest, res: Response) =
       }
     });
 
-    if (!application || application.job.employerId !== req.user!.id) {
-      return res.status(403).json({ success: false, message: 'Access denied' });
+    if (!application || application.job.employerId !== employerId) {
+      return { ok: false, code: 403, message: 'Access denied' };
     }
 
     // Nothing changed, so nobody is notified and the clock does not move.
     if (application.status === status) {
-      return res.json({ success: true, application });
+      return { ok: true, changed: false, application };
     }
 
     const now = new Date();
@@ -858,10 +861,7 @@ export const updateApplicationStatus = async (req: AuthRequest, res: Response) =
     const activeProposalStatuses = ['PENDING', 'COUNTERED'];
 
     if (existingAgreement && existingAgreement.status !== 'ACTIVE') {
-      return res.status(400).json({
-        success: false,
-        message: 'This application is already attached to a closed agreement and cannot be changed'
-      });
+      return { ok: false, code: 400, message: 'This application is already attached to a closed agreement and cannot be changed' };
     }
 
     const updatedApplication = await prisma.$transaction(async (tx) => {
@@ -918,7 +918,7 @@ export const updateApplicationStatus = async (req: AuthRequest, res: Response) =
           if (existingAgreement.status !== 'ACTIVE') {
             await createAgreementEvent(tx, {
               agreementId: reactivatedAgreement.id,
-              actorId: req.user!.id,
+              actorId: employerId,
               eventType: 'STATUS_CHANGED',
               message: 'Agreement reactivated after the candidate was moved back to HIRED.',
               fromStatus: existingAgreement.status,
@@ -940,7 +940,7 @@ export const updateApplicationStatus = async (req: AuthRequest, res: Response) =
 
           await createAgreementEvent(tx, {
             agreementId: createdAgreement.id,
-            actorId: req.user!.id,
+            actorId: employerId,
             eventType: 'CREATED',
             message: 'Agreement created after the candidate was hired.',
             toStatus: createdAgreement.status
@@ -954,7 +954,7 @@ export const updateApplicationStatus = async (req: AuthRequest, res: Response) =
 
         await createAgreementEvent(tx, {
           agreementId: cancelledAgreement.id,
-          actorId: req.user!.id,
+          actorId: employerId,
           eventType: 'STATUS_CHANGED',
           message: 'Agreement cancelled because the application moved out of HIRED.',
           fromStatus: existingAgreement.status,
@@ -977,7 +977,113 @@ export const updateApplicationStatus = async (req: AuthRequest, res: Response) =
       );
     }
 
-    return res.json({ success: true, application: updatedApplication });
+    return { ok: true, changed: true, application: updatedApplication };
+};
+
+export const updateApplicationStatus = async (req: AuthRequest, res: Response) => {
+  try {
+    const applicationId = singleValue(req.params.applicationId);
+    const { status } = req.body as { status: string };
+
+    if (!applicationId) {
+      return res.status(400).json({ success: false, message: 'Application id is required' });
+    }
+
+    const result = await changeApplicationStatus(applicationId, status, req.user!.id);
+    if (!result.ok) {
+      return res.status(result.code).json({ success: false, message: result.message });
+    }
+
+    return res.json({ success: true, application: result.application });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
+  }
+};
+
+// Private notes and a 1-5 rating on one applicant. Only the employer who owns the job can read or write them.
+export const reviewApplication = async (req: AuthRequest, res: Response) => {
+  try {
+    const applicationId = singleValue(req.params.applicationId);
+    const { rating, note } = req.body as { rating?: number | null; note?: string };
+
+    if (!applicationId) {
+      return res.status(400).json({ success: false, message: 'Application id is required' });
+    }
+
+    const application = await prisma.application.findUnique({
+      where: { id: applicationId },
+      select: { id: true, job: { select: { employerId: true } } },
+    });
+
+    if (!application || application.job.employerId !== req.user!.id) {
+      return res.status(403).json({ success: false, message: 'Access denied' });
+    }
+
+    const data = {
+      ...(rating !== undefined ? { rating } : {}),
+      ...(note !== undefined ? { note: note === '' ? null : note } : {}),
+    };
+
+    const review = await prisma.applicationReview.upsert({
+      where: { applicationId },
+      create: { applicationId, employerId: req.user!.id, ...data },
+      update: data,
+      select: { rating: true, note: true, updatedAt: true },
+    });
+
+    return res.json({ success: true, review });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
+  }
+};
+
+// Politely turns down several applicants at once. Each one gets the same notification and email as a single
+// rejection. Hired people and ones already turned down are skipped, never changed.
+export const bulkRejectApplicants = async (req: AuthRequest, res: Response) => {
+  try {
+    const jobId = singleValue(req.params.id);
+    const { applicationIds } = req.body as { applicationIds: string[] };
+
+    if (!jobId) {
+      return res.status(400).json({ success: false, message: 'Job id is required' });
+    }
+
+    const job = await prisma.job.findUnique({ where: { id: jobId }, select: { employerId: true } });
+    if (!job || job.employerId !== req.user!.id) {
+      return res.status(403).json({ success: false, message: 'Access denied' });
+    }
+
+    const ids = [...new Set(applicationIds)];
+    const found = await prisma.application.findMany({
+      where: { id: { in: ids }, jobId },
+      select: { id: true, status: true },
+    });
+    const byId = new Map(found.map((application) => [application.id, application.status]));
+
+    const rejected: string[] = [];
+    const skipped: { id: string; reason: string }[] = [];
+
+    for (const id of ids) {
+      const status = byId.get(id);
+      if (!status) {
+        skipped.push({ id, reason: 'Not an applicant for this job' });
+        continue;
+      }
+      if (status === 'REJECTED') {
+        skipped.push({ id, reason: 'Already turned down' });
+        continue;
+      }
+      if (status === 'HIRED' || status === 'COMPLETED' || status === 'CANCELLED') {
+        skipped.push({ id, reason: 'Already hired' });
+        continue;
+      }
+
+      const result = await changeApplicationStatus(id, 'REJECTED', req.user!.id);
+      if (result.ok) rejected.push(id);
+      else skipped.push({ id, reason: result.message });
+    }
+
+    return res.json({ success: true, rejected, skipped });
   } catch (error) {
     return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }

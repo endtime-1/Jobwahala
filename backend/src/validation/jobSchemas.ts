@@ -156,3 +156,27 @@ export const generateJobDraftSchema = z.object({
     })
     .strict(),
 });
+
+export const applicationReviewSchema = z.object({
+  body: z
+    .object({
+      // 1 to 5 stars, or null to clear it.
+      rating: z.number().int().min(1).max(5).nullable().optional(),
+      // Private note; an empty string clears it.
+      note: z.string().trim().max(2000).optional(),
+    })
+    .strict()
+    .refine((value) => value.rating !== undefined || value.note !== undefined, { message: 'Send a rating or a note' }),
+  params: z.object({
+    applicationId: z.string().min(1),
+  }),
+});
+
+export const bulkRejectSchema = z.object({
+  body: z
+    .object({
+      applicationIds: z.array(z.string().min(1)).min(1).max(100),
+    })
+    .strict(),
+  params: jobIdParams,
+});

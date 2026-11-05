@@ -318,6 +318,20 @@ export const apiGenerateApplicantDecisionBrief = (
     body: JSON.stringify(data || {}),
   }).then(handleResponse);
 
+export const apiSaveApplicationReview = (applicationId: string, data: { rating?: number | null; note?: string }) =>
+  fetch(`${BASE_URL}/jobs/applications/${applicationId}/review`, {
+    method: 'PUT',
+    headers: headers(true),
+    body: JSON.stringify(data),
+  }).then(handleResponse);
+
+export const apiBulkRejectApplicants = (jobId: string, applicationIds: string[]) =>
+  fetch(`${BASE_URL}/jobs/${jobId}/applicants/bulk-reject`, {
+    method: 'POST',
+    headers: headers(true),
+    body: JSON.stringify({ applicationIds }),
+  }).then(handleResponse);
+
 export const apiUpdateApplicationStatus = (applicationId: string, status: string) =>
   fetch(`${BASE_URL}/jobs/applications/${applicationId}/status`, {
     method: 'PATCH',

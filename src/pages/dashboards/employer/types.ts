@@ -62,12 +62,19 @@ export type RecentApplication = {
   }
 }
 
+export type ApplicantReview = {
+  rating: number | null
+  note: string | null
+  updatedAt?: string
+}
+
 export type JobApplicant = {
   id: string
   status: string
   cvSource?: string | null
   cvFileUrl?: string | null
   cvFileName?: string | null
+  review?: ApplicantReview | null
   createdAt: string
   coverLetter?: string | null
   fitScore?: number

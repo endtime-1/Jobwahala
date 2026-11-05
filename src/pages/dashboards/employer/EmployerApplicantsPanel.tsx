@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { useFeatures } from '../../../lib/features'
 import EvidenceLink from '../../../components/EvidenceLink'
 import {
+  apiBulkRejectApplicants,
   apiUpdateApplicationStatus,
   apiCreateJobProposal,
   apiGenerateJobProposalDraft,
@@ -29,6 +30,7 @@ import {
 } from './utils'
 import { getErrorMessage } from '../../../lib/errors'
 import ApplicantBoard from './ApplicantBoard'
+import ApplicantReviewBox from './ApplicantReviewBox'
 
 type Props = {
   jobs: EmployerJob[]
@@ -68,6 +70,40 @@ export default function EmployerApplicantsPanel({
   const [proposalTarget, setProposalTarget] = useState<ProposalTarget | null>(null)
   const [error, setError] = useState('')
   const [view, setView] = useState<'list' | 'board'>('list')
+
+  const [selected, setSelected] = useState<string[]>([])
+  const [confirmingBulk, setConfirmingBulk] = useState(false)
+  const [bulkBusy, setBulkBusy] = useState(false)
+  const [bulkNotice, setBulkNotice] = useState('')
+
+  // Only people who can still be turned down can be ticked.
+  const canReject = (status: string) => status !== 'REJECTED' && status !== 'HIRED' && status !== 'COMPLETED' && status !== 'CANCELLED'
+  const rejectable = applicants.filter((applicant) => canReject(applicant.status))
+  const chosen = selected.filter((id) => rejectable.some((applicant) => applicant.id === id))
+
+  const toggleSelected = (id: string) => setSelected((current) => (current.includes(id) ? current.filter((x) => x !== id) : [...current, id]))
+
+  const handleBulkReject = async () => {
+    if (!selectedJobId || chosen.length === 0) return
+    setError('')
+    setBulkNotice('')
+    setBulkBusy(true)
+    try {
+      const res = (await apiBulkRejectApplicants(selectedJobId, chosen)) as { rejected?: string[]; skipped?: unknown[] }
+      const done = res.rejected?.length ?? 0
+      const left = res.skipped?.length ?? 0
+      setBulkNotice(
+        `${done} applicant${done === 1 ? ' was' : 's were'} told politely that you chose to go another way.${left ? ` ${left} could not be changed.` : ''}`,
+      )
+      setSelected([])
+      setConfirmingBulk(false)
+      onRefresh()
+    } catch (err) {
+      setError(getErrorMessage(err, 'We could not turn those applicants down right now.'))
+    } finally {
+      setBulkBusy(false)
+    }
+  }
 
   const shortlistedCount = applicants.filter((a) => a.status === 'SHORTLISTED').length
 
@@ -336,6 +372,46 @@ export default function EmployerApplicantsPanel({
               />
             ) : null}
 
+            {view === 'list' && rejectable.length > 0 ? (
+              <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-surface-border bg-white px-4 py-3">
+                <label className="flex items-center gap-2 text-xs font-bold text-text-muted">
+                  <input
+                    type="checkbox"
+                    aria-label="Select all applicants who can be turned down"
+                    checked={chosen.length > 0 && chosen.length === rejectable.length}
+                    onChange={(event) => setSelected(event.target.checked ? rejectable.map((applicant) => applicant.id) : [])}
+                  />
+                  Select all
+                </label>
+                {chosen.length > 0 ? (
+                  confirmingBulk ? (
+                    <>
+                      <span className="text-xs font-bold text-text-main">
+                        Turn down {chosen.length} applicant{chosen.length === 1 ? '' : 's'}? Each gets a polite message by email and in the app.
+                      </span>
+                      <button type="button" disabled={bulkBusy} onClick={() => void handleBulkReject()} className="btn btn-sm bg-error text-white disabled:opacity-60">
+                        {bulkBusy ? 'Sending...' : 'Yes, turn them down'}
+                      </button>
+                      <button type="button" disabled={bulkBusy} onClick={() => setConfirmingBulk(false)} className="btn btn-outline btn-sm bg-white">
+                        Cancel
+                      </button>
+                    </>
+                  ) : (
+                    <button type="button" onClick={() => setConfirmingBulk(true)} className="btn btn-outline btn-sm bg-white text-error">
+                      Reject selected ({chosen.length})
+                    </button>
+                  )
+                ) : (
+                  <span className="text-xs font-medium text-text-light">Tick applicants to turn several down at once.</span>
+                )}
+              </div>
+            ) : null}
+            {bulkNotice ? (
+              <p role="status" className="rounded-2xl border border-surface-border bg-surface-alt/40 px-4 py-3 text-sm font-semibold text-text-main">
+                {bulkNotice}
+              </p>
+            ) : null}
+
             {/* Applicant cards */}
             {(view === 'list' ? applicants : []).map((application) => {
               const name = getDisplayName(
@@ -348,6 +424,18 @@ export default function EmployerApplicantsPanel({
                 <div key={application.id} id={`applicant-${application.id}`} className="scroll-mt-32 rounded-[1.75rem] border border-surface-border bg-surface-alt/20 p-4 sm:p-6">
                   <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
                     <div className="flex gap-4">
+                      {canReject(application.status) ? (
+                        <input
+                          type="checkbox"
+                          aria-label={`Select ${name}`}
+                          checked={chosen.includes(application.id)}
+                          onChange={() => {
+                            setConfirmingBulk(false)
+                            toggleSelected(application.id)
+                          }}
+                          className="mt-4 h-4 w-4 flex-none"
+                        />
+                      ) : null}
                       <div className="h-12 w-12 bg-white border border-surface-border rounded-2xl flex items-center justify-center text-[10px] font-black text-text-main shadow-sm">
                         {name.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase()}
                       </div>
@@ -387,6 +475,7 @@ export default function EmployerApplicantsPanel({
                             {application.coverLetter?.trim() || 'No cover letter was provided for this application.'}
                           </p>
                         </div>
+                        <ApplicantReviewBox applicationId={application.id} applicantName={name} review={application.review} />
                       </div>
                     </div>
 

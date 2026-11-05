@@ -192,6 +192,7 @@ model Application {
   seeker    User      @relation(fields: [seekerId], references: [id], onDelete: Cascade)
   agreement Agreement?
   proposals Proposal[]
+  review    ApplicationReview?
 
   @@unique([jobId, seekerId])
   @@index([jobId, status])
@@ -753,4 +754,20 @@ model SeekerCv {
   updatedAt        DateTime  @updatedAt
 
   user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// The employer's private notes and 1-5 rating on an applicant. Kept in its own table so it can never be
+// returned to the applicant along with the application. Only the employer who owns the job reads or writes it.
+model ApplicationReview {
+  id            String   @id @default(uuid())
+  applicationId String   @unique
+  employerId    String
+  rating        Int?
+  note          String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([employerId])
 }

@@ -340,6 +340,9 @@ export const deleteAccount = async (
     await tx.verificationRequest.deleteMany({ where: { userId } });
     await tx.freelanceService.updateMany({ where: { freelancerId: userId, status: 'ACTIVE' }, data: { status: 'CLOSED' } });
 
+    // Private employer notes: the ones this member wrote, and the ones written about them.
+    await tx.applicationReview.deleteMany({ where: { OR: [{ employerId: userId }, { application: { seekerId: userId } }] } });
+
     // Applications: withdrawn, unless a work agreement hangs off one, in which case only the personal text goes.
     await tx.application.deleteMany({ where: { seekerId: userId, agreement: { is: null } } });
     await tx.application.updateMany({ where: { seekerId: userId }, data: { coverLetter: null, cvSource: null, cvFileUrl: null, cvFileName: null } });
