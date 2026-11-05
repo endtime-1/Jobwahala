@@ -53,11 +53,11 @@ const handleResponse = async (res: Response) => {
 };
 
 // Auth
-export const apiRegister = (email: string, password: string, role: string) =>
+export const apiRegister = (email: string, password: string, role: string, captchaToken?: string) =>
   fetch(`${BASE_URL}/auth/register`, {
     method: 'POST',
     headers: headers(),
-    body: JSON.stringify({ email, password, role }),
+    body: JSON.stringify({ email, password, role, ...(captchaToken ? { captchaToken } : {}) }),
   }).then(handleResponse);
 
 export const apiLogin = (email: string, password: string) =>
@@ -67,11 +67,11 @@ export const apiLogin = (email: string, password: string) =>
     body: JSON.stringify({ email, password }),
   }).then(handleResponse);
 
-export const apiSendPhoneCode = (phone: string, purpose: 'LOGIN' | 'SIGNUP') =>
+export const apiSendPhoneCode = (phone: string, purpose: 'LOGIN' | 'SIGNUP', captchaToken?: string) =>
   fetch(`${BASE_URL}/auth/phone/send-code`, {
     method: 'POST',
     headers: headers(),
-    body: JSON.stringify({ phone, purpose }),
+    body: JSON.stringify({ phone, purpose, ...(captchaToken ? { captchaToken } : {}) }),
   }).then(handleResponse);
 
 export const apiLoginWithPhone = (phone: string, code: string) =>
@@ -192,7 +192,7 @@ export const apiDeleteSavedSearch = (id: string) =>
   fetch(`${BASE_URL}/saved-searches/${id}`, { method: 'DELETE', headers: headers(true) }).then(handleResponse);
 
 // Public interest list (no account needed)
-export const apiCreateInterestSignup = (data: { email?: string; phone?: string; source: string; website?: string }) =>
+export const apiCreateInterestSignup = (data: { email?: string; phone?: string; source: string; website?: string; captchaToken?: string }) =>
   fetch(`${BASE_URL}/interest`, {
     method: 'POST',
     headers: headers(),
@@ -833,11 +833,11 @@ export const apiUpdateProfile = (data: Record<string, unknown>) =>
   }).then(handleResponse);
 
 // Reports
-export const apiCreateReport = (type: 'job' | 'service' | 'user', targetId: string, reason: string, details: string) =>
+export const apiCreateReport = (type: 'job' | 'service' | 'user', targetId: string, reason: string, details: string, captchaToken?: string) =>
   fetch(`${BASE_URL}/reports`, {
     method: 'POST',
     headers: headers(true),
-    body: JSON.stringify({ type, targetId, reason, details }),
+    body: JSON.stringify({ type, targetId, reason, details, ...(captchaToken ? { captchaToken } : {}) }),
   }).then(handleResponse);
 
 // Admin

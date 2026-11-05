@@ -1,7 +1,9 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { ArrowRight, Phone } from 'lucide-react'
 import { useAuth, type UserRole } from '../context/AuthContext'
+import TurnstileWidget from './TurnstileWidget'
 import { apiSendPhoneCode } from '../lib/api'
+import { useCaptcha } from '../lib/captcha'
 import { getErrorMessage } from '../lib/errors'
 
 type Props = {
@@ -26,6 +28,7 @@ export default function PhoneCodeFlow({ mode, role = 'SEEKER', onDone }: Props) 
   const [wait, setWait] = useState(0)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const captcha = useCaptcha()
 
   // Count down the "wait before asking again" the server asked for.
   useEffect(() => {
@@ -40,7 +43,7 @@ export default function PhoneCodeFlow({ mode, role = 'SEEKER', onDone }: Props) 
     setError('')
     setBusy(true)
     try {
-      await apiSendPhoneCode(phone, purpose)
+      await (captcha.token ? apiSendPhoneCode(phone, purpose, captcha.token) : apiSendPhoneCode(phone, purpose))
       setSentTo(phone)
       setCode('')
       setWait(60)
@@ -50,6 +53,8 @@ export default function PhoneCodeFlow({ mode, role = 'SEEKER', onDone }: Props) 
       setError(getErrorMessage(err, 'We could not send the code. Please try again.'))
     } finally {
       setBusy(false)
+      // Each text needs its own bot check.
+      captcha.reset()
     }
   }
 
@@ -102,7 +107,9 @@ export default function PhoneCodeFlow({ mode, role = 'SEEKER', onDone }: Props) 
         </p>
       ) : null}
 
-      <button type="submit" disabled={busy || wait > 0} className="btn btn-gold btn-lg w-full justify-center disabled:cursor-not-allowed disabled:opacity-60">
+      <TurnstileWidget onToken={captcha.setToken} resetSignal={captcha.resetSignal} />
+
+      <button type="submit" disabled={busy || wait > 0 || !captcha.ready} className="btn btn-gold btn-lg w-full justify-center disabled:cursor-not-allowed disabled:opacity-60">
         {busy ? 'Sending…' : wait > 0 ? `Wait ${wait}s` : <>Text me a code <ArrowRight className="h-4 w-4" /></>}
       </button>
     </form>
@@ -138,11 +145,13 @@ export default function PhoneCodeFlow({ mode, role = 'SEEKER', onDone }: Props) 
         {busy ? 'Checking…' : mode === 'login' ? 'Sign in' : 'Create account'}
       </button>
 
+      <TurnstileWidget onToken={captcha.setToken} resetSignal={captcha.resetSignal} />
+
       <div className="flex items-center justify-between text-[12px] font-semibold">
         <button type="button" onClick={() => { setSentTo(null); setError('') }} className="text-[#6b7a8d] hover:text-[#111c2d]">
           Use a different number
         </button>
-        <button type="button" disabled={busy || wait > 0} onClick={() => void sendCode()} className="text-[#2f6df6] hover:underline disabled:cursor-not-allowed disabled:opacity-50">
+        <button type="button" disabled={busy || wait > 0 || !captcha.ready} onClick={() => void sendCode()} className="text-[#2f6df6] hover:underline disabled:cursor-not-allowed disabled:opacity-50">
           {wait > 0 ? `Send a new code in ${wait}s` : 'Send a new code'}
         </button>
       </div>

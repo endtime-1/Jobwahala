@@ -11,6 +11,13 @@ COPY . .
 # argument only when the API lives on its own public domain.
 ARG VITE_API_URL=/api
 ENV VITE_API_URL=$VITE_API_URL
+# Public keys baked into the site at build time. Both are optional: empty turns the feature off.
+ARG VITE_SENTRY_DSN=
+ARG VITE_TURNSTILE_SITE_KEY=
+ARG VITE_RELEASE=
+ENV VITE_SENTRY_DSN=$VITE_SENTRY_DSN
+ENV VITE_TURNSTILE_SITE_KEY=$VITE_TURNSTILE_SITE_KEY
+ENV VITE_RELEASE=$VITE_RELEASE
 
 RUN npm run build
 

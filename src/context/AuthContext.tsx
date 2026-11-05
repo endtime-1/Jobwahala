@@ -53,7 +53,7 @@ interface AuthContextType {
   userEmail: string;
   role: UserRole | null;
   login: (email: string, password: string) => Promise<void>;
-  signup: (email: string, password: string, role: UserRole) => Promise<void>;
+  signup: (email: string, password: string, role: UserRole, captchaToken?: string) => Promise<void>;
   loginWithPhone: (phone: string, code: string) => Promise<void>;
   signupWithPhone: (phone: string, code: string, role: UserRole) => Promise<void>;
   logout: () => void;
@@ -148,8 +148,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signup = async (email: string, password: string, role: UserRole) => {
-    const data = await apiRegister(email, password, role);
+  const signup = async (email: string, password: string, role: UserRole, captchaToken?: string) => {
+    const data = captchaToken ? await apiRegister(email, password, role, captchaToken) : await apiRegister(email, password, role);
     persistToken(data.token);
 
     try {

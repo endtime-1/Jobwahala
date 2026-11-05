@@ -1,3 +1,5 @@
+// Error reporting must start before anything else loads.
+import './instrument';
 import { createServer } from 'http';
 import app from './app';
 import env from './config/env';

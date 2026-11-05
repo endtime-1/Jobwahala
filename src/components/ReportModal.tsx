@@ -2,6 +2,8 @@ import { X, Send, AlertTriangle } from 'lucide-react'
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { apiCreateReport } from '../lib/api'
+import { useCaptcha } from '../lib/captcha'
+import TurnstileWidget from './TurnstileWidget'
 import { getErrorMessage } from '../lib/errors'
 
 interface ReportModalProps {
@@ -18,6 +20,7 @@ export default function ReportModal({ isOpen, onClose, type, targetId, targetNam
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
   const [error, setError] = useState('')
+  const captcha = useCaptcha()
 
   if (!isOpen) return null
 
@@ -27,7 +30,7 @@ export default function ReportModal({ isOpen, onClose, type, targetId, targetNam
     setIsSubmitting(true)
 
     try {
-      await apiCreateReport(type, targetId, reason, details)
+      await (captcha.token ? apiCreateReport(type, targetId, reason, details, captcha.token) : apiCreateReport(type, targetId, reason, details))
       setIsSubmitting(false)
       setIsSuccess(true)
       setTimeout(() => {
@@ -38,6 +41,7 @@ export default function ReportModal({ isOpen, onClose, type, targetId, targetNam
       }, 2000)
     } catch (err) {
       setIsSubmitting(false)
+      captcha.reset()
       setError(getErrorMessage(err, 'Unable to submit report right now.'))
     }
   }
@@ -104,9 +108,11 @@ export default function ReportModal({ isOpen, onClose, type, targetId, targetNam
                 </p>
               ) : null}
 
+              <TurnstileWidget onToken={captcha.setToken} resetSignal={captcha.resetSignal} />
+
               <button 
                 type="submit" 
-                disabled={isSubmitting}
+                disabled={isSubmitting || !captcha.ready}
                 className="btn btn-primary bg-error border-error text-white btn-lg w-full rounded-2xl shadow-error/20 flex items-center justify-center gap-3 font-black uppercase tracking-widest"
               >
                 {isSubmitting ? 'Transmitting...' : 'Submit Report'} <Send className="h-5 w-5" />

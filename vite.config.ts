@@ -34,7 +34,7 @@ export default defineConfig({
       workbox: {
         // Keep the first-visit background download small for people on limited data: the CV builder,
         // admin screens and the realtime socket library are cached the first time they are used.
-        globIgnores: ['**/CVGenerator-*.js', '**/AdminDashboard-*.js', '**/esm-*.js'],
+        globIgnores: ['**/CVGenerator-*.js', '**/AdminDashboard-*.js', '**/esm-*.js', '**/sentryClient-*.js'],
         navigateFallbackDenylist: [new RegExp('^/api/'), new RegExp('^/health'), new RegExp('^/ready')],
         runtimeCaching: [
           {

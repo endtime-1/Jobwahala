@@ -29,6 +29,7 @@ import companyRoutes from './routes/companyRoutes';
 import interestRoutes from './routes/interestRoutes';
 import applicationRoutes from './routes/applicationRoutes';
 import { requireFreelanceEnabled } from './middleware/featureFlags';
+import { Sentry } from './config/sentry';
 import {
   createRateLimit,
   notFoundHandler,
@@ -190,6 +191,9 @@ app.use('/api/verifications', verificationRoutes);
 app.use('/api/payouts', freelanceOnly, payoutRoutes);
 
 app.use(notFoundHandler);
+
+// Reports unexpected server errors to Sentry (when it is on), then hands on to the handler below.
+Sentry.setupExpressErrorHandler(app);
 
 app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
   const status = typeof err?.status === 'number' ? err.status : 500;

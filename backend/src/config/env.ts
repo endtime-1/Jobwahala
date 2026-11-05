@@ -88,6 +88,13 @@ const smtpUser = process.env.SMTP_USER || '';
 const smtpPass = process.env.SMTP_PASS || '';
 const smtpFrom = process.env.SMTP_FROM || 'noreply@jobwahala.com';
 
+// Error reporting (Sentry). Empty means off. Personal data is stripped before anything is sent.
+const sentryDsn = (process.env.SENTRY_DSN || '').trim();
+const sentryRelease = (process.env.SENTRY_RELEASE || process.env.RAILWAY_GIT_COMMIT_SHA || '').trim();
+
+// Cloudflare Turnstile secret, for the bot check on sign-up, the waitlist and reporting.
+const turnstileSecretKey = (process.env.TURNSTILE_SECRET_KEY || '').trim();
+
 // Text messages (one-time codes). ARKESEL sends for real; CONSOLE only logs and is refused in production.
 const smsProvider = (process.env.SMS_PROVIDER || (isProduction ? 'ARKESEL' : 'CONSOLE')).trim().toUpperCase();
 const arkeselApiKey = (process.env.ARKESEL_API_KEY || '').trim();
@@ -115,6 +122,9 @@ const env = {
   smtpPass,
   smtpFrom,
   smsProvider,
+  sentryDsn,
+  sentryRelease,
+  turnstileSecretKey,
   arkeselApiKey,
   arkeselSenderId,
   paymentProvider: paymentProvider as 'SANDBOX' | 'PAYSTACK',

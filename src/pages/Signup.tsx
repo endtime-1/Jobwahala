@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Mail, Lock, User, Eye, EyeOff, ArrowRight, Briefcase, Laptop, Users } from 'lucide-react'
 import { AuthAside, AuthMobileBanner } from '../components/AuthShell'
 import PhoneCodeFlow from '../components/PhoneCodeFlow'
+import TurnstileWidget from '../components/TurnstileWidget'
+import { useCaptcha } from '../lib/captcha'
 import { useFeatures } from '../lib/features'
 import { useAuth, type UserRole } from '../context/AuthContext'
 import { isApiUnavailableMessage } from '../lib/apiStatus'
@@ -17,6 +19,7 @@ const ROLES: { value: UserRole; label: string; description: string; icon: typeof
 export default function Signup() {
   const [method, setMethod] = useState<'email' | 'phone'>('email')
   const { freelanceEnabled } = useFeatures()
+  const captcha = useCaptcha()
   // Freelancer accounts open when freelance gigs do.
   const roles = ROLES.filter((item) => item.value !== 'FREELANCER' || freelanceEnabled)
   const [email, setEmail] = useState('')
@@ -34,9 +37,11 @@ export default function Signup() {
     setError('')
     setIsLoading(true)
     try {
-      await signup(email, password, role)
+      await (captcha.token ? signup(email, password, role, captcha.token) : signup(email, password, role))
       navigate('/onboarding')
     } catch (err) {
+      // A bot-check token works once, so ask for a fresh one after any failure.
+      captcha.reset()
       const nextMessage = getErrorMessage(err, 'Signup failed. Please try again.')
       setError(isApiUnavailableMessage(nextMessage) ? '' : nextMessage)
     } finally {
@@ -203,9 +208,11 @@ export default function Signup() {
                   </div>
                 )}
 
+                <TurnstileWidget onToken={captcha.setToken} resetSignal={captcha.resetSignal} />
+
                 <button
                   type="submit"
-                  disabled={isLoading}
+                  disabled={isLoading || !captcha.ready}
                   className="btn btn-gold btn-lg mt-1 w-full justify-center disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {isLoading ? (

@@ -58,6 +58,26 @@ ARKESEL_SENDER_ID=JobWahala
 
 Register the sender name with Arkesel first (11 characters at most). `SMS_PROVIDER=CONSOLE` only prints codes in the log and is refused in production.
 
+Sign-up, the freelance waitlist and reporting are protected by Cloudflare Turnstile (a bot check). Create a Turnstile widget in the Cloudflare dashboard, then set the secret on the backend and the public site key on the website service (it is baked in at build time, so redeploy after adding it):
+
+```env
+# backend service
+TURNSTILE_SECRET_KEY=
+# website (frontend) service
+VITE_TURNSTILE_SITE_KEY=
+```
+
+**Set both before launch.** With no secret in production the protected forms stay closed (they answer "temporarily unavailable"), on purpose, so the check can never be silently off. If only the site key is missing, people cannot get past the form.
+
+Errors are reported to Sentry, with personal data removed first. Both are optional; leave them empty to turn reporting off:
+
+```env
+# backend service
+SENTRY_DSN=
+# website (frontend) service, baked in at build time
+VITE_SENTRY_DSN=
+```
+
 For live payments set `PAYMENT_PROVIDER=PAYSTACK`, the Paystack keys, and point the Paystack dashboard webhook at `https://your-web-domain/api/payments/webhooks/paystack`. Ghana cedi checkouts offer mobile money first, so enable mobile money on the Paystack account.
 
 Also set any feature-specific secrets you are using:

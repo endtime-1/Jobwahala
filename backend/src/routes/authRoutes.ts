@@ -14,6 +14,7 @@ import {
 import { authMiddleware } from '../middleware/auth';
 import { validate } from '../middleware/validate';
 import { createRateLimit } from '../middleware/security';
+import { requireCaptcha } from '../middleware/captcha';
 import {
   loginSchema,
   registerSchema,
@@ -32,11 +33,13 @@ const router = Router();
 // (and per phone number inside the service); trying codes has its own, looser limit.
 const smsSendLimit = createRateLimit({ windowMs: 60 * 60 * 1000, max: 20, scope: 'sms-send' });
 const smsCheckLimit = createRateLimit({ windowMs: 60 * 60 * 1000, max: 60, scope: 'sms-check' });
-router.post('/phone/send-code', smsSendLimit, validate(sendPhoneCodeSchema), sendPhoneCode);
+// A bot check before any text is sent (each one costs money) and before an account can be created.
+const captcha = requireCaptcha();
+router.post('/phone/send-code', smsSendLimit, captcha, validate(sendPhoneCodeSchema), sendPhoneCode);
 router.post('/phone/login', smsCheckLimit, validate(phoneLoginSchema), loginWithPhone);
 router.post('/phone/signup', smsCheckLimit, validate(phoneSignupSchema), signupWithPhone);
 
-router.post('/register', validate(registerSchema), register);
+router.post('/register', captcha, validate(registerSchema), register);
 router.post('/login', validate(loginSchema), login);
 router.get('/me', authMiddleware, me);
 

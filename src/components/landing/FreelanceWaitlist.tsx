@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from 'react'
 import { Check, Loader2 } from 'lucide-react'
 import { apiCreateInterestSignup } from '../../lib/api'
+import { useCaptcha } from '../../lib/captcha'
+import TurnstileWidget from '../TurnstileWidget'
 
 const FREELANCE_SOURCE = 'landing_freelance_gigs'
 
@@ -18,6 +20,7 @@ export default function FreelanceWaitlist() {
   const [website, setWebsite] = useState('')
   const [status, setStatus] = useState<Status>('idle')
   const [message, setMessage] = useState('')
+  const captcha = useCaptcha()
 
   const submit = async (event: FormEvent) => {
     event.preventDefault()
@@ -33,9 +36,10 @@ export default function FreelanceWaitlist() {
 
     setStatus('sending')
     try {
-      await apiCreateInterestSignup({ ...parts, source: FREELANCE_SOURCE, website })
+      await apiCreateInterestSignup({ ...parts, source: FREELANCE_SOURCE, website, ...(captcha.token ? { captchaToken: captcha.token } : {}) })
       setStatus('done')
     } catch (error) {
+      captcha.reset()
       setStatus('error')
       setMessage(error instanceof Error && error.message ? error.message : 'Could not save that. Please try again.')
     }
@@ -90,12 +94,16 @@ export default function FreelanceWaitlist() {
             aria-hidden
             className="absolute -left-[9999px] h-0 w-0 opacity-0"
           />
-          <button type="submit" disabled={status === 'sending'} className="btn btn-primary h-12 justify-center px-6">
+          <button type="submit" disabled={status === 'sending' || !captcha.ready} className="btn btn-primary h-12 justify-center px-6">
             {status === 'sending' ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
             Tell me when it opens
           </button>
         </form>
       )}
+
+      <div className="mt-3">
+        <TurnstileWidget onToken={captcha.setToken} resetSignal={captcha.resetSignal} />
+      </div>
 
       {status === 'error' && (
         <p id="freelance-waitlist-error" role="alert" className="mt-3 text-sm font-bold text-error">
