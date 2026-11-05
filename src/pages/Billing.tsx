@@ -146,6 +146,9 @@ export default function Billing() {
       <header className="mb-8">
         <h1 className="text-3xl font-black tracking-tight text-text-main">Billing</h1>
         <p className="mt-2 text-base font-medium text-text-muted">Promote your jobs, buy credits or a plan, and download your receipts. Pay by card or mobile money.</p>
+        <p className="mt-2 text-sm font-bold">
+          <Link to="/plans" className="text-primary hover:underline">Compare employer plans</Link>
+        </p>
       </header>
 
       {mode === 'test' ? (

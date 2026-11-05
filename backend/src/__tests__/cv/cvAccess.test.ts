@@ -8,6 +8,9 @@ const prismaMock = vi.hoisted(() => ({
   seekerCv: { findFirst: vi.fn(), findUnique: vi.fn(), upsert: vi.fn(), updateMany: vi.fn() },
   job: { findFirst: vi.fn() },
   verificationRequest: { findFirst: vi.fn() },
+  teamMember: { findFirst: vi.fn() },
+  subscription: { findMany: vi.fn() },
+  product: { findFirst: vi.fn(), findUnique: vi.fn() },
 }));
 
 vi.mock('../../config/prisma', () => ({ default: prismaMock }));
@@ -47,6 +50,10 @@ beforeEach(() => {
   vi.clearAllMocks();
   prismaMock.application.findFirst.mockResolvedValue(null);
   prismaMock.seekerCv.findFirst.mockResolvedValue(null);
+  // No team, no paid plan, no Free-plan row: the built-in Free plan, which has no CV database.
+  prismaMock.teamMember.findFirst.mockResolvedValue(null);
+  prismaMock.subscription.findMany.mockResolvedValue([]);
+  prismaMock.product.findFirst.mockResolvedValue(null);
 });
 
 describe('who can open a CV', () => {

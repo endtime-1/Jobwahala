@@ -28,6 +28,8 @@ model User {
   // Courses: as a training provider, as a learner, and enquiries made.
   courses             Course[] @relation("ProviderCourses")
   billingPayments     BillingPayment[] @relation("BillingPayments")
+  teamMembers         TeamMember[] @relation("TeamOwner")
+  teamMemberships     TeamMember[] @relation("TeamMembership")
   subscriptions       Subscription[] @relation("Subscriptions")
   creditAccount       CreditAccount? @relation("CreditAccount")
   learnerCourses      LearnerCourse[] @relation("LearnerCourses")
@@ -88,6 +90,8 @@ model JobSeekerProfile {
   experience  String?
   resumeFileUrl String?
   // Early career: STUDENT, NSS or GRADUATE, used to show the most relevant internships and graduate jobs first.
+  // Opt-in: employers on a plan with CV database access may find this profile and open its CV.
+  visibleToEmployers Boolean @default(false)
   careerStage    String?
   institution    String?
   programme      String?
@@ -111,6 +115,10 @@ model EmployerProfile {
   providerStatus     String  @default("NONE") // NONE, PENDING, APPROVED, REJECTED
   providerReviewNote String?
   providerReviewedAt DateTime?
+  // Branded company page (plans that include it). Kept if the plan ends; just not shown.
+  coverImageUrl String?
+  galleryJson   String @default("[]")
+  whyWorkWithUs String?
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
@@ -187,6 +195,7 @@ model Job {
   applications Application[]
   reports      Report[]      @relation("ReportedJob")
   savedBy      SavedJob[]
+  views        JobView[]
 
   @@index([employerId])
   @@index([postedByAdminId])
@@ -937,6 +946,13 @@ model Product {
   sortOrder   Int      @default(0)
   paystackPlanCode   String?
   paystackPlanAmount Int?
+  // Employer plans: FREE, STARTER or BUSINESS. The credits above are per month for a plan.
+  planTier      String?
+  teamLimit     Int     @default(1) // seats, the owner included
+  cvDatabase    Boolean @default(false)
+  brandedPage   Boolean @default(false)
+  hiringReports Boolean @default(false)
+  topEmployers  Boolean @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -994,6 +1010,11 @@ model Subscription {
   cancelAtPeriodEnd  Boolean @default(false)
   cancelledAt        DateTime?
   reminderSentForPeriodEnd DateTime? // the period end we already sent a renewal reminder for
+  pendingProductId   String?   // a downgrade that starts when this period ends
+  graceEndsAt        DateTime? // set when a renewal fails: 7 days to put it right
+  graceRemindersSent Int       @default(0)
+  authorizationCode  String?   // the saved card, so a downgrade can be scheduled
+  nextCreditGrantAt  DateTime? // when the next month of plan credits arrives
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -1010,6 +1031,9 @@ model CreditAccount {
   userId         String @unique
   featuredCredits Int   @default(0)
   boostCredits    Int   @default(0)
+  // Monthly plan credits: they expire at the next monthly grant. Spent before the credits above.
+  planFeaturedCredits Int @default(0)
+  planBoostCredits    Int @default(0)
   updatedAt      DateTime @updatedAt
 
   user User @relation("CreditAccount", fields: [userId], references: [id], onDelete: Cascade)
@@ -1070,4 +1094,37 @@ model BillingRefund {
   payment BillingPayment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
 
   @@index([paymentId])
+}
+
+// ---------------------------------------------------------------- Employer plans: team, and job views for hiring reports
+
+// A person who works for a company account. The owner is seat 1; members are the other seats the plan allows.
+model TeamMember {
+  id         String   @id @default(uuid())
+  ownerId    String
+  email      String
+  userId     String?  // set when they accept the invitation
+  status     String   @default("INVITED") // INVITED, ACTIVE, SUSPENDED (over the plan's limit; kept, not deleted)
+  inviteTokenHash String @unique
+  invitedAt  DateTime @default(now())
+  joinedAt   DateTime?
+
+  owner User  @relation("TeamOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  user  User? @relation("TeamMembership", fields: [userId], references: [id], onDelete: SetNull)
+
+  @@unique([ownerId, email])
+  @@index([userId])
+}
+
+// One view of a job page per visitor per day (a keyed hash, never an address).
+model JobView {
+  id          String   @id @default(uuid())
+  jobId       String
+  visitorHash String
+  createdAt   DateTime @default(now())
+
+  job Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, visitorHash])
+  @@index([jobId, createdAt])
 }

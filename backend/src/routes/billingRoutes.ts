@@ -4,15 +4,17 @@ import { createRateLimit } from '../middleware/security';
 import { validate } from '../middleware/validate';
 import {
   cancelMySubscription,
+  changePlan,
   downloadReceipt,
   getCatalogue,
   getMyBilling,
   getPaymentStatus,
+  getPlans,
   handlePaystackBillingWebhook,
   promoteJob,
   startCheckout,
 } from '../controllers/billingController';
-import { checkoutSchema, idSchema, promoteSchema, referenceSchema } from '../validation/billingSchemas';
+import { changePlanSchema, checkoutSchema, idSchema, promoteSchema, referenceSchema } from '../validation/billingSchemas';
 
 const router = Router();
 
@@ -27,6 +29,8 @@ const statusLimit = createRateLimit({ windowMs: 60 * 1000, max: 30, scope: 'bill
 
 router.get('/catalogue', getCatalogue);
 router.get('/me', getMyBilling);
+router.get('/plans', getPlans);
+router.post('/plans/change', validate(changePlanSchema), changePlan);
 router.post('/checkout', checkoutLimit, validate(checkoutSchema), startCheckout);
 router.get('/payments/:reference/status', statusLimit, validate(referenceSchema), getPaymentStatus);
 router.get('/payments/:id/receipt', validate(idSchema), downloadReceipt);

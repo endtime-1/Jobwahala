@@ -25,6 +25,12 @@ type ProductBody = {
   includes: string[];
   active: boolean;
   sortOrder: number;
+  planTier?: string | null;
+  teamLimit: number;
+  cvDatabase: boolean;
+  brandedPage: boolean;
+  hiringReports: boolean;
+  topEmployers: boolean;
 };
 
 const productData = (body: ProductBody) => ({
@@ -36,7 +42,13 @@ const productData = (body: ProductBody) => ({
   durationDays: body.durationDays ?? null,
   featuredCredits: body.featuredCredits,
   boostCredits: body.boostCredits,
-  interval: body.kind === 'SUBSCRIPTION' ? body.interval ?? null : null,
+  interval: body.kind === 'SUBSCRIPTION' && body.planTier !== 'FREE' ? body.interval ?? null : null,
+  planTier: body.kind === 'SUBSCRIPTION' ? body.planTier ?? null : null,
+  teamLimit: body.teamLimit,
+  cvDatabase: body.cvDatabase,
+  brandedPage: body.brandedPage,
+  hiringReports: body.hiringReports,
+  topEmployers: body.topEmployers,
   includesJson: JSON.stringify(body.includes),
   active: body.active,
   sortOrder: body.sortOrder,
@@ -86,7 +98,7 @@ export const updateProduct = async (req: AuthRequest, res: Response) => {
         action: 'PRODUCT_UPDATED',
         targetType: 'Product',
         targetId: id,
-        metadata: { name: data.name, before: { pricePesewas: existing.pricePesewas, active: existing.active, durationDays: existing.durationDays }, after: { pricePesewas: data.pricePesewas, active: data.active, durationDays: data.durationDays } },
+        metadata: { name: data.name, before: { pricePesewas: existing.pricePesewas, active: existing.active, durationDays: existing.durationDays, teamLimit: existing.teamLimit, featuredCredits: existing.featuredCredits, boostCredits: existing.boostCredits, cvDatabase: existing.cvDatabase, hiringReports: existing.hiringReports }, after: { pricePesewas: data.pricePesewas, active: data.active, durationDays: data.durationDays, teamLimit: data.teamLimit, featuredCredits: data.featuredCredits, boostCredits: data.boostCredits, cvDatabase: data.cvDatabase, hiringReports: data.hiringReports } },
       });
     });
     return res.json({ success: true });

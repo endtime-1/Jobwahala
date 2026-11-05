@@ -1130,3 +1130,26 @@ export const apiAdminRefund = (id: string, data: { amountGhs?: number; reason: s
 export const apiAdminLookupAccount = (email: string) => fetch(`${BASE_URL}/admin/billing/account?email=${encodeURIComponent(email)}`, { headers: headers(true) }).then(handleResponse);
 export const apiAdminAdjustCredits = (data: { email: string; type: 'FEATURE' | 'BOOST'; delta: number; reason: string }) =>
   fetch(`${BASE_URL}/admin/billing/credits`, { method: 'POST', headers: headers(true), body: JSON.stringify(data) }).then(handleResponse);
+
+// ---------------------------------------------------------------- Employer plans
+
+export const apiGetPlans = () => fetch(`${BASE_URL}/billing/plans`, { headers: headers(true) }).then(handleResponse);
+export const apiChangePlan = (productId: string) =>
+  fetch(`${BASE_URL}/billing/plans/change`, { method: 'POST', headers: headers(true), body: JSON.stringify({ productId }) }).then(handleResponse);
+
+export const apiGetTeam = () => fetch(`${BASE_URL}/team`, { headers: headers(true) }).then(handleResponse);
+export const apiGetMembership = () => fetch(`${BASE_URL}/team/membership`, { headers: headers(true) }).then(handleResponse);
+export const apiInviteTeamMember = (email: string) =>
+  fetch(`${BASE_URL}/team/invite`, { method: 'POST', headers: headers(true), body: JSON.stringify({ email }) }).then(handleResponse);
+export const apiAcceptTeamInvite = (token: string) =>
+  fetch(`${BASE_URL}/team/accept`, { method: 'POST', headers: headers(true), body: JSON.stringify({ token }) }).then(handleResponse);
+export const apiRemoveTeamMember = (id: string) => fetch(`${BASE_URL}/team/${id}`, { method: 'DELETE', headers: headers(true) }).then(handleResponse);
+
+export const apiGetHiringReport = (months = 6) => fetch(`${BASE_URL}/hiring-reports?months=${months}`, { headers: headers(true) }).then(handleResponse);
+export const apiSearchCvDatabase = (params: Record<string, string> = {}) =>
+  fetch(`${BASE_URL}/cv-database?${new URLSearchParams(params).toString()}`, { headers: headers(true) }).then(handleResponse);
+
+/** Counts a view of a job page. Fire and forget: the server ignores crawlers and the company's own team. */
+export const apiTrackJobView = (jobId: string) => {
+  void fetch(`${BASE_URL}/jobs/${jobId}/view`, { method: 'POST', headers: headers(true) }).catch(() => undefined);
+};

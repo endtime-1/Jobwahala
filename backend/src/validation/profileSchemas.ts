@@ -34,6 +34,8 @@ const seekerProfileBodySchema = z
     institution: trimmedOptionalString(120),
     programme: trimmedOptionalString(120),
     completionYear: z.number().int().min(1990).max(new Date().getFullYear() + 8).nullable().optional(),
+    // Opt in to being found by employers whose plan includes the CV database.
+    visibleToEmployers: z.boolean().optional(),
   })
   .strict();
 
@@ -56,6 +58,10 @@ const employerProfileBodySchema = z
     logoUrl: logoUrlField(),
     website: optionalUrl(),
     description: trimmedOptionalString(2000),
+    // Branded company page (plans that include it): checked against the plan when saved.
+    coverImageUrl: logoUrlField(),
+    gallery: z.array(logoUrlField().refine((value) => Boolean(value), 'Upload each picture through JobWahala')).max(6).optional(),
+    whyWorkWithUs: trimmedOptionalString(2000),
   })
   .strict();
 

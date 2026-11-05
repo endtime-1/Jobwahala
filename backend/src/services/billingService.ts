@@ -22,33 +22,29 @@ import {
   type ProductKind,
 } from '../utils/billing';
 import { paystackMode, realPaystack, type PaystackClient } from './paystackBilling';
+import { BillingError } from './billingErrors';
+import { expirePlanCredits, getCreditBalance, getEntitlements, grantMonthlyPlanCredits, reconcileTeam } from './planService';
+import { DEFAULT_PLANS, GRACE_DAYS, featuresOf, graceEndFrom, graceRemindersDue, isLive, planLevel } from '../utils/plans';
 import { notifyJobAlerts } from './jobAlertService';
-import { sendPaymentFailedEmail, sendPaymentReceiptEmail, sendRenewalReminderEmail } from './emailService';
+import { sendGraceReminderEmail, sendPaymentFailedEmail, sendPaymentReceiptEmail, sendRenewalReminderEmail } from './emailService';
 
-/** Something the person can be told: a status, a code the page can act on, and a plain message. */
-export class BillingError extends Error {
-  constructor(
-    public status: number,
-    public code: string,
-    message: string,
-  ) {
-    super(message);
-  }
-}
+export { BillingError };
+export { getCreditBalance };
 
 type Mailer = {
   receipt: typeof sendPaymentReceiptEmail;
   failed: typeof sendPaymentFailedEmail;
   reminder: typeof sendRenewalReminderEmail;
+  grace: typeof sendGraceReminderEmail;
 };
 
 let paystack: PaystackClient = realPaystack;
-let mail: Mailer = { receipt: sendPaymentReceiptEmail, failed: sendPaymentFailedEmail, reminder: sendRenewalReminderEmail };
+let mail: Mailer = { receipt: sendPaymentReceiptEmail, failed: sendPaymentFailedEmail, reminder: sendRenewalReminderEmail, grace: sendGraceReminderEmail };
 
 /** For tests: stand in for Paystack and for email. */
 export const setBillingDepsForTests = (deps?: { paystack?: PaystackClient; mail?: Partial<Mailer> }) => {
   paystack = deps?.paystack ?? realPaystack;
-  mail = { receipt: sendPaymentReceiptEmail, failed: sendPaymentFailedEmail, reminder: sendRenewalReminderEmail, ...(deps?.mail ?? {}) };
+  mail = { receipt: sendPaymentReceiptEmail, failed: sendPaymentFailedEmail, reminder: sendRenewalReminderEmail, grace: sendGraceReminderEmail, ...(deps?.mail ?? {}) };
 };
 
 /** A mail that fails must never undo or hold up a payment. */
@@ -67,10 +63,19 @@ export const getSettings = async () => {
 
 /** The first time anyone looks, the catalogue starts with sensible products for the admin to edit. */
 export const ensureDefaultProducts = async () => {
-  if ((await prisma.product.count()) > 0) return;
-  for (const product of DEFAULT_PRODUCTS) {
-    const { includes, ...rest } = product;
-    await prisma.product.create({ data: { ...rest, includesJson: JSON.stringify(includes) } });
+  const empty = (await prisma.product.count()) === 0;
+  if (empty) {
+    for (const product of DEFAULT_PRODUCTS) {
+      const { includes, ...rest } = product;
+      await prisma.product.create({ data: { ...rest, includesJson: JSON.stringify(includes) } });
+    }
+  }
+  // Employer plans: the Free plan and the paid tiers, to start from. Added once, whenever there are none.
+  if ((await prisma.product.count({ where: { planTier: { not: null } } })) === 0) {
+    for (const plan of DEFAULT_PLANS) {
+      const { includes, ...rest } = plan;
+      await prisma.product.create({ data: { ...rest, kind: 'SUBSCRIPTION', audience: 'EMPLOYER', includesJson: JSON.stringify(includes), durationDays: null } });
+    }
   }
 };
 
@@ -89,6 +94,12 @@ type ProductRow = {
   includesJson: string;
   active?: boolean;
   sortOrder?: number;
+  planTier?: string | null;
+  teamLimit?: number;
+  cvDatabase?: boolean;
+  brandedPage?: boolean;
+  hiringReports?: boolean;
+  topEmployers?: boolean;
 };
 
 export const serializeProduct = (product: ProductRow, settings: { vatRatePercent: number; pricesIncludeVat: boolean }) => {
@@ -105,6 +116,12 @@ export const serializeProduct = (product: ProductRow, settings: { vatRatePercent
     boostCredits: product.boostCredits,
     interval: product.interval,
     includes: includesList(product),
+    planTier: product.planTier ?? null,
+    teamLimit: product.teamLimit ?? 1,
+    cvDatabase: product.cvDatabase ?? false,
+    brandedPage: product.brandedPage ?? false,
+    hiringReports: product.hiringReports ?? false,
+    topEmployers: product.topEmployers ?? false,
     active: product.active ?? true,
     sortOrder: product.sortOrder ?? 0,
     priceGhs: product.pricePesewas / 100,
@@ -165,8 +182,14 @@ export const createCheckout = async (input: { userId: string; email: string; nam
     const course = input.targetId ? await prisma.course.findFirst({ where: { id: input.targetId, providerId: input.userId, ...publicCourseWhere() }, select: { id: true } }) : null;
     if (!course) throw new BillingError(400, 'COURSE_REQUIRED', 'Choose one of your live courses.');
   } else if (product.kind === 'SUBSCRIPTION') {
-    const current = await prisma.subscription.findFirst({ where: { userId: input.userId, productId: product.id, status: { in: ['ACTIVE', 'PAST_DUE'] } }, select: { id: true } });
-    if (current) throw new BillingError(409, 'ALREADY_SUBSCRIBED', 'You already have this plan.');
+    if (product.planTier === 'FREE' || product.pricePesewas <= 0) throw new BillingError(400, 'FREE_PLAN', 'The Free plan costs nothing. To move to it, cancel your paid plan.');
+
+    const current = await getEntitlements(input.userId);
+    if (current.productId === product.id) throw new BillingError(409, 'ALREADY_SUBSCRIBED', 'You already have this plan.');
+    // Moving up takes effect straight away and is paid now. Moving down waits for the end of the period, through "Change plan".
+    if (current.subscription && product.planTier && planLevel(product) <= planLevel({ planTier: current.tier, interval: current.interval })) {
+      throw new BillingError(409, 'USE_DOWNGRADE', 'To move to a smaller plan, use "Change plan": it starts when your current period ends, so you keep what you paid for.');
+    }
   }
 
   const settings = await getSettings();
@@ -225,11 +248,6 @@ export const grantCredits = async (tx: Tx, input: { userId: string; featured?: n
   if (boost !== 0) await tx.creditLedger.create({ data: { ...common, creditType: 'BOOST', delta: boost } });
 };
 
-export const getCreditBalance = async (userId: string) => {
-  const account = await prisma.creditAccount.findUnique({ where: { userId } });
-  return { featuredCredits: account?.featuredCredits ?? 0, boostCredits: account?.boostCredits ?? 0 };
-};
-
 /** Spend one credit to feature or boost one of the employer's open jobs. One conditional update: no double spending. */
 export const spendCredit = async (input: { userId: string; type: 'FEATURE' | 'BOOST'; jobId: string }, now = new Date()) => {
   const job = await prisma.job.findFirst({ where: { id: input.jobId, employerId: input.userId, ...publicJobWhere() }, select: { id: true, featuredUntil: true, boostedUntil: true } });
@@ -238,10 +256,18 @@ export const spendCredit = async (input: { userId: string; type: 'FEATURE' | 'BO
   const days = await productDays(input.type === 'FEATURE' ? 'FEATURED_JOB' : 'JOB_BOOST');
 
   const until = await prisma.$transaction(async (tx) => {
-    const taken = await tx.creditAccount.updateMany({
-      where: { userId: input.userId, ...(input.type === 'FEATURE' ? { featuredCredits: { gte: 1 } } : { boostCredits: { gte: 1 } }) },
-      data: input.type === 'FEATURE' ? { featuredCredits: { decrement: 1 } } : { boostCredits: { decrement: 1 } },
+    // Monthly plan credits go first (they expire), then credits that were bought or given. Each is one conditional update.
+    const feature = input.type === 'FEATURE';
+    let taken = await tx.creditAccount.updateMany({
+      where: { userId: input.userId, ...(feature ? { planFeaturedCredits: { gte: 1 } } : { planBoostCredits: { gte: 1 } }) },
+      data: feature ? { planFeaturedCredits: { decrement: 1 } } : { planBoostCredits: { decrement: 1 } },
     });
+    if (taken.count === 0) {
+      taken = await tx.creditAccount.updateMany({
+        where: { userId: input.userId, ...(feature ? { featuredCredits: { gte: 1 } } : { boostCredits: { gte: 1 } }) },
+        data: feature ? { featuredCredits: { decrement: 1 } } : { boostCredits: { decrement: 1 } },
+      });
+    }
     if (taken.count === 0) throw new BillingError(402, 'NO_CREDITS', input.type === 'FEATURE' ? 'You have no featured-job credits left.' : 'You have no boost credits left.');
 
     const ends = extendPromotion(input.type === 'FEATURE' ? job.featuredUntil : job.boostedUntil, days, now);
@@ -273,10 +299,12 @@ type PaymentRow = {
 };
 
 /** What a paid purchase gives: credits, a promotion on a job or course, or a subscription. Runs inside the payment's transaction. */
-const applyBenefits = async (tx: Tx, payment: PaymentRow, now: Date) => {
+type PaymentInfo = { authorizationCode?: string | null; customerCode?: string | null };
+
+const applyBenefits = async (tx: Tx, payment: PaymentRow, now: Date, info: PaymentInfo = {}) => {
   const product = payment.productId ? await tx.product.findUnique({ where: { id: payment.productId } }) : null;
   const kind = payment.productKind as ProductKind;
-  const out: { boostedJobId?: string } = {};
+  const out: { boostedJobId?: string; reconcileTeamFor?: string; stopRepeating: { code: string; token: string }[] } = { stopRepeating: [] };
 
   if (kind === 'JOB_PACK' && product) {
     await grantCredits(tx, { userId: payment.userId, featured: product.featuredCredits, boost: product.boostCredits, reason: 'PURCHASE', paymentId: payment.id });
@@ -303,20 +331,54 @@ const applyBenefits = async (tx: Tx, payment: PaymentRow, now: Date) => {
     let subscriptionId = payment.subscriptionId;
 
     if (subscriptionId) {
-      // A renewal: the new period starts where the last one ended (or now, if it had lapsed).
+      // A renewal, or a scheduled move to a smaller plan starting: the new period starts where the last one ended (or now, if it had lapsed).
       const existing = await tx.subscription.findUnique({ where: { id: subscriptionId } });
       if (existing) {
         const start = existing.currentPeriodEnd.getTime() > now.getTime() ? existing.currentPeriodEnd : now;
-        await tx.subscription.update({ where: { id: existing.id }, data: { status: 'ACTIVE', currentPeriodStart: start, currentPeriodEnd: addInterval(start, interval) } });
+        await tx.subscription.update({
+          where: { id: existing.id },
+          data: {
+            productId: product.id,
+            status: 'ACTIVE',
+            currentPeriodStart: start,
+            currentPeriodEnd: addInterval(start, interval),
+            nextCreditGrantAt: addInterval(start, 'MONTHLY'),
+            // Paid up again: the grace period is over, and a planned move has now happened.
+            graceEndsAt: null,
+            graceRemindersSent: 0,
+            pendingProductId: null,
+            cancelAtPeriodEnd: false,
+            cancelledAt: null,
+            ...(info.authorizationCode ? { authorizationCode: info.authorizationCode } : {}),
+          },
+        });
       }
     } else {
+      // A new plan. If the company already has one, this is an upgrade and it takes effect now: the old plan ends today.
+      const earlier = await tx.subscription.findMany({ where: { userId: payment.userId, status: { in: ['ACTIVE', 'PAST_DUE'] } } });
+      for (const old of earlier) {
+        await tx.subscription.update({ where: { id: old.id }, data: { status: 'CANCELLED', cancelAtPeriodEnd: true, cancelledAt: now, currentPeriodEnd: now, pendingProductId: null } });
+        if (old.paystackSubscriptionCode && old.paystackEmailToken) out.stopRepeating.push({ code: old.paystackSubscriptionCode, token: old.paystackEmailToken });
+      }
       const created = await tx.subscription.create({
-        data: { userId: payment.userId, productId: product.id, status: 'ACTIVE', currentPeriodStart: now, currentPeriodEnd: addInterval(now, interval) },
+        data: {
+          userId: payment.userId,
+          productId: product.id,
+          status: 'ACTIVE',
+          currentPeriodStart: now,
+          currentPeriodEnd: addInterval(now, interval),
+          nextCreditGrantAt: addInterval(now, 'MONTHLY'),
+          authorizationCode: info.authorizationCode ?? null,
+          paystackCustomerCode: info.customerCode ?? null,
+        },
       });
       subscriptionId = created.id;
       await tx.billingPayment.update({ where: { id: payment.id }, data: { subscriptionId } });
     }
-    await grantCredits(tx, { userId: payment.userId, featured: product.featuredCredits, boost: product.boostCredits, reason: 'SUBSCRIPTION', paymentId: payment.id });
+
+    // This month's plan credits. What was left of last month's expires now (that is the rule); pack credits are untouched.
+    await grantMonthlyPlanCredits(payment.userId, { featured: product.featuredCredits, boost: product.boostCredits }, tx as never, payment.id);
+    out.reconcileTeamFor = payment.userId;
   }
   return out;
 };
@@ -362,7 +424,7 @@ export const confirmPayment = async (reference: string, now = new Date()): Promi
     const claimed = await db.billingPayment.updateMany({ where: { id: payment.id, status: 'PENDING' }, data: { status: 'PAID', paidAt, channel: tx.channel, receiptNumber: number } });
     if (claimed.count === 0) return null;
 
-    const outcome = await applyBenefits(db, payment, now);
+    const outcome = await applyBenefits(db, payment, now, { authorizationCode: tx.authorizationCode, customerCode: tx.customerCode });
     return { number, outcome };
   });
 
@@ -372,6 +434,12 @@ export const confirmPayment = async (reference: string, now = new Date()): Promi
   }
 
   if (done.outcome.boostedJobId) await announceBoost(done.outcome.boostedJobId);
+
+  // An upgrade ends the old plan at Paystack too, so it is not charged again. Best effort: the local plan is already over.
+  for (const old of done.outcome.stopRepeating) {
+    sendQuietly('billing_stop_old_plan_failed', () => paystack.disableSubscription({ code: old.code, token: old.token }));
+  }
+  if (done.outcome.reconcileTeamFor) await reconcileTeam(done.outcome.reconcileTeamFor);
 
   if (payment.billToEmail) {
     sendQuietly('billing_receipt_email_failed', () =>
@@ -399,12 +467,16 @@ const startRenewal = async (data: Record<string, any>) => {
   const customerCode = data.customer?.customer_code as string | undefined;
   const email = (data.customer?.email as string | undefined)?.toLowerCase();
 
+  // The plan being charged: the one the company is on, or the smaller one it asked to move to at the end of the period.
+  const charged = await prisma.product.findFirst({ where: { paystackPlanCode: planCode } });
+  if (!charged) return false;
+
   const subscription = await prisma.subscription.findFirst({
     where: {
-      product: { paystackPlanCode: planCode },
-      OR: [...(customerCode ? [{ paystackCustomerCode: customerCode }] : []), ...(email ? [{ user: { email } }] : [])],
+      OR: [{ productId: charged.id }, { pendingProductId: charged.id }],
+      AND: [{ OR: [...(customerCode ? [{ paystackCustomerCode: customerCode }] : []), ...(email ? [{ user: { email } }] : [])] }],
     },
-    include: { product: true, user: { select: { id: true, email: true } } },
+    include: { user: { select: { id: true, email: true } } },
     orderBy: { createdAt: 'desc' },
   });
   if (!subscription) return false;
@@ -415,9 +487,9 @@ const startRenewal = async (data: Record<string, any>) => {
   await prisma.billingPayment.create({
     data: {
       userId: subscription.userId,
-      productId: subscription.productId,
+      productId: charged.id,
       productKind: 'SUBSCRIPTION',
-      productName: subscription.product.name,
+      productName: charged.name,
       reference: String(data.reference),
       subtotalPesewas: total - vat,
       vatPesewas: vat,
@@ -457,10 +529,14 @@ export const processPaystackEvent = async (body: PaystackEventBody) => {
     } else if (type === 'subscription.create') {
       const planCode = data.plan?.plan_code as string | undefined;
       const email = (data.customer?.email as string | undefined)?.toLowerCase();
-      const subscription = await prisma.subscription.findFirst({
-        where: { paystackSubscriptionCode: null, product: { paystackPlanCode: planCode }, ...(email ? { user: { email } } : {}) },
-        orderBy: { createdAt: 'desc' },
-      });
+      const planProduct = planCode ? await prisma.product.findFirst({ where: { paystackPlanCode: planCode }, select: { id: true } }) : null;
+      // Either the first payment's plan, or the smaller plan the company asked to move to at the end of its period.
+      const subscription = planProduct
+        ? await prisma.subscription.findFirst({
+            where: { OR: [{ paystackSubscriptionCode: null, productId: planProduct.id }, { pendingProductId: planProduct.id }], ...(email ? { user: { email } } : {}) },
+            orderBy: { createdAt: 'desc' },
+          })
+        : null;
       if (!subscription) throw new BillingError(409, 'SUBSCRIPTION_NOT_READY', 'The first payment has not been settled yet.');
       await prisma.subscription.update({
         where: { id: subscription.id },
@@ -471,9 +547,15 @@ export const processPaystackEvent = async (body: PaystackEventBody) => {
       const code = data.subscription?.subscription_code ?? data.subscription_code;
       const subscription = code ? await prisma.subscription.findUnique({ where: { paystackSubscriptionCode: code }, include: { user: { select: { email: true } }, product: { select: { name: true } } } }) : null;
       if (subscription) {
-        await prisma.subscription.update({ where: { id: subscription.id }, data: { status: 'PAST_DUE' } });
-        if (subscription.user.email) sendQuietly('billing_failed_email_failed', () => mail.failed(subscription.user.email!, { productName: `${subscription.product.name} (renewal)`, reason: data.description ?? null }));
-        void createNotification(prisma, { userId: subscription.userId, type: 'PAYMENT_FAILED', title: 'Your plan payment failed', message: 'We could not renew your plan. Please check your payment method.', actionUrl: '/billing' }).catch(() => undefined);
+        // The plan keeps working for 7 days while the payment is put right. The clock starts at the first failure only.
+        const graceEndsAt = subscription.graceEndsAt ?? graceEndFrom(new Date());
+        await prisma.subscription.update({ where: { id: subscription.id }, data: { status: 'PAST_DUE', graceEndsAt, ...(subscription.graceEndsAt ? {} : { graceRemindersSent: 0 }) } });
+        if (subscription.user.email) {
+          sendQuietly('billing_failed_email_failed', () =>
+            mail.failed(subscription.user.email!, { productName: `${subscription.product.name} (renewal)`, reason: data.description ?? null, graceEndsOn: graceEndsAt.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) }),
+          );
+        }
+        void createNotification(prisma, { userId: subscription.userId, type: 'PAYMENT_FAILED', title: 'Your plan payment failed', message: `We could not renew your plan. It keeps working for ${GRACE_DAYS} days while you fix the payment.`, actionUrl: '/plans' }).catch(() => undefined);
       }
       outcome = subscription ? 'past_due' : 'not_ours';
     } else if (type === 'subscription.disable' || type === 'subscription.not_renew') {
@@ -499,6 +581,56 @@ export const processPaystackEvent = async (body: PaystackEventBody) => {
 
 // ------------------------------------------------------------------ subscriptions
 
+const fullDate = (date: Date) => date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+
+/**
+ * Move to a smaller plan. It starts when the current period ends, so the company keeps what it paid for. With a saved card the
+ * smaller plan is scheduled at Paystack to begin on that day; without one, the current plan simply is not renewed and the
+ * company chooses the smaller plan when it ends. The Free plan is the same as cancelling.
+ */
+export const scheduleDowngrade = async (userId: string, targetProductId: string) => {
+  const current = await getEntitlements(userId);
+  if (!current.subscription) throw new BillingError(400, 'NO_PLAN', 'You are on the Free plan already.');
+
+  const target = await prisma.product.findUnique({ where: { id: targetProductId } });
+  if (!target || !target.active || !target.planTier) throw new BillingError(404, 'PRODUCT_NOT_FOUND', 'That plan is not available.');
+
+  if (target.planTier === 'FREE') {
+    const result = await cancelSubscription(userId, current.subscription.id);
+    return { effectiveOn: result.endsOn, scheduled: true, to: target.name };
+  }
+  if (planLevel(target) >= planLevel({ planTier: current.tier, interval: current.interval })) {
+    throw new BillingError(400, 'NOT_A_DOWNGRADE', 'That is not a smaller plan. To move up, buy it: it starts straight away.');
+  }
+
+  const subscription = await prisma.subscription.findUnique({ where: { id: current.subscription.id } });
+  if (!subscription) throw new BillingError(404, 'SUBSCRIPTION_NOT_FOUND', 'No active plan.');
+
+  let scheduled = false;
+  if (subscription.authorizationCode && subscription.paystackCustomerCode) {
+    const settings = await getSettings();
+    try {
+      const planCode = await ensurePlan(target, priceWithVat(target.pricePesewas, settings).totalPesewas);
+      await paystack.createSubscription({ customerCode: subscription.paystackCustomerCode, planCode, authorizationCode: subscription.authorizationCode, startDate: subscription.currentPeriodEnd });
+      scheduled = true;
+    } catch (error) {
+      logger.error('billing_schedule_downgrade_failed', { error: getErrorMessage(error) });
+      throw new BillingError(502, 'PAYSTACK_UNAVAILABLE', 'We could not schedule that change with the payment provider. Nothing was changed. Please try again.');
+    }
+  }
+
+  // Either way the current plan stops repeating: it runs to the end of the period it was paid for.
+  if (subscription.paystackSubscriptionCode && subscription.paystackEmailToken) {
+    try {
+      await paystack.disableSubscription({ code: subscription.paystackSubscriptionCode, token: subscription.paystackEmailToken });
+    } catch {
+      throw new BillingError(502, 'PAYSTACK_UNAVAILABLE', 'We could not change your plan with the payment provider. Please try again in a moment.');
+    }
+  }
+  await prisma.subscription.update({ where: { id: subscription.id }, data: { cancelAtPeriodEnd: true, pendingProductId: scheduled ? target.id : null } });
+  return { effectiveOn: subscription.currentPeriodEnd, scheduled, to: target.name };
+};
+
 export const cancelSubscription = async (userId: string, subscriptionId: string) => {
   const subscription = await prisma.subscription.findFirst({ where: { id: subscriptionId, userId } });
   if (!subscription || !['ACTIVE', 'PAST_DUE'].includes(subscription.status)) throw new BillingError(404, 'SUBSCRIPTION_NOT_FOUND', 'No active plan to cancel.');
@@ -515,7 +647,11 @@ export const cancelSubscription = async (userId: string, subscriptionId: string)
   return { endsOn: subscription.currentPeriodEnd };
 };
 
-/** Daily: remind people three days before a plan renews, and end plans that were not renewed. */
+/**
+ * Daily: remind people three days before a plan renews, give yearly plans their monthly credits, remind people whose payment
+ * failed (during the 7-day grace period), and end plans that are over. Ending a plan never deletes anything: the company moves
+ * to Free, its monthly credits go, and team members above the Free limit are paused.
+ */
 export const runBillingSweep = async (now = new Date(), daysBefore = 3) => {
   const soon = new Date(now.getTime() + daysBefore * DAY_MS);
   const due = await prisma.subscription.findMany({
@@ -531,25 +667,59 @@ export const runBillingSweep = async (now = new Date(), daysBefore = 3) => {
     if (!subscription.user.email) continue;
     await prisma.subscription.update({ where: { id: subscription.id }, data: { reminderSentForPeriodEnd: subscription.currentPeriodEnd } });
     const amount = subscription.product.paystackPlanAmount ?? subscription.product.pricePesewas;
-    sendQuietly('billing_reminder_email_failed', () =>
-      mail.reminder(subscription.user.email!, { planName: subscription.product.name, renewsOn: subscription.currentPeriodEnd.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }), amount: formatGhs(amount) }),
-    );
+    sendQuietly('billing_reminder_email_failed', () => mail.reminder(subscription.user.email!, { planName: subscription.product.name, renewsOn: fullDate(subscription.currentPeriodEnd), amount: formatGhs(amount) }));
     reminded += 1;
   }
 
-  // A renewal webhook that never came: after two days of grace the plan is over.
-  const expired = await prisma.subscription.updateMany({
-    where: { status: { in: ['ACTIVE', 'PAST_DUE'] }, currentPeriodEnd: { lt: new Date(now.getTime() - 2 * DAY_MS) } },
-    data: { status: 'EXPIRED' },
-  });
+  // A yearly plan's credits come monthly, inside the year it paid for. (A monthly plan's come with each renewal.)
+  const owed = await prisma.subscription.findMany({ where: { status: { in: ['ACTIVE', 'PAST_DUE'] }, nextCreditGrantAt: { lte: now } }, include: { product: true }, take: 500 });
+  let granted = 0;
+  for (const subscription of owed) {
+    if (!isLive(subscription, now) || !subscription.nextCreditGrantAt || subscription.nextCreditGrantAt.getTime() >= subscription.currentPeriodEnd.getTime()) continue;
+    await prisma.$transaction(async (tx) => {
+      await grantMonthlyPlanCredits(subscription.userId, { featured: subscription.product.featuredCredits, boost: subscription.product.boostCredits }, tx as never);
+      await tx.subscription.update({ where: { id: subscription.id }, data: { nextCreditGrantAt: addInterval(subscription.nextCreditGrantAt!, 'MONTHLY') } });
+    });
+    granted += 1;
+  }
 
-  return { reminded, expired: expired.count };
+  // Renewal payment failed: reminders while the 7 days of grace run.
+  const late = await prisma.subscription.findMany({
+    where: { status: 'PAST_DUE', graceEndsAt: { gt: now } },
+    include: { user: { select: { email: true } }, product: { select: { name: true } } },
+    take: 500,
+  });
+  let graceReminders = 0;
+  for (const subscription of late) {
+    const owedReminders = graceRemindersDue(subscription.graceEndsAt!, now);
+    if (owedReminders <= subscription.graceRemindersSent) continue;
+    await prisma.subscription.update({ where: { id: subscription.id }, data: { graceRemindersSent: owedReminders } });
+    if (subscription.user.email) {
+      sendQuietly('billing_grace_email_failed', () => mail.grace(subscription.user.email!, { planName: subscription.product.name, endsOn: fullDate(subscription.graceEndsAt!), lastChance: owedReminders >= 2 }));
+    }
+    graceReminders += 1;
+  }
+
+  // Plans that are over: past the end of the period they paid for (or cancelled), or past their grace. The company is on Free from here.
+  const ending = await prisma.subscription.findMany({ where: { status: { in: ['ACTIVE', 'PAST_DUE'] }, currentPeriodEnd: { lt: now } }, take: 500 });
+  let expired = 0;
+  const owners = new Set<string>();
+  for (const subscription of [...ending, ...(await prisma.subscription.findMany({ where: { status: 'PAST_DUE', graceEndsAt: { lt: now } }, take: 500 }))]) {
+    if (isLive(subscription, now) || owners.has(subscription.id)) continue;
+    owners.add(subscription.id);
+    await prisma.subscription.update({ where: { id: subscription.id }, data: { status: 'EXPIRED' } });
+    await expirePlanCredits(subscription.userId);
+    await reconcileTeam(subscription.userId, now);
+    expired += 1;
+  }
+
+  return { reminded, granted, graceReminders, expired };
 };
 
 export const runBillingSweepSafely = async () => {
   try {
     const result = await runBillingSweep();
-    if (result.reminded || result.expired) logger.info('billing_sweep', result);
+    if (result.reminded || result.expired || result.granted || result.graceReminders) logger.info('billing_sweep', result);
   } catch (error) {
     logger.error('billing_sweep_failed', { error: getErrorMessage(error) });
   }
@@ -584,7 +754,7 @@ export const refundPayment = async (input: { admin: Admin; paymentId: string; am
     await tx.billingPayment.update({ where: { id: payment.id }, data: { refundedPesewas: { increment: amount }, status: fully ? 'REFUNDED' : 'PARTIALLY_REFUNDED' } });
 
     if (input.reverseBenefits) {
-      if (payment.productKind === 'JOB_PACK' || payment.productKind === 'SUBSCRIPTION') {
+      if (payment.productKind === 'JOB_PACK') {
         // Take back the credits this payment gave, as far as they are still unspent.
         const granted = await tx.creditLedger.findMany({ where: { paymentId: payment.id, delta: { gt: 0 } } });
         const account = await tx.creditAccount.findUnique({ where: { userId: payment.userId } });
@@ -593,9 +763,12 @@ export const refundPayment = async (input: { admin: Admin; paymentId: string; am
           const take = Math.min(row.delta, have);
           if (take > 0) await grantCredits(tx, { userId: payment.userId, ...(row.creditType === 'FEATURE' ? { featured: -take } : { boost: -take }), reason: 'REFUND', paymentId: payment.id, adminId: input.admin.id });
         }
-        if (payment.productKind === 'SUBSCRIPTION' && payment.subscriptionId) {
-          await tx.subscription.update({ where: { id: payment.subscriptionId }, data: { status: 'CANCELLED', cancelAtPeriodEnd: true, cancelledAt: new Date(), currentPeriodEnd: new Date() } });
+      } else if (payment.productKind === 'SUBSCRIPTION') {
+        // The plan ends now, and so do its monthly credits. Credits that were bought stay.
+        if (payment.subscriptionId) {
+          await tx.subscription.update({ where: { id: payment.subscriptionId }, data: { status: 'CANCELLED', cancelAtPeriodEnd: true, cancelledAt: new Date(), currentPeriodEnd: new Date(), pendingProductId: null } });
         }
+        await expirePlanCredits(payment.userId, tx as never);
       } else if (payment.targetId && payment.productKind === 'FEATURED_JOB') {
         await tx.job.update({ where: { id: payment.targetId }, data: { featuredUntil: null } });
       } else if (payment.targetId && payment.productKind === 'JOB_BOOST') {

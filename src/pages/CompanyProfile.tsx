@@ -27,6 +27,10 @@ type Company = {
   website?: string | null
   description?: string | null
   isVerified: boolean
+  isBranded?: boolean
+  coverImageUrl?: string | null
+  gallery?: string[]
+  whyWorkWithUs?: string | null
   memberSince: string
   jobs: CompanyJob[]
 }
@@ -111,6 +115,9 @@ export default function CompanyProfile() {
       )}
 
       <section className="relative overflow-hidden rounded-[2rem] px-5 py-8 text-white sm:px-9 sm:py-11" style={{ background: heroBackground }}>
+        {company.isBranded && company.coverImageUrl ? (
+          <img src={company.coverImageUrl} alt="" className="absolute inset-0 h-full w-full object-cover opacity-30" />
+        ) : null}
         <div className="heritage-strip absolute inset-x-0 top-0" aria-hidden />
         <div className="relative z-10 flex flex-col gap-6 sm:flex-row sm:items-center">
           <CompanyLogo name={company.companyName} logoUrl={company.logoUrl} className="h-24 w-24 rounded-3xl text-3xl" />
@@ -187,12 +194,31 @@ export default function CompanyProfile() {
         </section>
 
         <aside>
+          {company.isBranded && company.whyWorkWithUs ? (
+            <section aria-label="Why work with us" className="mb-8">
+              <h2 className="text-xl font-black text-text-main">Why work with us</h2>
+              <p className="mt-4 whitespace-pre-wrap text-sm font-medium leading-relaxed text-text-muted">{company.whyWorkWithUs}</p>
+            </section>
+          ) : null}
           <h2 className="text-xl font-black text-text-main">About</h2>
           <p className="mt-4 whitespace-pre-wrap text-sm font-medium leading-relaxed text-text-muted">
             {company.description || `${company.companyName} has not added a company description yet.`}
           </p>
         </aside>
       </div>
+
+      {company.isBranded && company.gallery && company.gallery.length > 0 ? (
+        <section aria-label="Gallery" className="mt-10">
+          <h2 className="text-xl font-black text-text-main">Life at {company.companyName}</h2>
+          <ul className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-3">
+            {company.gallery.map((src, index) => (
+              <li key={src} className="overflow-hidden rounded-2xl border border-surface-border">
+                <img src={src} alt={`${company.companyName} photo ${index + 1}`} loading="lazy" className="h-40 w-full object-cover" />
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
     </div>
   )
 }

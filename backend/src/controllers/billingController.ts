@@ -10,9 +10,13 @@ import {
   getCreditBalance,
   getSettings,
   listCatalogue,
+  ensureDefaultProducts,
   processPaystackEvent,
+  scheduleDowngrade,
+  serializeProduct,
   spendCredit,
 } from '../services/billingService';
+import { getEntitlements } from '../services/planService';
 import { isValidPaystackSignature, paystackMode } from '../services/paystackBilling';
 import { getErrorMessage } from '../utils/errors';
 import { publicJobWhere } from '../utils/jobLifecycle';
@@ -157,5 +161,56 @@ export const handlePaystackBillingWebhook = async (req: RawBodyRequest, res: Res
   } catch (error) {
     logger.error('billing_webhook_failed', { error: getErrorMessage(error) });
     return res.status(500).json({ success: false, message: 'Could not process this event' });
+  }
+};
+
+/** The plan page: every plan side by side, the one this company is on, and how much of it is used. */
+export const getPlans = async (req: AuthRequest, res: Response) => {
+  try {
+    const ownerId = req.user!.id;
+    await ensureDefaultProducts();
+    const [settings, products, entitlements, credits, teamSeats] = await Promise.all([
+      getSettings(),
+      prisma.product.findMany({ where: { planTier: { not: null }, active: true }, orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }] }),
+      getEntitlements(ownerId),
+      getCreditBalance(ownerId),
+      prisma.teamMember.count({ where: { ownerId, status: { in: ['ACTIVE', 'INVITED'] } } }),
+    ]);
+
+    return res.json({
+      success: true,
+      mode: paystackMode(),
+      plans: products.map((product) => serializeProduct(product, settings)),
+      current: {
+        tier: entitlements.tier,
+        planName: entitlements.planName,
+        productId: entitlements.productId,
+        interval: entitlements.interval,
+        subscription: entitlements.subscription,
+        features: { teamLimit: entitlements.teamLimit, cvDatabase: entitlements.cvDatabase, brandedPage: entitlements.brandedPage, hiringReports: entitlements.hiringReports, topEmployers: entitlements.topEmployers },
+      },
+      usage: {
+        featuredCredits: credits.featuredCredits,
+        boostCredits: credits.boostCredits,
+        planCredits: credits.plan,
+        purchasedCredits: credits.purchased,
+        monthlyFeaturedCredits: entitlements.monthlyFeaturedCredits,
+        monthlyBoostCredits: entitlements.monthlyBoostCredits,
+        teamSeatsUsed: 1 + teamSeats,
+        teamLimit: entitlements.teamLimit,
+      },
+    });
+  } catch (error) {
+    return respondBillingError(res, error);
+  }
+};
+
+/** Move to a smaller plan (or to Free): it starts when the current period ends. Moving up is a normal purchase. */
+export const changePlan = async (req: AuthRequest, res: Response) => {
+  try {
+    const result = await scheduleDowngrade(req.user!.id, (req.body as { productId: string }).productId);
+    return res.json({ success: true, ...result });
+  } catch (error) {
+    return respondBillingError(res, error);
   }
 };

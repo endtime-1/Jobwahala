@@ -5,6 +5,7 @@ import { useFeatures } from '../../lib/features'
 import AddPhonePanel from '../../components/AddPhonePanel'
 import CvManager from '../../components/CvManager'
 import EarlyCareerProfile from '../../components/EarlyCareerProfile'
+import CvVisibilityToggle from '../../components/CvVisibilityToggle'
 import WhatsAppChannels from '../../components/WhatsAppChannels'
 import MyLearningPanel from '../../components/MyLearningPanel'
 import CompanyLogo from '../../components/CompanyLogo'
@@ -382,6 +383,8 @@ export default function SeekerDashboard() {
             <EarlyCareerProfile />
 
             <CvManager />
+
+            <CvVisibilityToggle />
 
             <MyLearningPanel />
 

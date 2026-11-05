@@ -7,7 +7,7 @@ import VerifiedBadge from '../components/VerifiedBadge'
 import UnverifiedEmployerLabel from '../components/UnverifiedEmployerLabel'
 import SaveJobButton from '../components/SaveJobButton'
 import ShareOnWhatsApp from '../components/ShareOnWhatsApp'
-import { apiApplyForJob, apiDeleteApplication, apiGetJobApplicationCoaching, apiGetJobById, apiGetMyJobApplication } from '../lib/api'
+import { apiApplyForJob, apiDeleteApplication, apiGetJobApplicationCoaching, apiGetJobById, apiGetMyJobApplication, apiTrackJobView } from '../lib/api'
 import { emailHandle, formatRelativeTime } from '../lib/display'
 import { closingSummary } from '../lib/jobLifecycle'
 import EarlyCareerChips from '../components/EarlyCareerChips'
@@ -118,6 +118,11 @@ export default function JobDetails() {
         if (cancelled) return
 
         setJob(jobData.job as JobDetail)
+        try {
+          apiTrackJobView(id)
+        } catch {
+          // Counting a view must never get in the way of the page.
+        }
         setApplication((applicationData.application || null) as JobApplication | null)
         setCoaching((coachingData.coaching || null) as JobApplicationCoaching | null)
         setCoachingError((coachingData as { error?: string }).error || '')

@@ -13,6 +13,7 @@ import VerificationPanel from '../../components/VerificationPanel'
 import { useEmployerDashboard, useJobApplicants } from './employer/hooks'
 import EmployerStatsCards from './employer/EmployerStatsCards'
 import CompanyProfilePanel from './employer/CompanyProfilePanel'
+import PlanUsagePanel from '../../components/PlanUsagePanel'
 import ProviderLinkPanel from '../../components/ProviderLinkPanel'
 import WhatsAppChannels from '../../components/WhatsAppChannels'
 import EmployerJobsPanel from './employer/EmployerJobsPanel'
@@ -157,6 +158,7 @@ export default function EmployerDashboard() {
       ) : null}
 
       <CompanyProfilePanel />
+      <PlanUsagePanel />
 
       <div className="mb-8">
         <ProviderLinkPanel />

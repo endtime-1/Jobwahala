@@ -1,3 +1,4 @@
+import { getEntitlements } from '../services/planService';
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import prisma from '../config/prisma';
@@ -928,9 +929,18 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
         data: updateData
       });
     } else if (role === 'EMPLOYER') {
+      // The branded page belongs to plans that include it. Taking things off is always allowed; putting them on is checked here.
+      const { gallery, ...employerData } = updateData as Record<string, unknown> & { gallery?: string[] };
+      const addingBranding = Boolean(employerData.coverImageUrl) || (gallery && gallery.length > 0) || Boolean(typeof employerData.whyWorkWithUs === 'string' && employerData.whyWorkWithUs.trim());
+      if (addingBranding && !(await getEntitlements(userId)).brandedPage) {
+        return res.status(403).json({ success: false, code: 'PLAN_REQUIRED', message: 'A branded company page is part of the Starter and Business plans.' });
+      }
+      if (gallery) employerData.galleryJson = JSON.stringify(gallery);
+      if (employerData.coverImageUrl === '') employerData.coverImageUrl = null;
+
       updatedProfile = await prisma.employerProfile.update({
         where: { userId },
-        data: updateData
+        data: employerData
       });
     } else if (role === 'FREELANCER') {
       updatedProfile = await prisma.freelancerProfile.update({

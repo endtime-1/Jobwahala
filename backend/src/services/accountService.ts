@@ -268,7 +268,7 @@ export const getDeletionPreview = async (userId: string): Promise<DeletionPrevie
   const user = await prisma.user.findUnique({ where: { id: userId }, select: { role: true, email: true, phone: true } });
   if (!user) return null;
 
-  const [applicationsMade, openJobs, applicantsOnOpenJobs, activeAgreements, pendingPayouts, openDisputes] = await Promise.all([
+  const [applicationsMade, openJobs, applicantsOnOpenJobs, activeAgreements, pendingPayouts, openDisputes, paidPlans] = await Promise.all([
     prisma.application.count({ where: { seekerId: userId } }),
     prisma.job.count({ where: { employerId: userId, status: { in: OPEN_JOB_STATUSES } } }),
     prisma.application.count({ where: { job: { employerId: userId, status: { in: OPEN_JOB_STATUSES } } } }),
@@ -279,6 +279,7 @@ export const getDeletionPreview = async (userId: string): Promise<DeletionPrevie
     prisma.agreementDispute.count({
       where: { status: { in: ['OPEN', 'UNDER_REVIEW'] }, OR: [{ creatorId: userId }, { counterpartyId: userId }] },
     }),
+    prisma.subscription.count({ where: { userId, status: { in: ['ACTIVE', 'PAST_DUE'] }, cancelAtPeriodEnd: false } }),
   ]);
 
   const blockers: string[] = [];
@@ -286,6 +287,8 @@ export const getDeletionPreview = async (userId: string): Promise<DeletionPrevie
   if (activeAgreements > 0) blockers.push('You have active work agreements. Finish or cancel them first.');
   if (pendingPayouts > 0) blockers.push('You have a payout that has not been paid out yet. Wait for it to arrive first.');
   if (openDisputes > 0) blockers.push('You have a dispute that is still open. Wait for it to be resolved first.');
+  // Deleting the account would not stop Paystack charging the card.
+  if (paidPlans > 0) blockers.push('You have a paid plan that will renew. Cancel it on the Billing page first, so you are not charged again.');
 
   return {
     role: user.role,
@@ -359,6 +362,10 @@ export const deleteAccount = async (
     await tx.courseEnquiry.deleteMany({ where: { OR: [{ userId }, { course: { providerId: userId } }] } });
     await tx.course.updateMany({ where: { providerId: userId, status: { not: 'REMOVED' } }, data: { status: 'REMOVED' } });
 
+    // A company's team: its members lose access, and the member's own seat on someone else's team goes.
+    await tx.teamMember.deleteMany({ where: { OR: [{ ownerId: userId }, { userId }] } });
+    await tx.creditAccount.deleteMany({ where: { userId } });
+
     // Private employer notes: the ones this member wrote, and the ones written about them.
     await tx.applicationReview.deleteMany({ where: { OR: [{ employerId: userId }, { application: { seekerId: userId } }] } });
 
@@ -377,7 +384,7 @@ export const deleteAccount = async (
       await tx.job.updateMany({ where: { employerId: userId, status: { in: OPEN_JOB_STATUSES } }, data: { status: 'CLOSED' } });
       await tx.employerProfile.updateMany({
         where: { userId },
-        data: { companyName: 'Former employer', industry: null, logoUrl: null, website: null, description: null, avgResponseHours: null, responseCount: 0 },
+        data: { companyName: 'Former employer', industry: null, logoUrl: null, website: null, description: null, avgResponseHours: null, responseCount: 0, coverImageUrl: null, galleryJson: '[]', whyWorkWithUs: null },
       });
     }
 

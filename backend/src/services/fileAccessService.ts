@@ -1,6 +1,7 @@
 import prisma from '../config/prisma';
 import env from '../config/env';
 import { fileWasUploadedBy, UploadRef } from '../utils/fileAccess';
+import { getEntitlements } from './planService';
 
 type Viewer = { id: string; role: string };
 
@@ -65,9 +66,13 @@ export const canViewUpload = async (viewer: Viewer, ref: UploadRef): Promise<boo
     case 'cv': {
       // An employer may open a CV only if an applicant chose to send it with an application to one of THEIR jobs.
       // The seeker themselves (the uploader) is let in above; this also covers their current saved CVs.
+      // A team member opens files as the company they work for.
+      const membership = viewer.role === 'EMPLOYER' ? await prisma.teamMember.findFirst({ where: { userId: viewer.id, status: 'ACTIVE' }, select: { ownerId: true } }) : null;
+      const companyId = membership?.ownerId ?? viewer.id;
+
       const [sentToThisEmployer, ownCurrent] = await Promise.all([
         prisma.application.findFirst({
-          where: { cvFileUrl: { endsWith: tail }, job: { employerId: viewer.id } },
+          where: { cvFileUrl: { endsWith: tail }, job: { employerId: companyId } },
           select: { id: true },
         }),
         prisma.seekerCv.findFirst({
@@ -75,7 +80,20 @@ export const canViewUpload = async (viewer: Viewer, ref: UploadRef): Promise<boo
           select: { id: true },
         }),
       ]);
-      return Boolean(sentToThisEmployer || ownCurrent);
+      if (sentToThisEmployer || ownCurrent) return true;
+
+      // The CV database: a company whose plan includes it may open the CV of someone who chose to be found. Both are checked.
+      if (viewer.role === 'EMPLOYER') {
+        const optedIn = await prisma.seekerCv.findFirst({
+          where: {
+            OR: [{ uploadedUrl: { endsWith: tail } }, { builderUrl: { endsWith: tail } }],
+            user: { status: 'ACTIVE', jobSeekerProfile: { is: { visibleToEmployers: true } } },
+          },
+          select: { id: true },
+        });
+        if (optedIn && (await getEntitlements(companyId)).cvDatabase) return true;
+      }
+      return false;
     }
 
     default:

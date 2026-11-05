@@ -12,6 +12,12 @@ const JobDetails = lazy(() => import('./pages/JobDetails'))
 const Internships = lazy(() => import('./pages/Internships'))
 const Courses = lazy(() => import('./pages/Courses'))
 const Billing = lazy(() => import('./pages/Billing'))
+const Plans = lazy(() => import('./pages/Plans'))
+const Team = lazy(() => import('./pages/Team'))
+const JoinTeam = lazy(() => import('./pages/JoinTeam'))
+const CvDatabase = lazy(() => import('./pages/CvDatabase'))
+const HiringReports = lazy(() => import('./pages/HiringReports'))
+const CompanyPageEditor = lazy(() => import('./pages/CompanyPageEditor'))
 const CourseDetail = lazy(() => import('./pages/CourseDetail'))
 const ProviderPage = lazy(() => import('./pages/ProviderPage'))
 const ProviderDashboard = lazy(() => import('./pages/ProviderDashboard'))
@@ -104,6 +110,12 @@ function App() {
           <Route path="/providers/:id" element={<ProviderPage />} />
           <Route path="/provider" element={renderProtected(<ProviderDashboard />)} />
           <Route path="/billing" element={renderProtected(<Billing />)} />
+          <Route path="/plans" element={renderProtected(<Plans />)} />
+          <Route path="/team" element={renderProtected(<Team />)} />
+          <Route path="/join-team" element={renderProtected(<JoinTeam />)} />
+          <Route path="/cv-database" element={renderProtected(<CvDatabase />)} />
+          <Route path="/hiring-reports" element={renderProtected(<HiringReports />)} />
+          <Route path="/company-page" element={renderProtected(<CompanyPageEditor />)} />
           <Route path="/jobs/:id" element={<JobDetails />} />
           <Route path="/cv-generator" element={renderProtected(<CVGenerator />)} />
           <Route path="/messaging" element={renderProtected(<Messaging />)} />

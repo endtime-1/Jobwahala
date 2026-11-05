@@ -9,10 +9,22 @@ const BASE = 'https://api.paystack.co';
 /** What the billing code needs from Paystack. A class of its own so tests can stand in for it. */
 export type PaystackClient = {
   initialize: (input: { email: string; amountPesewas: number; reference: string; callbackUrl: string; plan?: string; metadata?: Record<string, unknown> }) => Promise<{ authorizationUrl: string }>;
-  verify: (reference: string) => Promise<{ status: string; amountPesewas: number; currency: string; channel: string | null; paidAt: string | null; failureReason: string | null }>;
+  verify: (reference: string) => Promise<{
+    status: string;
+    amountPesewas: number;
+    currency: string;
+    channel: string | null;
+    paidAt: string | null;
+    failureReason: string | null;
+    /** The saved card, when Paystack says it can be charged again, and the customer it belongs to. */
+    authorizationCode?: string | null;
+    customerCode?: string | null;
+  }>;
   createPlan: (input: { name: string; amountPesewas: number; interval: 'monthly' | 'annually' }) => Promise<{ planCode: string }>;
   refund: (input: { reference: string; amountPesewas: number }) => Promise<{ refundId: string | null; status: string }>;
   disableSubscription: (input: { code: string; token: string }) => Promise<void>;
+  /** Starts a subscription on a later day (used to move to a smaller plan when the current period ends). */
+  createSubscription: (input: { customerCode: string; planCode: string; authorizationCode: string; startDate: Date }) => Promise<void>;
 };
 
 const headers = () => ({ Authorization: `Bearer ${env.paystackSecretKey}`, 'Content-Type': 'application/json' });
@@ -56,6 +68,8 @@ export const realPaystack: PaystackClient = {
         channel: data.data.channel ?? null,
         paidAt: data.data.paid_at ?? null,
         failureReason: data.data.gateway_response ?? null,
+        authorizationCode: data.data.authorization?.reusable ? (data.data.authorization.authorization_code ?? null) : null,
+        customerCode: data.data.customer?.customer_code ?? null,
       };
     } catch (error) {
       return fail('paystack_verify_failed', error);
@@ -77,6 +91,14 @@ export const realPaystack: PaystackClient = {
       return { refundId: data.data?.id != null ? String(data.data.id) : null, status: String(data.data?.status ?? 'pending') };
     } catch (error) {
       return fail('paystack_refund_failed', error);
+    }
+  },
+
+  async createSubscription({ customerCode, planCode, authorizationCode, startDate }) {
+    try {
+      await axios.post(`${BASE}/subscription`, { customer: customerCode, plan: planCode, authorization: authorizationCode, start_date: startDate.toISOString() }, { headers: headers(), timeout: 15000 });
+    } catch (error) {
+      fail('paystack_create_subscription_failed', error);
     }
   },
 

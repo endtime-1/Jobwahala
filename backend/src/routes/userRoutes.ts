@@ -16,13 +16,15 @@ import {
   requestVerificationCodeSchema,
 } from '../validation/verificationSchemas';
 import { createRateLimit } from '../middleware/security';
+import { actAsCompany } from '../middleware/company';
 
 const router = Router();
 
-router.get('/dashboard', authMiddleware, getDashboardData);
-router.get('/overview', authMiddleware, getDashboardOverview);
-router.get('/signals', authMiddleware, getWorkspaceSignals);
-router.get('/workflow-summary', authMiddleware, getDashboardWorkflowSummary);
+// A team member sees the company's dashboard; for everyone else actAsCompany does nothing.
+router.get('/dashboard', authMiddleware, actAsCompany, getDashboardData);
+router.get('/overview', authMiddleware, actAsCompany, getDashboardOverview);
+router.get('/signals', authMiddleware, actAsCompany, getWorkspaceSignals);
+router.get('/workflow-summary', authMiddleware, actAsCompany, getDashboardWorkflowSummary);
 router.get('/profile-optimization', authMiddleware, roleMiddleware(['SEEKER']), getProfileOptimization);
 router.get('/verification', authMiddleware, getMyVerification);
 // Companies send the full set of business details; other roles send the short form.

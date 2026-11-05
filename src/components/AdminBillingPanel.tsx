@@ -11,6 +11,7 @@ import {
   apiAdminSaveProduct,
 } from '../lib/api'
 import { STATUS_LABEL, ghs, type Product } from '../lib/billing'
+import type { Plan } from '../lib/plans'
 import { getErrorMessage } from '../lib/errors'
 
 type Revenue = {
@@ -32,6 +33,12 @@ type ProductForm = {
   featuredCredits: string
   boostCredits: string
   interval: '' | 'MONTHLY' | 'YEARLY'
+  planTier: 'FREE' | 'STARTER' | 'BUSINESS'
+  teamLimit: string
+  cvDatabase: boolean
+  brandedPage: boolean
+  hiringReports: boolean
+  topEmployers: boolean
   includes: string
   active: boolean
   sortOrder: string
@@ -45,7 +52,7 @@ const KINDS: { value: Product['kind']; label: string }[] = [
   { value: 'SUBSCRIPTION', label: 'Subscription plan' },
 ]
 
-const emptyProduct: ProductForm = { kind: 'FEATURED_JOB', name: '', description: '', audience: 'EMPLOYER', priceGhs: '', durationDays: '30', featuredCredits: '0', boostCredits: '0', interval: '', includes: '', active: true, sortOrder: '0' }
+const emptyProduct: ProductForm = { kind: 'FEATURED_JOB', name: '', description: '', audience: 'EMPLOYER', priceGhs: '', durationDays: '30', featuredCredits: '0', boostCredits: '0', interval: '', planTier: 'STARTER', teamLimit: '3', cvDatabase: false, brandedPage: false, hiringReports: false, topEmployers: false, includes: '', active: true, sortOrder: '0' }
 
 const toForm = (product: Product): ProductForm => ({
   id: product.id,
@@ -58,6 +65,12 @@ const toForm = (product: Product): ProductForm => ({
   featuredCredits: String(product.featuredCredits),
   boostCredits: String(product.boostCredits),
   interval: product.interval ?? '',
+  planTier: (product as Partial<Plan>).planTier ?? 'STARTER',
+  teamLimit: String((product as Partial<Plan>).teamLimit ?? 1),
+  cvDatabase: Boolean((product as Partial<Plan>).cvDatabase),
+  brandedPage: Boolean((product as Partial<Plan>).brandedPage),
+  hiringReports: Boolean((product as Partial<Plan>).hiringReports),
+  topEmployers: Boolean((product as Partial<Plan>).topEmployers),
   // Only the admin's own lines, not the credit lines the server adds.
   includes: product.includes.filter((line) => !/credits?( every| )/.test(line) && !/credit(s)? every/.test(line)).join('\n'),
   active: product.active,
@@ -73,7 +86,10 @@ const toPayload = (form: ProductForm) => ({
   durationDays: form.durationDays.trim() === '' ? null : Number(form.durationDays),
   featuredCredits: Number(form.featuredCredits) || 0,
   boostCredits: Number(form.boostCredits) || 0,
-  interval: form.kind === 'SUBSCRIPTION' && form.interval ? form.interval : null,
+  interval: form.kind === 'SUBSCRIPTION' && form.planTier !== 'FREE' && form.interval ? form.interval : null,
+  ...(form.kind === 'SUBSCRIPTION'
+    ? { planTier: form.planTier, teamLimit: Number(form.teamLimit) || 1, cvDatabase: form.cvDatabase, brandedPage: form.brandedPage, hiringReports: form.hiringReports, topEmployers: form.topEmployers }
+    : {}),
   includes: form.includes.split('\n').map((line) => line.trim()).filter(Boolean),
   active: form.active,
   sortOrder: Number(form.sortOrder) || 0,
@@ -390,6 +406,31 @@ export default function AdminBillingPanel() {
                   </>
                 ) : null}
                 {editing.kind === 'SUBSCRIPTION' ? (
+                  <>
+                    <label className="block text-sm font-bold text-text-main">
+                      Plan
+                      <select value={editing.planTier} onChange={(e) => setEditing({ ...editing, planTier: e.target.value as ProductForm['planTier'] })} className={field}>
+                        <option value="FREE">Free</option>
+                        <option value="STARTER">Starter</option>
+                        <option value="BUSINESS">Business</option>
+                      </select>
+                    </label>
+                    <label className="block text-sm font-bold text-text-main">
+                      Team members allowed (including the owner)
+                      <input value={editing.teamLimit} onChange={(e) => setEditing({ ...editing, teamLimit: e.target.value })} inputMode="numeric" className={field} />
+                    </label>
+                    <fieldset className="sm:col-span-2 flex flex-wrap gap-x-5 gap-y-2 text-sm font-bold text-text-main">
+                      <legend className="mb-1 text-sm font-bold">Features</legend>
+                      {([['brandedPage', 'Branded company page'], ['cvDatabase', 'CV database'], ['hiringReports', 'Hiring reports'], ['topEmployers', 'Top employers priority']] as const).map(([key, label]) => (
+                        <label key={key} className="flex items-center gap-2">
+                          <input type="checkbox" checked={editing[key]} onChange={(e) => setEditing({ ...editing, [key]: e.target.checked })} />
+                          {label}
+                        </label>
+                      ))}
+                    </fieldset>
+                  </>
+                ) : null}
+                {editing.kind === 'SUBSCRIPTION' && editing.planTier !== 'FREE' ? (
                   <label className="block text-sm font-bold text-text-main">
                     Repeats
                     <select value={editing.interval} onChange={(e) => setEditing({ ...editing, interval: e.target.value as ProductForm['interval'] })} required className={field}>

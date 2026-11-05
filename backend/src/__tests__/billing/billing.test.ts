@@ -9,7 +9,8 @@ const prismaMock = vi.hoisted(() => {
     billingPayment: m('findUnique', 'findMany', 'create', 'update', 'updateMany'),
     billingSettings: m('findUnique', 'create', 'upsert', 'update'),
     subscription: m('findFirst', 'findUnique', 'findMany', 'create', 'update', 'updateMany'),
-    creditAccount: m('findUnique', 'upsert', 'updateMany'),
+    creditAccount: m('findUnique', 'upsert', 'updateMany', 'update'),
+    teamMember: m('findMany', 'update'),
     creditLedger: m('create', 'findMany'),
     paystackEvent: m('create', 'update', 'deleteMany'),
     billingRefund: m('create', 'updateMany'),
@@ -58,6 +59,7 @@ import {
   receiptNumber,
 } from '../../utils/billing';
 import { renderReceiptHtml } from '../../utils/receiptRender';
+import { DEFAULT_PLANS } from '../../utils/plans';
 import { rankJobsByVerification } from '../../utils/verification';
 
 const SECRET = 'sk_test_unit_test_secret';
@@ -72,7 +74,7 @@ const paystack = {
   refund: vi.fn(),
   disableSubscription: vi.fn(),
 };
-const mail = { receipt: vi.fn(), failed: vi.fn(), reminder: vi.fn() };
+const mail = { receipt: vi.fn(), failed: vi.fn(), reminder: vi.fn(), grace: vi.fn() };
 
 const product = (overrides: Record<string, unknown> = {}) => ({
   id: 'prod-1',
@@ -135,7 +137,10 @@ beforeEach(() => {
   prismaMock.paystackEvent.update.mockResolvedValue({});
   prismaMock.job.findUnique.mockResolvedValue({ featuredUntil: null, boostedUntil: null, id: 'job-1', employerId: 'emp-1', title: 'Cook', description: 'd', location: 'Accra', type: 'Full-time', category: null });
   prismaMock.course.findUnique.mockResolvedValue({ featuredFrom: null, featuredUntil: null });
-  prismaMock.creditAccount.findUnique.mockResolvedValue({ featuredCredits: 5, boostCredits: 5 });
+  prismaMock.creditAccount.findUnique.mockResolvedValue({ featuredCredits: 5, boostCredits: 5, planFeaturedCredits: 0, planBoostCredits: 0 });
+  prismaMock.subscription.findMany.mockResolvedValue([]);
+  prismaMock.product.findFirst.mockResolvedValue(null);
+  prismaMock.teamMember.findMany.mockResolvedValue([]);
   paystack.verify.mockResolvedValue(paidTx());
   paystack.initialize.mockResolvedValue({ authorizationUrl: 'https://checkout.paystack.com/abc' });
   paystack.createPlan.mockResolvedValue({ planCode: 'PLN_new' });
@@ -201,9 +206,9 @@ describe('money and VAT', () => {
     expect(includesList({ includesJson: 'not json' })).toEqual([]);
   });
 
-  it('starts the catalogue with the five kinds of product', () => {
-    expect(new Set(DEFAULT_PRODUCTS.map((item) => item.kind))).toEqual(new Set(['FEATURED_JOB', 'JOB_BOOST', 'JOB_PACK', 'FEATURED_COURSE', 'SUBSCRIPTION']));
-    expect(DEFAULT_PRODUCTS.filter((item) => item.kind === 'SUBSCRIPTION').map((item) => item.interval).sort()).toEqual(['MONTHLY', 'YEARLY']);
+  it('starts the catalogue with the one-off products, and the Free, Starter and Business plans (monthly and yearly)', () => {
+    expect(new Set(DEFAULT_PRODUCTS.map((item) => item.kind))).toEqual(new Set(['FEATURED_JOB', 'JOB_BOOST', 'JOB_PACK', 'FEATURED_COURSE']));
+    expect(DEFAULT_PLANS.map((plan) => `${plan.planTier}/${plan.interval}`)).toEqual(['FREE/null', 'STARTER/MONTHLY', 'STARTER/YEARLY', 'BUSINESS/MONTHLY', 'BUSINESS/YEARLY']);
   });
 });
 
@@ -285,7 +290,7 @@ describe('the catalogue', () => {
 
     const result = await listCatalogue({ id: 'emp-1' });
 
-    expect(prismaMock.product.create).toHaveBeenCalledTimes(DEFAULT_PRODUCTS.length);
+    expect(prismaMock.product.create).toHaveBeenCalledTimes(DEFAULT_PRODUCTS.length + DEFAULT_PLANS.length);
     expect(prismaMock.product.findMany.mock.calls[0][0].where).toEqual({ active: true });
     expect(result.map((item) => item.id)).toEqual(['prod-1']);
   });
@@ -420,11 +425,46 @@ describe('checkout', () => {
     expect(paystack.createPlan).toHaveBeenCalledWith(expect.objectContaining({ amountPesewas: 115000, interval: 'annually' }));
   });
 
+  const livePlan = (overrides: Record<string, unknown> = {}, productOverrides: Record<string, unknown> = {}) => ({
+    id: 'sub-1',
+    status: 'ACTIVE',
+    currentPeriodEnd: new Date(NOW.getTime() + 20 * DAY),
+    graceEndsAt: null,
+    cancelAtPeriodEnd: false,
+    pendingProductId: null,
+    product: product({ id: 'prod-1', kind: 'SUBSCRIPTION', planTier: 'STARTER', interval: 'MONTHLY', teamLimit: 3, brandedPage: true, featuredCredits: 2, boostCredits: 1, ...productOverrides }),
+    ...overrides,
+  });
+
   it('cannot take the same plan twice', async () => {
-    prismaMock.product.findUnique.mockResolvedValue(product({ kind: 'SUBSCRIPTION', interval: 'MONTHLY' }));
-    prismaMock.subscription.findFirst.mockResolvedValue({ id: 'sub-1' });
+    prismaMock.product.findUnique.mockResolvedValue(product({ kind: 'SUBSCRIPTION', interval: 'MONTHLY', planTier: 'STARTER' }));
+    prismaMock.subscription.findMany.mockResolvedValue([livePlan()]);
 
     await expect(createCheckout({ ...user, productId: 'prod-1' })).rejects.toMatchObject({ code: 'ALREADY_SUBSCRIBED' });
+  });
+
+  it('moving UP to a bigger plan is a purchase, and takes effect straight away', async () => {
+    prismaMock.product.findUnique.mockResolvedValue(product({ id: 'biz', kind: 'SUBSCRIPTION', interval: 'MONTHLY', planTier: 'BUSINESS', pricePesewas: 45000 }));
+    prismaMock.subscription.findMany.mockResolvedValue([livePlan()]);
+
+    const result = await createCheckout({ ...user, productId: 'biz' });
+
+    expect(result.authorizationUrl).toContain('paystack');
+    expect(paystack.createPlan).toHaveBeenCalledWith(expect.objectContaining({ amountPesewas: 45000 }));
+  });
+
+  it('moving DOWN is refused at checkout: it has to wait for the end of the period, through "Change plan"', async () => {
+    prismaMock.product.findUnique.mockResolvedValue(product({ id: 'starter', kind: 'SUBSCRIPTION', interval: 'MONTHLY', planTier: 'STARTER' }));
+    prismaMock.subscription.findMany.mockResolvedValue([livePlan({}, { id: 'biz', planTier: 'BUSINESS', interval: 'MONTHLY' })]);
+
+    await expect(createCheckout({ ...user, productId: 'starter' })).rejects.toMatchObject({ code: 'USE_DOWNGRADE' });
+    expect(prismaMock.billingPayment.create).not.toHaveBeenCalled();
+  });
+
+  it('the Free plan cannot be bought', async () => {
+    prismaMock.product.findUnique.mockResolvedValue(product({ kind: 'SUBSCRIPTION', planTier: 'FREE', pricePesewas: 0 }));
+
+    await expect(createCheckout({ ...user, productId: 'prod-1' })).rejects.toMatchObject({ code: 'FREE_PLAN' });
   });
 
   it('says so, and charges nothing, when Paystack cannot be reached', async () => {
@@ -525,22 +565,56 @@ describe('settling a payment', () => {
 
   it('a first subscription payment starts the plan for a month and gives that month\'s credits', async () => {
     prismaMock.billingPayment.findUnique.mockResolvedValue(payment({ productKind: 'SUBSCRIPTION', targetId: null, targetType: null }));
-    prismaMock.product.findUnique.mockResolvedValue(product({ kind: 'SUBSCRIPTION', interval: 'MONTHLY', featuredCredits: 3, boostCredits: 2 }));
+    prismaMock.product.findUnique.mockResolvedValue(product({ kind: 'SUBSCRIPTION', interval: 'MONTHLY', planTier: 'STARTER', featuredCredits: 3, boostCredits: 2 }));
     prismaMock.subscription.create.mockResolvedValue({ id: 'sub-1' });
+    paystack.verify.mockResolvedValue({ ...paidTx(), authorizationCode: 'AUTH_1', customerCode: 'CUS_1' });
 
     await confirmPayment('JWB-REF-1', NOW);
 
     const data = prismaMock.subscription.create.mock.calls[0][0].data;
-    expect(data).toMatchObject({ userId: 'emp-1', productId: 'prod-1', status: 'ACTIVE' });
+    expect(data).toMatchObject({ userId: 'emp-1', productId: 'prod-1', status: 'ACTIVE', authorizationCode: 'AUTH_1', paystackCustomerCode: 'CUS_1' });
     expect(data.currentPeriodEnd.toISOString()).toBe('2026-12-10T10:00:00.000Z');
+    expect(data.nextCreditGrantAt.toISOString()).toBe('2026-12-10T10:00:00.000Z');
     expect(prismaMock.billingPayment.update).toHaveBeenCalledWith({ where: { id: 'pay-1' }, data: { subscriptionId: 'sub-1' } });
-    expect(prismaMock.creditAccount.upsert.mock.calls[0][0].update).toEqual({ featuredCredits: { increment: 3 }, boostCredits: { increment: 2 } });
+    // The month's credits go in the plan bucket (which expires), not the bought-credits bucket.
+    expect(prismaMock.creditAccount.upsert.mock.calls[0][0].update).toEqual({ planFeaturedCredits: 3, planBoostCredits: 2 });
+  });
+
+  it('an UPGRADE ends the old plan today (and stops it repeating at Paystack) and starts the new one', async () => {
+    prismaMock.billingPayment.findUnique.mockResolvedValue(payment({ productKind: 'SUBSCRIPTION', targetId: null, targetType: null }));
+    prismaMock.product.findUnique.mockResolvedValue(product({ id: 'biz', kind: 'SUBSCRIPTION', interval: 'MONTHLY', planTier: 'BUSINESS', featuredCredits: 6, boostCredits: 3 }));
+    prismaMock.subscription.findMany.mockResolvedValueOnce([{ id: 'old-sub', paystackSubscriptionCode: 'SUB_OLD', paystackEmailToken: 'tok-old' }]);
+    prismaMock.subscription.create.mockResolvedValue({ id: 'new-sub' });
+
+    await confirmPayment('JWB-REF-1', NOW);
+
+    expect(prismaMock.subscription.update).toHaveBeenCalledWith({ where: { id: 'old-sub' }, data: expect.objectContaining({ status: 'CANCELLED', currentPeriodEnd: NOW, pendingProductId: null }) });
+    await vi.waitFor(() => expect(paystack.disableSubscription).toHaveBeenCalledWith({ code: 'SUB_OLD', token: 'tok-old' }));
+    expect(prismaMock.subscription.create.mock.calls[0][0].data.productId).toBe('biz');
+  });
+
+  it('unused monthly credits expire when the new month\'s credits arrive, and both steps are in the ledger; bought credits stay', async () => {
+    prismaMock.billingPayment.findUnique.mockResolvedValue(payment({ productKind: 'SUBSCRIPTION', targetId: null, subscriptionId: 'sub-1' }));
+    prismaMock.product.findUnique.mockResolvedValue(product({ kind: 'SUBSCRIPTION', interval: 'MONTHLY', planTier: 'STARTER', featuredCredits: 2, boostCredits: 1 }));
+    prismaMock.subscription.findUnique.mockResolvedValue({ id: 'sub-1', currentPeriodEnd: NOW });
+    prismaMock.creditAccount.findUnique.mockResolvedValue({ featuredCredits: 4, boostCredits: 0, planFeaturedCredits: 1, planBoostCredits: 0 });
+
+    await confirmPayment('JWB-REF-1', NOW);
+
+    const upsert = prismaMock.creditAccount.upsert.mock.calls[0][0];
+    expect(upsert.update).toEqual({ planFeaturedCredits: 2, planBoostCredits: 1 });
+    expect(upsert.update).not.toHaveProperty('featuredCredits');
+    expect(prismaMock.creditLedger.create.mock.calls.map((call: any[]) => [call[0].data.creditType, call[0].data.delta, call[0].data.reason])).toEqual([
+      ['FEATURE', -1, 'EXPIRY'],
+      ['FEATURE', 2, 'SUBSCRIPTION'],
+      ['BOOST', 1, 'SUBSCRIPTION'],
+    ]);
   });
 
   it('a renewal moves the same plan on by one period and gives the credits again', async () => {
     const end = new Date(NOW.getTime() + 2 * DAY);
     prismaMock.billingPayment.findUnique.mockResolvedValue(payment({ productKind: 'SUBSCRIPTION', targetId: null, subscriptionId: 'sub-1' }));
-    prismaMock.product.findUnique.mockResolvedValue(product({ kind: 'SUBSCRIPTION', interval: 'MONTHLY', featuredCredits: 3 }));
+    prismaMock.product.findUnique.mockResolvedValue(product({ kind: 'SUBSCRIPTION', interval: 'MONTHLY', planTier: 'STARTER', featuredCredits: 3 }));
     prismaMock.subscription.findUnique.mockResolvedValue({ id: 'sub-1', currentPeriodEnd: end });
 
     await confirmPayment('JWB-REF-1', NOW);
@@ -550,6 +624,18 @@ describe('settling a payment', () => {
     expect(data.currentPeriodStart).toEqual(end);
     expect(data.currentPeriodEnd.toISOString()).toBe(addInterval(end, 'MONTHLY').toISOString());
     expect(data.status).toBe('ACTIVE');
+    // Paying up ends any grace period.
+    expect(data).toMatchObject({ graceEndsAt: null, graceRemindersSent: 0, cancelAtPeriodEnd: false });
+  });
+
+  it('when a planned move to a smaller plan takes its first payment, the company moves onto that plan', async () => {
+    prismaMock.billingPayment.findUnique.mockResolvedValue(payment({ productId: 'starter', productKind: 'SUBSCRIPTION', targetId: null, subscriptionId: 'sub-1' }));
+    prismaMock.product.findUnique.mockResolvedValue(product({ id: 'starter', kind: 'SUBSCRIPTION', interval: 'MONTHLY', planTier: 'STARTER', featuredCredits: 2 }));
+    prismaMock.subscription.findUnique.mockResolvedValue({ id: 'sub-1', currentPeriodEnd: NOW });
+
+    await confirmPayment('JWB-REF-1', NOW);
+
+    expect(prismaMock.subscription.update.mock.calls[0][0].data).toMatchObject({ productId: 'starter', pendingProductId: null, status: 'ACTIVE' });
   });
 
   it('settles only once: a second call (the webhook after the page, or the other way) changes nothing', async () => {
@@ -692,6 +778,7 @@ describe('Paystack webhooks', () => {
 
     it('an automatic renewal creates its own payment, settles it, and moves the plan on', async () => {
       prismaMock.billingPayment.findUnique.mockResolvedValueOnce(null).mockResolvedValue(payment({ productKind: 'SUBSCRIPTION', subscriptionId: 'sub-1', reference: 'RENEW-1', totalPesewas: 15000 }));
+      prismaMock.product.findFirst.mockResolvedValue(sub.product);
       prismaMock.subscription.findFirst.mockResolvedValue(sub);
       prismaMock.subscription.findUnique.mockResolvedValue({ id: 'sub-1', currentPeriodEnd: NOW });
       prismaMock.product.findUnique.mockResolvedValue(sub.product);
@@ -706,6 +793,7 @@ describe('Paystack webhooks', () => {
     });
 
     it('links Paystack\'s subscription codes to the plan once the first payment has settled', async () => {
+      prismaMock.product.findFirst.mockResolvedValue({ id: 'prod-1' });
       prismaMock.subscription.findFirst.mockResolvedValue({ id: 'sub-1' });
 
       await send({ event: 'subscription.create', data: { subscription_code: 'SUB_1', email_token: 'tok', plan: { plan_code: 'PLN_1' }, customer: { customer_code: 'CUS_1', email: 'hr@acme.example' } } });
@@ -714,6 +802,7 @@ describe('Paystack webhooks', () => {
     });
 
     it('if that comes before the first payment settles, Paystack is asked to send it again', async () => {
+      prismaMock.product.findFirst.mockResolvedValue({ id: 'prod-1' });
       prismaMock.subscription.findFirst.mockResolvedValue(null);
 
       const result = await send({ event: 'subscription.create', data: { subscription_code: 'SUB_1', plan: { plan_code: 'PLN_1' }, customer: { email: 'hr@acme.example' } } });
@@ -723,12 +812,15 @@ describe('Paystack webhooks', () => {
     });
 
     it('a failed renewal marks the plan past due and tells the owner', async () => {
-      prismaMock.subscription.findUnique.mockResolvedValue({ ...sub, user: { email: 'hr@acme.example' }, product: { name: 'Employer plan (monthly)' } });
+      prismaMock.subscription.findUnique.mockResolvedValue({ ...sub, graceEndsAt: null, user: { email: 'hr@acme.example' }, product: { name: 'Employer plan (monthly)' } });
 
       await send({ event: 'invoice.payment_failed', data: { subscription: { subscription_code: 'SUB_1' }, description: 'Card declined' } });
 
-      expect(prismaMock.subscription.update.mock.calls[0][0].data).toEqual({ status: 'PAST_DUE' });
-      await vi.waitFor(() => expect(mail.failed).toHaveBeenCalledWith('hr@acme.example', { productName: 'Employer plan (monthly) (renewal)', reason: 'Card declined' }));
+      const data = prismaMock.subscription.update.mock.calls[0][0].data;
+      expect(data).toMatchObject({ status: 'PAST_DUE', graceRemindersSent: 0 });
+      // Seven days to put it right, counted from the first failure.
+      expect(Math.round((data.graceEndsAt.getTime() - Date.now()) / DAY)).toBe(7);
+      await vi.waitFor(() => expect(mail.failed).toHaveBeenCalledWith('hr@acme.example', expect.objectContaining({ productName: 'Employer plan (monthly) (renewal)', reason: 'Card declined', graceEndsOn: expect.any(String) })));
     });
 
     it('a cancelled plan runs to the end of the period it paid for', async () => {
@@ -788,34 +880,98 @@ describe('managing a plan', () => {
   describe('the daily sweep', () => {
     const due = (overrides: Record<string, unknown> = {}) => ({ id: 'sub-1', reminderSentForPeriodEnd: null, currentPeriodEnd: new Date(NOW.getTime() + 2 * DAY), user: { email: 'hr@acme.example' }, product: { name: 'Employer plan (monthly)', pricePesewas: 15000, paystackPlanAmount: 15000 }, ...overrides });
 
-    beforeEach(() => {
-      prismaMock.subscription.updateMany.mockResolvedValue({ count: 0 });
-    });
+    /** The sweep asks the subscriptions table several different questions; answer each one separately. */
+    const sweepData = (lists: { due?: unknown[]; owed?: unknown[]; late?: unknown[]; ending?: unknown[]; graceOver?: unknown[] }) =>
+      prismaMock.subscription.findMany.mockImplementation(async (args: any) => {
+        const where = args?.where ?? {};
+        if (where.cancelAtPeriodEnd === false && where.currentPeriodEnd?.gt) return lists.due ?? [];
+        if (where.nextCreditGrantAt) return lists.owed ?? [];
+        if (where.status === 'PAST_DUE' && where.graceEndsAt?.gt) return lists.late ?? [];
+        if (where.status === 'PAST_DUE' && where.graceEndsAt?.lt) return lists.graceOver ?? [];
+        if (where.currentPeriodEnd?.lt) return lists.ending ?? [];
+        return [];
+      });
+
+    beforeEach(() => sweepData({}));
 
     it('reminds people three days before renewal, once per period', async () => {
-      prismaMock.subscription.findMany.mockResolvedValue([due()]);
+      sweepData({ due: [due()] });
 
       const first = await runBillingSweep(NOW);
 
       expect(first.reminded).toBe(1);
       expect(mail.reminder).toHaveBeenCalledWith('hr@acme.example', { planName: 'Employer plan (monthly)', renewsOn: '12 November 2026', amount: 'GHS 150.00' });
-      expect(prismaMock.subscription.findMany.mock.calls[0][0].where).toMatchObject({ status: 'ACTIVE', cancelAtPeriodEnd: false });
 
       mail.reminder.mockClear();
-      prismaMock.subscription.findMany.mockResolvedValue([due({ reminderSentForPeriodEnd: new Date(NOW.getTime() + 2 * DAY) })]);
+      sweepData({ due: [due({ reminderSentForPeriodEnd: new Date(NOW.getTime() + 2 * DAY) })] });
       expect((await runBillingSweep(NOW)).reminded).toBe(0);
       expect(mail.reminder).not.toHaveBeenCalled();
     });
 
-    it('ends plans that were not renewed after two days of grace', async () => {
-      prismaMock.subscription.findMany.mockResolvedValue([]);
-      prismaMock.subscription.updateMany.mockResolvedValue({ count: 2 });
+    it('a yearly plan gets each month of credits inside its year, replacing what was left; a monthly plan waits for its renewal', async () => {
+      const yearly = { id: 'sub-y', userId: 'emp-1', status: 'ACTIVE', currentPeriodEnd: new Date(NOW.getTime() + 200 * DAY), graceEndsAt: null, cancelAtPeriodEnd: false, nextCreditGrantAt: new Date(NOW.getTime() - DAY), product: { featuredCredits: 2, boostCredits: 1 } };
+      const monthly = { ...yearly, id: 'sub-m', userId: 'emp-2', currentPeriodEnd: new Date(NOW.getTime() - 1000), nextCreditGrantAt: new Date(NOW.getTime() - 1000) };
+      sweepData({ owed: [yearly, monthly] });
+      prismaMock.creditAccount.findUnique.mockResolvedValue({ planFeaturedCredits: 1, planBoostCredits: 0 });
+
+      const result = await runBillingSweep(NOW);
+
+      expect(result.granted).toBe(1);
+      expect(prismaMock.creditAccount.upsert.mock.calls[0][0]).toMatchObject({ where: { userId: 'emp-1' }, update: { planFeaturedCredits: 2, planBoostCredits: 1 } });
+      expect(prismaMock.subscription.update.mock.calls[0][0].where.id).toBe('sub-y');
+      expect(prismaMock.subscription.update.mock.calls[0][0].data.nextCreditGrantAt.getTime()).toBeGreaterThan(NOW.getTime());
+      expect(prismaMock.creditAccount.upsert).toHaveBeenCalledTimes(1);
+    });
+
+    it('while a failed payment is in its 7 days of grace: a reminder after 2 days, a last one after 5, and no repeats', async () => {
+      const grace = (daysAgo: number, sent: number) => ({ id: 'sub-1', userId: 'emp-1', status: 'PAST_DUE', graceEndsAt: new Date(NOW.getTime() + (7 - daysAgo) * DAY), graceRemindersSent: sent, user: { email: 'hr@acme.example' }, product: { name: 'Employer plan (monthly)' } });
+
+      sweepData({ late: [grace(1, 0)] });
+      expect((await runBillingSweep(NOW)).graceReminders).toBe(0);
+
+      sweepData({ late: [grace(2, 0)] });
+      expect((await runBillingSweep(NOW)).graceReminders).toBe(1);
+      expect(mail.grace).toHaveBeenCalledWith('hr@acme.example', expect.objectContaining({ planName: 'Employer plan (monthly)', lastChance: false }));
+      expect(prismaMock.subscription.update).toHaveBeenLastCalledWith({ where: { id: 'sub-1' }, data: { graceRemindersSent: 1 } });
+
+      sweepData({ late: [grace(3, 1)] });
+      expect((await runBillingSweep(NOW)).graceReminders).toBe(0);
+
+      sweepData({ late: [grace(5, 1)] });
+      expect((await runBillingSweep(NOW)).graceReminders).toBe(1);
+      expect(mail.grace).toHaveBeenLastCalledWith('hr@acme.example', expect.objectContaining({ lastChance: true }));
+
+      sweepData({ late: [grace(6, 2)] });
+      expect((await runBillingSweep(NOW)).graceReminders).toBe(0);
+    });
+
+    it('a plan that ran out, or whose grace is over, becomes Free: the plan ends, its monthly credits go, the team is paused, and nothing is deleted', async () => {
+      const over = { id: 'sub-1', userId: 'emp-1', status: 'PAST_DUE', currentPeriodEnd: new Date(NOW.getTime() - 20 * DAY), graceEndsAt: new Date(NOW.getTime() - DAY), cancelAtPeriodEnd: false };
+      const cancelled = { id: 'sub-2', userId: 'emp-2', status: 'ACTIVE', currentPeriodEnd: new Date(NOW.getTime() - DAY), graceEndsAt: null, cancelAtPeriodEnd: true };
+      sweepData({ ending: [over, cancelled], graceOver: [over] });
+      prismaMock.creditAccount.findUnique.mockResolvedValue({ planFeaturedCredits: 2, planBoostCredits: 0, featuredCredits: 4, boostCredits: 1 });
+      prismaMock.creditAccount.update.mockResolvedValue({});
 
       const result = await runBillingSweep(NOW);
 
       expect(result.expired).toBe(2);
-      expect(prismaMock.subscription.updateMany.mock.calls[0][0]).toMatchObject({ data: { status: 'EXPIRED' } });
-      expect(prismaMock.subscription.updateMany.mock.calls[0][0].where.currentPeriodEnd.lt.getTime()).toBe(NOW.getTime() - 2 * DAY);
+      const ended = prismaMock.subscription.update.mock.calls.map((call: any[]) => [call[0].where.id, call[0].data.status]);
+      expect(ended).toEqual([['sub-1', 'EXPIRED'], ['sub-2', 'EXPIRED']]);
+      // Monthly plan credits go; credits that were bought stay.
+      expect(prismaMock.creditAccount.update).toHaveBeenCalledWith({ where: { userId: 'emp-1' }, data: { planFeaturedCredits: 0, planBoostCredits: 0 } });
+      expect(prismaMock.creditLedger.create.mock.calls[0][0].data).toMatchObject({ creditType: 'FEATURE', delta: -2, reason: 'EXPIRY' });
+      // The team is looked at, so members above the Free limit are paused.
+      expect(prismaMock.teamMember.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: expect.objectContaining({ ownerId: 'emp-1' }) }));
+    });
+
+    it('a plan still inside its period or its grace is left alone', async () => {
+      const fine = { id: 'sub-1', userId: 'emp-1', status: 'PAST_DUE', currentPeriodEnd: new Date(NOW.getTime() - 3 * DAY), graceEndsAt: new Date(NOW.getTime() + 2 * DAY), cancelAtPeriodEnd: false };
+      sweepData({ ending: [fine] });
+
+      const result = await runBillingSweep(NOW);
+
+      expect(result.expired).toBe(0);
+      expect(prismaMock.subscription.update).not.toHaveBeenCalled();
     });
   });
 });
@@ -834,7 +990,8 @@ describe('credits', () => {
   it('spending a credit features one of your open jobs for the product\'s days, and records it', async () => {
     const result = await spendCredit({ userId: 'emp-1', type: 'FEATURE', jobId: 'job-1' }, NOW);
 
-    expect(prismaMock.creditAccount.updateMany.mock.calls[0][0]).toEqual({ where: { userId: 'emp-1', featuredCredits: { gte: 1 } }, data: { featuredCredits: { decrement: 1 } } });
+    // The monthly plan credits (which expire) are spent first.
+    expect(prismaMock.creditAccount.updateMany.mock.calls[0][0]).toEqual({ where: { userId: 'emp-1', planFeaturedCredits: { gte: 1 } }, data: { planFeaturedCredits: { decrement: 1 } } });
     expect(result.until.getTime()).toBe(NOW.getTime() + 14 * DAY);
     expect(prismaMock.creditLedger.create.mock.calls[0][0].data).toMatchObject({ userId: 'emp-1', creditType: 'FEATURE', delta: -1, reason: 'SPEND', jobId: 'job-1' });
     expect(prismaMock.job.findFirst.mock.calls[0][0].where).toMatchObject({ id: 'job-1', employerId: 'emp-1', status: 'ACTIVE' });
@@ -851,7 +1008,7 @@ describe('credits', () => {
   it('a boost credit marks the job "Urgently hiring" and tells matching alerts', async () => {
     await spendCredit({ userId: 'emp-1', type: 'BOOST', jobId: 'job-1' }, NOW);
 
-    expect(prismaMock.creditAccount.updateMany.mock.calls[0][0].where).toEqual({ userId: 'emp-1', boostCredits: { gte: 1 } });
+    expect(prismaMock.creditAccount.updateMany.mock.calls[0][0].where).toEqual({ userId: 'emp-1', planBoostCredits: { gte: 1 } });
     expect(prismaMock.job.update.mock.calls[0][0].data.boostedUntil.getTime()).toBe(NOW.getTime() + 14 * DAY);
     expect(alertsMock.notifyJobAlerts).toHaveBeenCalled();
   });

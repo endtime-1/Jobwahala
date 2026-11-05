@@ -14,6 +14,7 @@ interface JobSeekerProfile {
   skills?: string | null;
   experience?: string | null;
   resumeFileUrl?: string | null;
+  visibleToEmployers?: boolean;
 }
 
 interface EmployerProfile {

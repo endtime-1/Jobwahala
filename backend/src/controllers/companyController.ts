@@ -4,6 +4,8 @@ import { publicJobWhere } from '../utils/jobLifecycle';
 import prisma from '../config/prisma';
 import { getErrorMessage } from '../utils/errors';
 import { singleValue } from '../utils/request';
+import { getEntitlements } from '../services/planService';
+import { isLive } from '../utils/plans';
 
 const publicProfileFields = {
   companyName: true,
@@ -11,6 +13,9 @@ const publicProfileFields = {
   logoUrl: true,
   website: true,
   description: true,
+  coverImageUrl: true,
+  galleryJson: true,
+  whyWorkWithUs: true,
 } as const;
 
 const safeWebsite = (website?: string | null) => (website && /^https?:\/\//i.test(website) ? website : null);
@@ -49,11 +54,25 @@ export const getCompany = async (req: Request, res: Response) => {
       return res.status(404).json({ success: false, message: 'Company not found' });
     }
 
+    // The branded page (cover, gallery, "Why work with us") shows while the company's plan includes it. If the plan ends it is
+    // hidden, not deleted.
+    const { galleryJson, coverImageUrl, whyWorkWithUs, ...profile } = employer.employerProfile;
+    const branded = (await getEntitlements(employer.id)).brandedPage;
+    let gallery: string[] = [];
+    try {
+      const parsed = JSON.parse(galleryJson || '[]');
+      gallery = Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === 'string') : [];
+    } catch {
+      gallery = [];
+    }
+
     return res.json({
       success: true,
       company: {
         id: employer.id,
-        ...employer.employerProfile,
+        ...profile,
+        ...(branded ? { coverImageUrl, gallery, whyWorkWithUs } : {}),
+        isBranded: branded,
         website: safeWebsite(employer.employerProfile.website),
         isVerified: isVerifiedEmployer(employer.verificationRequests),
         memberSince: employer.createdAt,
@@ -81,10 +100,15 @@ export const listHiringCompanies = async (_req: Request, res: Response) => {
         verificationRequests: approvedBusinessVerificationQuery,
         _count: { select: { jobsPosted: { where: publicJobWhere() } } },
         jobsPosted: { where: publicJobWhere(), orderBy: { createdAt: 'desc' }, take: 1, select: { createdAt: true } },
+        subscriptions: {
+          where: { status: { in: ['ACTIVE', 'PAST_DUE'] } },
+          select: { status: true, currentPeriodEnd: true, graceEndsAt: true, cancelAtPeriodEnd: true, product: { select: { topEmployers: true } } },
+        },
       },
       take: 60,
     });
 
+    const now = new Date();
     const companies = employers
       .filter((employer) => employer.employerProfile)
       .map((employer) => ({
@@ -93,9 +117,17 @@ export const listHiringCompanies = async (_req: Request, res: Response) => {
         isVerified: isVerifiedEmployer(employer.verificationRequests),
         openRoles: employer._count.jobsPosted,
         latestJobAt: employer.jobsPosted[0]?.createdAt ?? null,
+        // Business plans get priority here, but only among companies with the same verification status.
+        hasPriority: employer.subscriptions.some((subscription) => subscription.product.topEmployers && isLive(subscription, now)),
       }))
-      .sort((a, b) => new Date(b.latestJobAt || 0).getTime() - new Date(a.latestJobAt || 0).getTime())
-      .slice(0, 12);
+      .sort(
+        (a, b) =>
+          Number(b.isVerified) - Number(a.isVerified) ||
+          Number(b.hasPriority) - Number(a.hasPriority) ||
+          new Date(b.latestJobAt || 0).getTime() - new Date(a.latestJobAt || 0).getTime(),
+      )
+      .slice(0, 12)
+      .map(({ hasPriority: _hasPriority, ...company }) => company);
 
     return res.json({ success: true, companies });
   } catch (error) {

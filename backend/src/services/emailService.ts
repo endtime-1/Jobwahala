@@ -338,11 +338,52 @@ export const sendRenewalReminderEmail = (email: string, data: { planName: string
     { label: 'Manage my plan', path: '/billing' },
   );
 
-export const sendPaymentFailedEmail = (email: string, data: { productName: string; reason?: string | null }) =>
+export const sendPaymentFailedEmail = (email: string, data: { productName: string; reason?: string | null; graceEndsOn?: string }) =>
   billingMail(
     email,
     `Your ${APP_NAME} payment did not go through`,
     'Payment problem',
-    [`We could not take the payment for ${data.productName}.${data.reason ? ` The bank said: ${data.reason}.` : ''}`, 'Nothing has been charged for this attempt. You can try again, or use a different card or mobile money number.'],
+    [
+      `We could not take the payment for ${data.productName}.${data.reason ? ` The bank said: ${data.reason}.` : ''}`,
+      data.graceEndsOn ? `Your plan keeps working until ${data.graceEndsOn} while you put this right. After that your company moves to the Free plan. Nothing is deleted.` : 'Nothing has been charged for this attempt. You can try again, or use a different card or mobile money number.',
+    ],
     { label: 'Go to my billing page', path: '/billing' },
   );
+
+/** During the 7-day grace period after a failed renewal: how long is left, and what to do. */
+export const sendGraceReminderEmail = (email: string, data: { planName: string; endsOn: string; lastChance: boolean }) =>
+  billingMail(
+    email,
+    data.lastChance ? `Last chance to keep your ${APP_NAME} ${data.planName} plan` : `Your ${APP_NAME} ${data.planName} plan needs a payment`,
+    data.lastChance ? 'Your plan ends tomorrow' : 'Your plan payment is overdue',
+    [
+      `We could not take the payment for your ${data.planName} plan. It keeps working until ${data.endsOn}.`,
+      'After that your company moves to the Free plan. Nothing is deleted: your jobs, applicants and company page stay safe, and your team members are only paused.',
+      'Update your payment method, or choose the plan again, to keep everything switched on.',
+    ],
+    { label: 'Fix my payment', path: '/plans' },
+  );
+
+/** Invitation to join a company's team on JobWahala. */
+export const sendTeamInviteEmail = (email: string, data: { company: string; url: string }) => {
+  const e = escapeHtml;
+  const html = wrapHtml(`
+    <div class="header">
+      <h1>${APP_NAME}</h1>
+      <p>You have been invited to a team</p>
+    </div>
+    <div class="body">
+      <p>${e(data.company)} invited you to help with hiring on ${APP_NAME}: posting jobs and reviewing applicants.</p>
+      <p>Sign up or log in with this email address (${e(email)}) as an employer, then open the link below to accept.</p>
+      <p style="text-align: center; margin: 32px 0;">
+        <a href="${data.url}" class="btn">Accept the invitation</a>
+      </p>
+      <p class="muted">If you were not expecting this, you can ignore it.</p>
+    </div>
+    <div class="footer">
+      &copy; ${new Date().getFullYear()} ${APP_NAME}. All rights reserved.
+    </div>
+  `);
+
+  return transporter.sendMail({ from: env.smtpFrom, to: email, subject: `${data.company} invited you to their ${APP_NAME} team`, html });
+};
