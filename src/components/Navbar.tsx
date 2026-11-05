@@ -77,7 +77,6 @@ const adminLinks: NavLinkItem[] = [
 const guestLinks: NavLinkItem[] = [
   { name: 'Browse Jobs', href: '/jobs', icon: <Briefcase className="h-4 w-4" /> },
   { name: 'Internships & NSS', href: '/internships', icon: <GraduationCap className="h-4 w-4" /> },
-  { name: 'For employers', href: '/onboarding?role=employer', icon: <Handshake className="h-4 w-4" /> },
   { name: 'Resources', href: '/blog', icon: <BookOpen className="h-4 w-4" /> },
 ]
 
