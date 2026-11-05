@@ -1,3 +1,4 @@
+import ScrollToTop from './components/ScrollToTop'
 import { Suspense, lazy, type ReactElement } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import ApiStatusBanner from './components/ApiStatusBanner'
@@ -73,6 +74,7 @@ function App() {
 
   return (
     <Suspense fallback={<RouteFallback />}>
+      <ScrollToTop />
       <ApiStatusBanner />
       <Routes>
         <Route path="/login" element={user ? <Navigate to={authRedirect} replace /> : <Login />} />
