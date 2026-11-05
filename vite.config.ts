@@ -2,11 +2,27 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
+import { siteCopy } from './src/content/siteCopy.ts'
+
+const escapeHtml = (value: string) => value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')
+
+// Fills the %SITE_...% markers in index.html from src/content/siteCopy.ts, so the page that paints before
+// JavaScript runs always says what the app says.
+const siteCopyPlugin = () => ({
+  name: 'site-copy',
+  transformIndexHtml: (html: string) =>
+    html
+      .replaceAll('%SITE_TITLE%', escapeHtml(siteCopy.title))
+      .replaceAll('%SITE_DESCRIPTION%', escapeHtml(siteCopy.description))
+      .replaceAll('%SITE_SHORT_DESCRIPTION%', escapeHtml(siteCopy.shortDescription))
+      .replaceAll('%SITE_HERO_TEXT%', escapeHtml(siteCopy.heroText)),
+})
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
-    react(), 
+    siteCopyPlugin(),
+    react(),
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',

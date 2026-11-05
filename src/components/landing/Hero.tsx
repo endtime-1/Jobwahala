@@ -1,5 +1,6 @@
 import { ArrowRight, Check } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { siteCopy } from '../../content/siteCopy'
 import HeroSearch from './HeroSearch'
 
 const POINTS = ['Company pages', 'Pay shown up front', 'Free to apply and to post']
@@ -17,8 +18,7 @@ export default function Hero() {
       </h1>
 
       <p className="mt-5 max-w-lg text-lg font-medium leading-snug text-white/80 sm:text-xl">
-        Real jobs from employers you can check, across Africa. See the pay and location before you apply, and look for
-        the verified badge.
+        {siteCopy.heroText}
       </p>
 
       <HeroSearch />

@@ -31,7 +31,7 @@ describe('buildFreelancerShareMeta', () => {
     expect(meta.title).toBe('A JobWahala freelancer — Figma · adobe');
     expect(meta.description).toContain('Skills: Figma, adobe, Canva.');
     expect(meta.description).toContain('Offers: Ghost Writer.');
-    expect(meta.description).toContain('escrow');
+    expect(meta.description).not.toMatch(/escrow/i);
   });
 
   it('keeps the description short enough for link previews', () => {

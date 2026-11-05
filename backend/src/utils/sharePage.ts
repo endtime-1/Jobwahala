@@ -38,7 +38,7 @@ export const buildFreelancerShareMeta = (input: FreelancerShareInput, siteUrl: s
       [
         skills.length ? `Skills: ${skills.join(', ')}.` : '',
         input.serviceTitles?.length ? `Offers: ${input.serviceTitles.slice(0, 3).join(', ')}.` : '',
-        'Hire with payments held in escrow until the work is approved.',
+        'Freelancer on JobWahala.',
       ]
         .filter(Boolean)
         .join(' '),

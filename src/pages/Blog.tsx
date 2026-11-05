@@ -119,7 +119,7 @@ export default function Blog() {
               <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-12">
                 <div className="max-w-xl text-left">
                   <h2 className="text-4xl md:text-5xl font-black text-white tracking-tighter leading-tight mb-6">Ready to work without the wahala?</h2>
-                  <p className="text-white/70 text-lg font-medium leading-relaxed">Find jobs, hire talent and get paid safely, with payments held in escrow until the work is approved.</p>
+                  <p className="text-white/70 text-lg font-medium leading-relaxed">Find real jobs, or post yours free and review applicants on one board.</p>
                 </div>
                 <div className="w-full lg:w-auto">
                   <div className="flex flex-col sm:flex-row gap-4">

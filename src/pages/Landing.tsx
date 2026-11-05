@@ -18,6 +18,7 @@ import PathCards from '../components/landing/PathCards'
 import Reveal from '../components/landing/Reveal'
 import TrustGrid from '../components/landing/TrustGrid'
 import type { HiringCompany, LandingCounts, LandingJob } from '../components/landing/types'
+import { siteCopy } from '../content/siteCopy'
 import { apiGetHiringCompanies, apiGetJobs, apiGetPlatformStats } from '../lib/api'
 
 function Section({ eyebrow, title, intro, children }: { eyebrow: string; title: string; intro?: string; children: ReactNode }) {
@@ -85,8 +86,8 @@ export default function Landing() {
   return (
     <div className="on-home">
       <SEO
-        title="Real jobs from employers you can check, across Africa"
-        description="Find real jobs across Africa from employers you can check, or post your jobs free and review applicants on one board. Pay and location shown up front. Freelance gigs coming soon."
+        title={siteCopy.title}
+        description={siteCopy.description}
         keywords="jobs in africa, jobs in ghana, find a job, post a job free, hire in africa, verified employers, work without the wahala, jobwahala"
       />
 

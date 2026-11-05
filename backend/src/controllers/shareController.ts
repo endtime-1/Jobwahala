@@ -7,6 +7,7 @@ import { getErrorMessage } from '../utils/errors';
 import { renderFreelancerSharePage, renderSharePageNotFound } from '../utils/sharePage';
 import { renderJobListPage, renderJobPage, type SeoJob } from '../utils/seoPages';
 import { publicJobWhere } from '../utils/jobLifecycle';
+import { siteCopy } from '../content/siteCopy';
 import {
   buildSitemapXml,
   countryEntries,
@@ -226,10 +227,9 @@ export const getJobListSharePage = async (req: Request, res: Response) => {
               path: '/jobs',
             }
           : {
-              heading: 'Real jobs from employers you can check, across Africa',
-              description:
-                'Find real jobs across Africa, or post your jobs free and review applicants on one board. Company pages, pay and location shown up front.',
-              intro: 'JobWahala is a job portal for Africa. Companies post real jobs and people apply in minutes.',
+              heading: siteCopy.title,
+              description: siteCopy.description,
+              intro: siteCopy.crawlerIntro,
               path: '/',
             };
 

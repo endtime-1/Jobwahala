@@ -17,7 +17,7 @@ describe('buildProfileShare', () => {
 
     expect(share.title).toBe('Ama Mensah — Figma · Canva')
     expect(share.description).toContain('Skills: Figma, Canva.')
-    expect(share.description).toContain('escrow')
+    expect(share.description).not.toMatch(/escrow/i)
   })
 
   it('describes the person for search engines', () => {

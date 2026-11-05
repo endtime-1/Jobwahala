@@ -16,7 +16,7 @@ export const buildProfileShare = ({ id, name, tagline, bio, skills, origin }: Pr
   const headline = tagline?.trim() || skills.slice(0, 2).join(' · ') || 'Freelancer on JobWahala'
   const description = clip(
     bio?.trim() ||
-      `${skills.length ? `Skills: ${skills.slice(0, 4).join(', ')}. ` : ''}Hire with payments held in escrow until the work is approved.`,
+      `${skills.length ? `Skills: ${skills.slice(0, 4).join(', ')}. ` : ''}Freelancer on JobWahala.`,
     200,
   )
   const url = `${origin}/freelancers/${id}`
@@ -39,4 +39,4 @@ export const buildProfileShare = ({ id, name, tagline, bio, skills, origin }: Pr
 export const whatsAppShareUrl = (message: string) => `https://wa.me/?text=${encodeURIComponent(message)}`
 
 export const profileWhatsAppMessage = (name: string, url: string) =>
-  `Check out ${name} on JobWahala - payments are held in escrow until the work is approved: ${url}`
+  `Check out ${name} on JobWahala: ${url}`
