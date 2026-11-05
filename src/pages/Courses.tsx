@@ -87,7 +87,7 @@ export default function Courses() {
       <SEO
         title="Courses and training in Ghana"
         description="Find courses from training providers in Ghana. Compare price, duration, format and start dates, then enquire. Free courses and verified providers."
-        canonical="https://jobwahala.com/courses"
+        canonical="https://www.jobwahala.com/courses"
       />
 
       <section className="relative isolate overflow-hidden bg-primary pb-10 pt-28 text-white sm:pb-14 sm:pt-32 xl:pt-36">

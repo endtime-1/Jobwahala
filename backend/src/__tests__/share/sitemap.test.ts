@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildSitemapXml, countryEntries, resolvePublicBaseUrl } from '../../utils/sitemap';
+import { buildSitemapXml, countryEntries, freelanceSitemapPaths, resolvePublicBaseUrl, staticSitemapPaths } from '../../utils/sitemap';
 
 describe('buildSitemapXml', () => {
   it('lists each page with its full address, last change and priority', () => {
@@ -23,6 +23,13 @@ describe('buildSitemapXml', () => {
 
   it('includes a page for each country', () => {
     expect(countryEntries().map((entry) => entry.path)).toContain('/jobs-in/south-africa');
+  });
+});
+
+describe('the freelance page in the sitemap', () => {
+  it('is not in the always-listed pages (while freelance is off the address only redirects home)', () => {
+    expect(staticSitemapPaths.map((entry) => entry.path)).not.toContain('/freelancers');
+    expect(freelanceSitemapPaths.map((entry) => entry.path)).toEqual(['/freelancers']);
   });
 });
 

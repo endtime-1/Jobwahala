@@ -118,7 +118,7 @@ export default function AccountSettings() {
 
   return (
     <div className="container max-w-3xl pb-16 pt-[calc(env(safe-area-inset-top)+8rem)] xl:pt-[calc(env(safe-area-inset-top)+9rem)]">
-      <SEO title="Account settings" description="Your sign-in details, your data, and deleting your account." canonical="https://jobwahala.com/settings" />
+      <SEO title="Account settings" description="Your sign-in details, your data, and deleting your account." canonical="https://www.jobwahala.com/settings" />
 
       <h1 className="text-3xl font-black tracking-tight text-text-main sm:text-4xl">Account settings</h1>
       <p className="mt-2 text-base font-medium text-text-muted">

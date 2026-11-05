@@ -18,12 +18,14 @@ export const staticSitemapPaths: SitemapEntry[] = [
   { path: '/', changeFrequency: 'daily', priority: 1 },
   { path: '/jobs', changeFrequency: 'daily', priority: 0.9 },
   { path: '/internships', changeFrequency: 'daily', priority: 0.9 },
-  { path: '/freelancers', changeFrequency: 'weekly', priority: 0.5 },
   { path: '/blog', changeFrequency: 'weekly', priority: 0.5 },
   { path: '/support', changeFrequency: 'monthly', priority: 0.4 },
   { path: '/terms', changeFrequency: 'monthly', priority: 0.2 },
   { path: '/privacy', changeFrequency: 'monthly', priority: 0.2 },
 ];
+
+/** Only listed while the freelance screens are switched on; otherwise the address just redirects to the home page. */
+export const freelanceSitemapPaths: SitemapEntry[] = [{ path: '/freelancers', changeFrequency: 'weekly', priority: 0.5 }];
 
 export const sitemapCountries = [
   'ghana',

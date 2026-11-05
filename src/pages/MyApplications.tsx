@@ -53,7 +53,7 @@ export default function MyApplications() {
 
   return (
     <div className="container pt-[calc(env(safe-area-inset-top)+8rem)] pb-12 xl:pt-[calc(env(safe-area-inset-top)+9rem)]">
-      <SEO title="My applications" description="Every job you have applied for, with where it stands." canonical="https://jobwahala.com/applications" />
+      <SEO title="My applications" description="Every job you have applied for, with where it stands." canonical="https://www.jobwahala.com/applications" />
 
       <header className="mb-8 max-w-2xl">
         <h1 className="text-3xl font-black tracking-tight text-text-main sm:text-4xl">My applications</h1>

@@ -59,7 +59,7 @@ export default function SavedJobs() {
 
   return (
     <div className="container pt-[calc(env(safe-area-inset-top)+8rem)] pb-12 xl:pt-[calc(env(safe-area-inset-top)+9rem)]">
-      <SEO title="Saved jobs" description="Jobs you saved to come back to." canonical="https://jobwahala.com/saved-jobs" />
+      <SEO title="Saved jobs" description="Jobs you saved to come back to." canonical="https://www.jobwahala.com/saved-jobs" />
 
       <header className="mb-8 max-w-2xl">
         <h1 className="text-3xl font-black tracking-tight text-text-main sm:text-4xl">Saved jobs</h1>

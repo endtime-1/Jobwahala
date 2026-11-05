@@ -10,6 +10,7 @@ import { useFeatures } from '../lib/features'
 import { useAuth, type UserRole } from '../context/AuthContext'
 import { isApiUnavailableMessage } from '../lib/apiStatus'
 import { getErrorMessage } from '../lib/errors'
+import SEO from '../components/SEO'
 
 const ROLES: { value: UserRole; label: string; description: string; icon: typeof Briefcase }[] = [
   { value: 'SEEKER', label: 'Job Seeker', description: 'I am looking for a job', icon: Users },
@@ -55,6 +56,7 @@ export default function Signup() {
 
   return (
     <div className="v2 flex min-h-screen">
+      <SEO title="Create your account" description="Join JobWahala free: find real jobs from employers you can check, or post jobs and review applicants on one board." />
       <AuthAside
         headline="Join free and"
         accent="get paid safely."

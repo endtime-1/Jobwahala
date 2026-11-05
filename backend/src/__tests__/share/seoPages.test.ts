@@ -4,6 +4,7 @@ import {
   detectCountry,
   isRemoteLocation,
   mapEmploymentType,
+  renderCompanyPage,
   renderJobListPage,
   renderJobPage,
   type SeoJob,
@@ -154,5 +155,42 @@ describe('JobPosting closing date', () => {
 
   it('leaves validThrough out when there is no closing date', () => {
     expect(buildJobPostingJsonLd(job, 'https://www.jobwahala.com')).not.toHaveProperty('validThrough');
+  });
+});
+
+describe('renderCompanyPage', () => {
+  const company = {
+    id: 'emp-1',
+    name: 'Akoko Solutions LTD',
+    industry: 'Production',
+    description: 'Poultry feed producer.',
+    logoUrl: 'https://cdn.example.com/akoko.png',
+    isVerified: false,
+    jobs: [{ id: 'job-1', title: 'B2B SALES EXECUTIVE', location: 'Kumasi', type: 'Full-time' }],
+  };
+
+  it('gives crawlers the company name as the title, its open roles, and the right address', () => {
+    const html = renderCompanyPage(company, 'https://www.jobwahala.com');
+
+    expect(html).toContain('<title>Akoko Solutions LTD jobs and company profile | JobWahala</title>');
+    expect(html).toContain('<link rel="canonical" href="https://www.jobwahala.com/companies/emp-1">');
+    expect(html).toContain('Open roles (1)');
+    expect(html).toContain('href="https://www.jobwahala.com/jobs/job-1"');
+    expect(html).toContain('<meta property="og:image" content="https://cdn.example.com/akoko.png">');
+  });
+
+  it('says plainly whether the employer is verified, and never shows an unverified one as verified', () => {
+    expect(renderCompanyPage(company, 'https://x.test')).toContain('Unverified employer');
+    expect(renderCompanyPage({ ...company, isVerified: true }, 'https://x.test')).toContain('Verified business');
+    expect(renderCompanyPage({ ...company, isVerified: false }, 'https://x.test')).not.toContain('Verified business');
+  });
+
+  it('copes with no description and no open roles, and escapes the company name', () => {
+    const html = renderCompanyPage({ ...company, name: '<b>Bad</b> & Co', description: null, jobs: [] }, 'https://x.test');
+
+    expect(html).toContain('&lt;b&gt;Bad&lt;/b&gt; &amp; Co');
+    expect(html).not.toContain('<b>Bad</b>');
+    expect(html).toContain('No open roles right now.');
+    expect(html).toContain('is hiring on JobWahala');
   });
 });

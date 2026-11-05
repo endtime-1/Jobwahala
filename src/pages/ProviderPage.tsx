@@ -64,7 +64,7 @@ export default function ProviderPage() {
       <SEO
         title={`${provider.name} - courses`}
         description={`${provider.name}: ${courses.length} ${courses.length === 1 ? 'course' : 'courses'} on JobWahala. ${provider.description ?? ''}`.slice(0, 200)}
-        canonical={`https://jobwahala.com/providers/${provider.id}`}
+        canonical={`https://www.jobwahala.com/providers/${provider.id}`}
         noindex={courses.length === 0}
       />
 

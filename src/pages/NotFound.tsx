@@ -15,6 +15,7 @@ export default function NotFound() {
       <SEO
         title="Page Not Found — JobWahala"
         description="The page you're looking for doesn't exist. Navigate back to JobWahala."
+        noindex
       />
       <PageHero eyebrow="Error 404" title="We can't find that" accent="page.">
         <p className="mt-4 max-w-xl text-base font-medium text-white/75 sm:text-lg">

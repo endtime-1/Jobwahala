@@ -424,6 +424,8 @@ export default function Navbar() {
                 <button
                   type="button"
                   onClick={() => setIsOpen((current) => !current)}
+                  aria-label={isOpen ? 'Close menu' : 'Open menu'}
+                  aria-expanded={isOpen}
                   className="relative flex h-11 w-11 items-center justify-center rounded-2xl border border-white/60 bg-white/76 text-text-main shadow-premium-sm"
                 >
                   {shellAttentionCount > 0 ? (

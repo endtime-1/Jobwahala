@@ -152,7 +152,7 @@ export default function Internships() {
       <SEO
         title="Internships, National Service and graduate jobs"
         description="Find internships, National Service (NSS) placements, industrial attachments and entry-level graduate jobs. See the stipend, duration and start date before you apply."
-        canonical="https://jobwahala.com/internships"
+        canonical="https://www.jobwahala.com/internships"
       />
 
       {/* Top band: what this page is, a search, and the four kinds of opportunity as one-tap choices. */}

@@ -86,7 +86,7 @@ export default function CourseDetail() {
       <SEO
         title={`${course.title} - ${course.provider.name}`}
         description={`${course.title} by ${course.provider.name}. ${priceLabel(course)}. ${course.summary}`.slice(0, 200)}
-        canonical={`https://jobwahala.com/courses/${course.slug}`}
+        canonical={`https://www.jobwahala.com/courses/${course.slug}`}
       />
 
       <div className="container max-w-5xl">

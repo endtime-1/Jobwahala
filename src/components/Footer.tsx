@@ -106,12 +106,12 @@ export default function Footer() {
           {columns.map((column) => (
             <div key={column.title}>
               <h3 className="text-base font-extrabold text-white">{column.title}</h3>
-              <div className="mt-4 flex flex-col gap-3">
+              <div className="mt-3 flex flex-col">
                 {column.links.map(([label, href]) => (
                   <Link
                     key={label}
                     to={href}
-                    className="text-base font-medium text-white/65 transition-colors hover:text-gold"
+                    className="inline-block py-2 text-base font-medium text-white/65 transition-colors hover:text-gold"
                   >
                     {label}
                   </Link>
@@ -124,9 +124,9 @@ export default function Footer() {
         <div className="mt-12 flex flex-col gap-3 border-t border-white/10 pt-6 text-sm font-medium text-white/50 md:flex-row md:items-center md:justify-between">
           <p>© {new Date().getFullYear()} JobWahala. All rights reserved.</p>
           <div className="flex flex-wrap items-center gap-6">
-            <Link to="/privacy" className="hover:text-white">Privacy</Link>
-            <Link to="/terms" className="hover:text-white">Terms</Link>
-            <Link to="/support" className="hover:text-white">Support</Link>
+            <Link to="/privacy" className="inline-block py-2 hover:text-white">Privacy</Link>
+            <Link to="/terms" className="inline-block py-2 hover:text-white">Terms</Link>
+            <Link to="/support" className="inline-block py-2 hover:text-white">Support</Link>
           </div>
         </div>
       </div>

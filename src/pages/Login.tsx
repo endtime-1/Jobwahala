@@ -7,6 +7,7 @@ import PhoneCodeFlow from '../components/PhoneCodeFlow'
 import { useAuth } from '../context/AuthContext'
 import { isApiUnavailableMessage } from '../lib/apiStatus'
 import { getErrorMessage } from '../lib/errors'
+import SEO from '../components/SEO'
 
 export default function Login() {
   const [method, setMethod] = useState<'email' | 'phone'>('email')
@@ -35,6 +36,7 @@ export default function Login() {
 
   return (
     <div className="v2 flex min-h-screen">
+      <SEO title="Log in" description="Log in to JobWahala to apply for jobs, post jobs and manage your applicants." />
       <AuthAside
         headline="Your next job is"
         accent="closer than you think."

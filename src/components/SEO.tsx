@@ -14,8 +14,8 @@ interface SEOProps {
 export default function SEO({
   title,
   description = 'Find real jobs across Africa from employers you can check, or post your jobs free and review applicants on one board.',
-  canonical = 'https://jobwahala.com',
-  ogImage = 'https://jobwahala.com/og-image.jpg',
+  canonical = 'https://www.jobwahala.com',
+  ogImage = 'https://www.jobwahala.com/og-image.jpg',
   ogType = 'website',
   keywords = 'jobs in africa, jobs in ghana, remote work africa, post a job free, verified employers, jobwahala',
   noindex = false,

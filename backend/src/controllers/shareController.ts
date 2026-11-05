@@ -5,7 +5,8 @@ import logger from '../config/logger';
 import { singleValue } from '../utils/request';
 import { getErrorMessage } from '../utils/errors';
 import { renderFreelancerSharePage, renderSharePageNotFound } from '../utils/sharePage';
-import { renderJobListPage, renderJobPage, type SeoJob } from '../utils/seoPages';
+import { renderCompanyPage, renderJobListPage, renderJobPage, type SeoJob } from '../utils/seoPages';
+import { approvedBusinessVerificationQuery, isVerifiedEmployer } from '../utils/verification';
 import { EARLY_CAREER_TYPES } from '../utils/earlyCareer';
 import { publicJobWhere } from '../utils/jobLifecycle';
 import { buildLandingIndex, buildLandingPage, landingSitemapPaths, type LandingIndex, type LandingJob } from '../utils/landingPages';
@@ -19,6 +20,7 @@ import { siteCopy } from '../content/siteCopy';
 import {
   buildSitemapXml,
   countryEntries,
+  freelanceSitemapPaths,
   resolvePublicBaseUrl,
   staticSitemapPaths,
   type SitemapEntry,
@@ -159,6 +161,7 @@ export const getSitemap = async (req: Request, res: Response) => {
 
     const entries: SitemapEntry[] = [
       ...staticSitemapPaths,
+      ...(env.freelanceEnabled ? freelanceSitemapPaths : []),
       ...countryEntries(),
       ...(await courseSitemapPaths()).map((path) => ({ path, changeFrequency: 'weekly' as const, priority: 0.6 })),
       ...landingSitemapPaths(await loadLandingIndex()).map((path) => ({ path, changeFrequency: 'daily' as const, priority: 0.6 })),
@@ -200,6 +203,48 @@ export const getJobSharePage = async (req: Request, res: Response) => {
     return res.send(renderJobPage(toSeoJob(job as SeoJobRow, siteUrl), siteUrl));
   } catch (error) {
     logger.error('job_share_page_error', { error: getErrorMessage(error) });
+    return res.status(500).type('html').send(renderSharePageNotFound(siteUrl));
+  }
+};
+
+/** A company page for search engines and link previews: the company's name, what it does and its open jobs. Nothing private. */
+export const getCompanySharePage = async (req: Request, res: Response) => {
+  const siteUrl = publicSiteUrl(req);
+
+  try {
+    const id = singleValue(req.params.id);
+    const employer = id
+      ? await prisma.user.findFirst({
+          where: { id, role: 'EMPLOYER', status: 'ACTIVE', employerProfile: { isNot: null } },
+          select: {
+            id: true,
+            employerProfile: { select: { companyName: true, industry: true, description: true, logoUrl: true } },
+            verificationRequests: approvedBusinessVerificationQuery,
+            jobsPosted: { where: publicJobWhere(), orderBy: { createdAt: 'desc' }, take: 20, select: { id: true, title: true, location: true, type: true } },
+          },
+        })
+      : null;
+
+    res.type('html');
+    if (!employer?.employerProfile) return res.status(404).send(renderSharePageNotFound(siteUrl));
+
+    res.set('Cache-Control', 'public, max-age=300');
+    return res.send(
+      renderCompanyPage(
+        {
+          id: employer.id,
+          name: employer.employerProfile.companyName,
+          industry: employer.employerProfile.industry,
+          description: employer.employerProfile.description,
+          logoUrl: employer.employerProfile.logoUrl,
+          isVerified: isVerifiedEmployer(employer.verificationRequests),
+          jobs: employer.jobsPosted,
+        },
+        siteUrl,
+      ),
+    );
+  } catch (error) {
+    logger.error('company_share_page_error', { error: getErrorMessage(error) });
     return res.status(500).type('html').send(renderSharePageNotFound(siteUrl));
   }
 };

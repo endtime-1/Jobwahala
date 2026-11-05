@@ -95,7 +95,7 @@ export default function SearchLanding() {
 
   return (
     <div className="pb-24 pt-24 xl:pt-28">
-      <SEO title={page.title} description={page.description} canonical={`https://jobwahala.com${page.path}`} noindex={!page.indexable} />
+      <SEO title={page.title} description={page.description} canonical={`https://www.jobwahala.com${page.path}`} noindex={!page.indexable} />
 
       <div className="container max-w-4xl">
         <nav aria-label="Breadcrumb" className="mb-4 flex flex-wrap items-center gap-1 text-sm font-semibold text-text-muted">

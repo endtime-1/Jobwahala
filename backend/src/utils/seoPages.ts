@@ -221,6 +221,44 @@ ${paragraphs(job.description)}
   });
 };
 
+export type SeoCompany = {
+  id: string;
+  name: string;
+  industry?: string | null;
+  description?: string | null;
+  logoUrl?: string | null;
+  isVerified: boolean;
+  jobs: { id: string; title: string; location?: string | null; type?: string | null }[];
+};
+
+export const renderCompanyPage = (company: SeoCompany, siteUrl: string) => {
+  const url = `${siteUrl}/companies/${company.id}`;
+  const open = company.jobs.length;
+  const description = clip(
+    company.description?.trim() ||
+      `${company.name}${company.industry ? ` (${company.industry})` : ''} is hiring on JobWahala${open ? ` with ${open} open ${open === 1 ? 'role' : 'roles'}` : ''}.`,
+    200,
+  );
+  const logo = jobPreviewImage({ employerLogoUrl: company.logoUrl ?? null, employerName: company.name });
+  const items = company.jobs
+    .map((job) => `<li><a href="${e(`${siteUrl}/jobs/${job.id}`)}">${e(job.title)}</a>${[job.type, job.location].filter(Boolean).length ? ` (${e([job.type, job.location].filter(Boolean).join(' · '))})` : ''}</li>`)
+    .join('\n');
+
+  return renderShell({
+    title: `${company.name} jobs and company profile`,
+    description,
+    url,
+    siteUrl,
+    image: logo,
+    jsonLd: { '@context': 'https://schema.org', '@type': 'Organization', name: company.name, url, ...(company.description ? { description: clip(company.description, 300) } : {}) },
+    body: `<h1>${e(company.name)}</h1>
+<p>${company.isVerified ? 'Verified business' : 'Unverified employer'}${company.industry ? ` · ${e(company.industry)}` : ''}</p>
+${company.description ? paragraphs(company.description) : ''}
+<h2>Open roles (${open})</h2>
+${open ? `<ul>\n${items}\n</ul>` : '<p>No open roles right now.</p>'}`,
+  });
+};
+
 export type JobListPageInput = {
   heading: string;
   description: string;

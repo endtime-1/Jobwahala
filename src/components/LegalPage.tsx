@@ -35,7 +35,7 @@ export default function LegalPage({ title, description, updated, intro, sections
           <ol className="grid gap-2 text-sm font-semibold text-primary sm:grid-cols-2">
             {sections.map((section, index) => (
               <li key={section.heading}>
-                <a href={`#section-${index + 1}`} className="hover:underline">
+                <a href={`#section-${index + 1}`} className="inline-block py-1.5 hover:underline">
                   {index + 1}. {section.heading}
                 </a>
               </li>
