@@ -10,6 +10,11 @@ import { EARLY_CAREER_TYPES } from '../utils/earlyCareer';
 import { publicJobWhere } from '../utils/jobLifecycle';
 import { buildLandingIndex, buildLandingPage, landingSitemapPaths, type LandingIndex, type LandingJob } from '../utils/landingPages';
 import { renderLandingNotFound, renderLandingPage } from '../utils/landingRender';
+import { loadPublicCourses } from '../services/courseCatalog';
+import { buildCourseLanding, coursePagePaths } from '../utils/courses';
+import { renderCourseDetailPage, renderCourseHubPage, renderCourseLandingPage } from '../utils/courseRender';
+import { courseInclude, toPublicCourse } from '../services/courseCatalog';
+import { publicCourseWhere } from '../utils/courses';
 import { siteCopy } from '../content/siteCopy';
 import {
   buildSitemapXml,
@@ -155,6 +160,7 @@ export const getSitemap = async (req: Request, res: Response) => {
     const entries: SitemapEntry[] = [
       ...staticSitemapPaths,
       ...countryEntries(),
+      ...(await courseSitemapPaths()).map((path) => ({ path, changeFrequency: 'weekly' as const, priority: 0.6 })),
       ...landingSitemapPaths(await loadLandingIndex()).map((path) => ({ path, changeFrequency: 'daily' as const, priority: 0.6 })),
       ...jobs.map((job) => ({
         path: `/jobs/${job.id}`,
@@ -343,5 +349,56 @@ export const getLandingJson = async (req: Request, res: Response) => {
   } catch (error) {
     logger.error('landing_page_error', { error: getErrorMessage(error) });
     return res.status(500).json({ success: false, message: 'Unable to load this page right now' });
+  }
+};
+
+// ---- courses
+
+/** The courses hub, every public course, and the category and skill pages that have enough courses. */
+const courseSitemapPaths = async () => {
+  const courses = await loadPublicCourses();
+  if (courses.length === 0) return [];
+  return ['/courses', ...courses.map((course) => `/courses/${course.slug}`), ...coursePagePaths(courses)];
+};
+
+export const getCourseHubSharePage = async (req: Request, res: Response) => {
+  const siteUrl = publicSiteUrl(req);
+  try {
+    res.type('html');
+    res.set('Cache-Control', 'public, max-age=300');
+    return res.send(renderCourseHubPage(await loadPublicCourses(), siteUrl));
+  } catch (error) {
+    logger.error('course_hub_page_error', { error: getErrorMessage(error) });
+    return res.status(500).type('html').send(renderLandingNotFound(siteUrl));
+  }
+};
+
+export const getCourseLandingSharePage = async (req: Request, res: Response) => {
+  const siteUrl = publicSiteUrl(req);
+  try {
+    const kind = singleValue(req.params.kind) === 'skill' ? 'skill' : 'category';
+    const page = buildCourseLanding(kind, singleValue(req.params.slug) || '', await loadPublicCourses());
+    if (!page) return res.status(404).type('html').send(renderLandingNotFound(siteUrl));
+    res.type('html');
+    res.set('Cache-Control', 'public, max-age=300');
+    return res.send(renderCourseLandingPage(page, siteUrl));
+  } catch (error) {
+    logger.error('course_landing_page_error', { error: getErrorMessage(error) });
+    return res.status(500).type('html').send(renderLandingNotFound(siteUrl));
+  }
+};
+
+export const getCourseSharePage = async (req: Request, res: Response) => {
+  const siteUrl = publicSiteUrl(req);
+  try {
+    const slug = singleValue(req.params.slug) || '';
+    const row = await prisma.course.findFirst({ where: { slug, ...publicCourseWhere() }, include: courseInclude });
+    if (!row) return res.status(404).type('html').send(renderLandingNotFound(siteUrl));
+    res.type('html');
+    res.set('Cache-Control', 'public, max-age=300');
+    return res.send(renderCourseDetailPage({ ...toPublicCourse(row as never), description: row.description }, siteUrl));
+  } catch (error) {
+    logger.error('course_share_page_error', { error: getErrorMessage(error) });
+    return res.status(500).type('html').send(renderLandingNotFound(siteUrl));
   }
 };

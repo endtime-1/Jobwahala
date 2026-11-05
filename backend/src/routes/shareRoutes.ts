@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getFreelancerSharePage, getJobListSharePage, getLandingJson, getLandingSharePage, getJobSharePage, getSitemap } from '../controllers/shareController';
+import { getCourseHubSharePage, getCourseLandingSharePage, getCourseSharePage, getFreelancerSharePage, getJobListSharePage, getLandingJson, getLandingSharePage, getJobSharePage, getSitemap } from '../controllers/shareController';
 
 const router = Router();
 
@@ -7,6 +7,9 @@ router.get('/sitemap.xml', getSitemap);
 router.get('/freelancers/:id', getFreelancerSharePage);
 router.get('/jobs/:id', getJobSharePage);
 router.get('/seo/:slug', getLandingSharePage);
+router.get('/course-pages/hub', getCourseHubSharePage);
+router.get('/course-pages/:kind/:slug', getCourseLandingSharePage);
+router.get('/course/:slug', getCourseSharePage);
 router.get('/seo-json/:slug', getLandingJson);
 router.get('/pages/home', getJobListSharePage);
 router.get('/pages/jobs', getJobListSharePage);

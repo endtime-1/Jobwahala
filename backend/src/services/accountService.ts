@@ -48,6 +48,8 @@ export const buildUserDataExport = async (userId: string, now: Date = new Date()
     savedSearches,
     savedJobs,
     cvFiles,
+    learnerCourses,
+    courseEnquiries,
     cvRequests,
     notifications,
     jobsPosted,
@@ -92,6 +94,16 @@ export const buildUserDataExport = async (userId: string, now: Date = new Date()
       select: { createdAt: true, job: { select: { id: true, title: true, employer: { select: { employerProfile: { select: { companyName: true } } } } } } },
     }),
     prisma.seekerCv.findUnique({ where: { userId } }),
+    prisma.learnerCourse.findMany({
+      where: { userId },
+      select: { title: true, providerName: true, completedOn: true, certificateUrl: true, status: true },
+      take: LIMIT,
+    }),
+    prisma.courseEnquiry.findMany({
+      where: { userId },
+      select: { name: true, email: true, phone: true, message: true, createdAt: true, course: { select: { title: true } } },
+      take: LIMIT,
+    }),
     prisma.cVGeneration.findMany({ where: { userId }, select: { prompt: true, createdAt: true }, take: LIMIT }),
     prisma.notification.findMany({
       where: { userId },
@@ -217,6 +229,8 @@ export const buildUserDataExport = async (userId: string, now: Date = new Date()
         }
       : null,
     cvRequests,
+    learnerCourses,
+    courseEnquiriesSent: courseEnquiries.map(({ course, ...enquiry }) => ({ ...enquiry, courseTitle: course.title })),
     notifications,
     jobsPosted: jobsPosted.map(({ _count, ...job }) => ({ ...job, applicants: _count.applications })),
     verificationRequests,
@@ -339,6 +353,11 @@ export const deleteAccount = async (
     await tx.payoutAccount.deleteMany({ where: { userId } });
     await tx.verificationRequest.deleteMany({ where: { userId } });
     await tx.freelanceService.updateMany({ where: { freelancerId: userId, status: 'ACTIVE' }, data: { status: 'CLOSED' } });
+
+    // Courses: what the member learned, asked, or (as a provider) was asked by others.
+    await tx.learnerCourse.deleteMany({ where: { userId } });
+    await tx.courseEnquiry.deleteMany({ where: { OR: [{ userId }, { course: { providerId: userId } }] } });
+    await tx.course.updateMany({ where: { providerId: userId, status: { not: 'REMOVED' } }, data: { status: 'REMOVED' } });
 
     // Private employer notes: the ones this member wrote, and the ones written about them.
     await tx.applicationReview.deleteMany({ where: { OR: [{ employerId: userId }, { application: { seekerId: userId } }] } });

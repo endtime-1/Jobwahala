@@ -3,6 +3,7 @@ import { Sparkles } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useFeatures } from '../../../lib/features'
 import EvidenceLink from '../../../components/EvidenceLink'
+import { BadgeCheck } from 'lucide-react'
 import {
   apiBulkRejectApplicants,
   apiUpdateApplicationStatus,
@@ -470,6 +471,31 @@ export default function EmployerApplicantsPanel({
                           ) : (
                             <p className="mb-4 text-sm font-semibold text-text-muted">No CV was sent with this application.</p>
                           )}
+                          {application.seeker.learnerCourses && application.seeker.learnerCourses.length > 0 ? (
+                            <div className="mb-4">
+                              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-text-light mb-2">Courses and certificates</p>
+                              <ul className="space-y-1.5">
+                                {application.seeker.learnerCourses.map((course) => (
+                                  <li key={course.id} className="flex flex-wrap items-center gap-2 text-sm font-semibold text-text-main">
+                                    <span>
+                                      {course.title}
+                                      {course.providerName ? <span className="text-text-muted"> ({course.providerName})</span> : null}
+                                    </span>
+                                    {course.verified ? (
+                                      <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-xs font-extrabold text-success">
+                                        <BadgeCheck className="h-3 w-3" aria-hidden /> Verified certificate
+                                      </span>
+                                    ) : null}
+                                    {course.certificateUrl ? (
+                                      <a href={course.certificateUrl} target="_blank" rel="noopener noreferrer nofollow" className="text-xs font-bold text-primary hover:underline">
+                                        Certificate link
+                                      </a>
+                                    ) : null}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          ) : null}
                           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-text-light mb-2">Cover Letter</p>
                           <p className="text-sm text-text-main leading-relaxed whitespace-pre-wrap">
                             {application.coverLetter?.trim() || 'No cover letter was provided for this application.'}

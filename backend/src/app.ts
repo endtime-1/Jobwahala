@@ -29,6 +29,9 @@ import companyRoutes from './routes/companyRoutes';
 import interestRoutes from './routes/interestRoutes';
 import applicationRoutes from './routes/applicationRoutes';
 import savedJobRoutes from './routes/savedJobRoutes';
+import courseRoutes from './routes/courseRoutes';
+import providerRoutes from './routes/providerRoutes';
+import learnerCourseRoutes from './routes/learnerCourseRoutes';
 import { requireFreelanceEnabled } from './middleware/featureFlags';
 import { Sentry } from './config/sentry';
 import {
@@ -189,6 +192,9 @@ app.use('/api/platform', platformRoutes);
 app.use('/api/interest', interestRoutes);
 app.use('/api/applications', applicationRoutes);
 app.use('/api/saved-jobs', savedJobRoutes);
+app.use('/api/courses', courseRoutes);
+app.use('/api/provider', providerRoutes);
+app.use('/api/learner/courses', learnerCourseRoutes);
 app.use('/api/verifications', verificationRoutes);
 app.use('/api/payouts', freelanceOnly, payoutRoutes);
 

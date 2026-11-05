@@ -12,6 +12,7 @@ import {
 } from '../../lib/api'
 import { emailHandle, formatMoney, formatRelativeTime, getDisplayName } from '../../lib/display'
 import { useAdminDashboard } from './admin/hooks'
+import AdminCoursesPanel from '../../components/AdminCoursesPanel'
 import { getErrorMessage } from '../../lib/errors'
 
 const moderationStatuses = ['ACTIVE', 'FLAGGED', 'SUSPENDED']
@@ -30,7 +31,7 @@ export default function AdminDashboard() {
   const queryClient = useQueryClient()
   const { data, isLoading, error: dashboardError } = useAdminDashboard()
   const [error, setError] = useState('')
-  const [activeTab, setActiveTab] = useState<'reports' | 'users' | 'jobs' | 'services' | 'verifications' | 'disputes'>('reports')
+  const [activeTab, setActiveTab] = useState<'reports' | 'users' | 'jobs' | 'services' | 'verifications' | 'disputes' | 'courses'>('reports')
   const [isActing, setIsActing] = useState(false)
   const [verificationDrafts, setVerificationDrafts] = useState<Record<string, { reviewNote: string; internalNote: string }>>({})
   const [disputeDrafts, setDisputeDrafts] = useState<Record<string, { resolutionNote: string }>>({})
@@ -160,7 +161,7 @@ export default function AdminDashboard() {
       </div>
 
       <div className="dashboard-actions mb-8">
-        {(['reports', 'users', 'jobs', 'services', 'verifications', 'disputes'] as const).map((tab) => (
+        {(['reports', 'users', 'jobs', 'services', 'verifications', 'disputes', 'courses'] as const).map((tab) => (
           <button key={tab} type="button" onClick={() => setActiveTab(tab)} className={`dashboard-action-chip ${activeTab === tab ? 'border-primary/30 bg-primary/10 text-primary' : ''}`}>{tab.charAt(0).toUpperCase() + tab.slice(1)}</button>
         ))}
       </div>
@@ -390,6 +391,8 @@ export default function AdminDashboard() {
               })}
             </div>
           ) : null}
+
+          {activeTab === 'courses' ? <AdminCoursesPanel /> : null}
 
           {activeTab === 'disputes' ? (
             <div className="space-y-6">

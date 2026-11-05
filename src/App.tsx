@@ -10,7 +10,12 @@ import { useFeatures } from './lib/features'
 const JobListings = lazy(() => import('./pages/JobListings'))
 const JobDetails = lazy(() => import('./pages/JobDetails'))
 const Internships = lazy(() => import('./pages/Internships'))
-const SearchLanding = lazy(() => import('./pages/SearchLanding'))
+const Courses = lazy(() => import('./pages/Courses'))
+const CourseDetail = lazy(() => import('./pages/CourseDetail'))
+const ProviderPage = lazy(() => import('./pages/ProviderPage'))
+const ProviderDashboard = lazy(() => import('./pages/ProviderDashboard'))
+const SlugPage = lazy(() => import('./pages/SlugPage'))
+const CourseCategoryPage = lazy(() => import('./pages/SlugPage').then((module) => ({ default: module.CourseCategoryPage })))
 const CVGenerator = lazy(() => import('./pages/CVGenerator'))
 const Messaging = lazy(() => import('./pages/Messaging'))
 const MyApplications = lazy(() => import('./pages/MyApplications'))
@@ -92,6 +97,11 @@ function App() {
           <Route path="/jobs" element={<JobListings />} />
           <Route path="/jobs-in/:country" element={<JobListings />} />
           <Route path="/internships" element={<Internships />} />
+          <Route path="/courses" element={<Courses />} />
+          <Route path="/courses/category/:category" element={<CourseCategoryPage />} />
+          <Route path="/courses/:slug" element={<CourseDetail />} />
+          <Route path="/providers/:id" element={<ProviderPage />} />
+          <Route path="/provider" element={renderProtected(<ProviderDashboard />)} />
           <Route path="/jobs/:id" element={<JobDetails />} />
           <Route path="/cv-generator" element={renderProtected(<CVGenerator />)} />
           <Route path="/messaging" element={renderProtected(<Messaging />)} />
@@ -112,7 +122,7 @@ function App() {
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/verify-identity" element={renderProtected(<IdentityVerification />)} />
           {/* Search landing pages: /jobs-in-accra, /banking-jobs, /banking-jobs-in-accra, /jobs-by-location */}
-          <Route path="/:slug" element={<SearchLanding />} />
+          <Route path="/:slug" element={<SlugPage />} />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>

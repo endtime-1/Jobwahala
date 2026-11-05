@@ -90,3 +90,23 @@ export const roleMiddleware = (roles: string[]) => {
     next();
   };
 };
+
+/**
+ * Who is making this request, if they are signed in; null for visitors. Never rejects: pages that work for
+ * everyone (and only do a little more for members) use this instead of authMiddleware.
+ */
+export const optionalUser = async (req: Request): Promise<{ id: string; role: string } | null> => {
+  const header = req.header('Authorization');
+  const token = header?.startsWith('Bearer ') ? header.replace('Bearer ', '') : header;
+  if (!token) return null;
+
+  try {
+    const decoded = jwt.verify(token, env.jwtSecret) as { id: string; tokenVersion?: number };
+    const user = await prisma.user.findUnique({ where: { id: decoded.id }, select: { id: true, role: true, status: true, tokenVersion: true } });
+    if (!user || user.status !== 'ACTIVE') return null;
+    if (typeof decoded.tokenVersion === 'number' && decoded.tokenVersion !== user.tokenVersion) return null;
+    return { id: user.id, role: user.role };
+  } catch {
+    return null;
+  }
+};

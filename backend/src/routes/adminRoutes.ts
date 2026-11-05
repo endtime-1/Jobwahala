@@ -19,6 +19,8 @@ import {
 } from '../controllers/adminController';
 import { getVerificationRequests, updateVerificationRequestStatus } from '../controllers/verificationController';
 import { getAdminAuditLog } from '../controllers/adminAuditController';
+import { getCourseQueue, reviewCourse, reviewProvider, setFeatured } from '../controllers/adminCourseController';
+import { courseReviewSchema, featuredSchema, providerReviewSchema } from '../validation/courseSchemas';
 import { authMiddleware, roleMiddleware } from '../middleware/auth';
 import { validate } from '../middleware/validate';
 import {
@@ -63,5 +65,10 @@ router.patch('/services/:id/status', validate(updateAdminServiceStatusSchema), u
 router.patch('/verifications/:id/status', validate(updateVerificationRequestStatusSchema), updateVerificationRequestStatus);
 router.patch('/disputes/:id/status', validate(updateAgreementDisputeStatusSchema), updateAgreementDisputeStatus);
 router.delete('/users/:id', validate(deleteAdminUserSchema), deleteUser);
+
+router.get('/courses/queue', getCourseQueue);
+router.post('/providers/:userId/review', validate(providerReviewSchema), reviewProvider);
+router.post('/courses/:id/review', validate(courseReviewSchema), reviewCourse);
+router.post('/courses/:id/featured', validate(featuredSchema), setFeatured);
 
 export default router;

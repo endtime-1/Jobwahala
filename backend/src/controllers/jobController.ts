@@ -540,14 +540,31 @@ export const getJobApplicants = async (req: AuthRequest, res: Response) => {
           }
         },
         seeker: {
-          select: { id: true, email: true, jobSeekerProfile: true }
+          select: {
+            id: true,
+            email: true,
+            jobSeekerProfile: true,
+            // Courses the applicant says they completed; "verified" means the provider confirmed it.
+            learnerCourses: {
+              orderBy: { completedOn: 'desc' },
+              take: 10,
+              select: { id: true, title: true, providerName: true, completedOn: true, certificateUrl: true, status: true },
+            },
+          }
         },
         // The employer's private notes and rating. Only this route (job owner) ever returns it.
         review: { select: { rating: true, note: true, updatedAt: true } }
       }
     });
 
-    const rankedApplications = mapRankedApplications(applications, job);
+    const withCourses = applications.map((application) => ({
+      ...application,
+      seeker: {
+        ...application.seeker,
+        learnerCourses: (application.seeker.learnerCourses ?? []).map(({ status, ...course }) => ({ ...course, verified: status === 'CONFIRMED' })),
+      },
+    }));
+    const rankedApplications = mapRankedApplications(withCourses, job);
 
     res.json({ success: true, applications: rankedApplications });
   } catch (error) {

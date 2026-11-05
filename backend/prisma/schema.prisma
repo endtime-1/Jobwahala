@@ -25,6 +25,10 @@ model User {
   updatedAt     DateTime @updatedAt
 
   jobSeekerProfile   JobSeekerProfile?
+  // Courses: as a training provider, as a learner, and enquiries made.
+  courses             Course[] @relation("ProviderCourses")
+  learnerCourses      LearnerCourse[] @relation("LearnerCourses")
+  courseEnquiries     CourseEnquiry[] @relation("CourseEnquiries")
   employerProfile    EmployerProfile?
   freelancerProfile  FreelancerProfile?
 
@@ -99,6 +103,11 @@ model EmployerProfile {
   // How quickly this employer first responds to applicants (a running average, kept up to date as they respond).
   avgResponseHours Float?
   responseCount    Int     @default(0)
+  // A company that also runs courses. The admin approves it before its courses can be public.
+  isTrainingProvider Boolean @default(false)
+  providerStatus     String  @default("NONE") // NONE, PENDING, APPROVED, REJECTED
+  providerReviewNote String?
+  providerReviewedAt DateTime?
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
@@ -786,4 +795,118 @@ model ApplicationReview {
   application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 
   @@index([employerId])
+}
+
+// ---------------------------------------------------------------- Courses (a marketplace for training providers)
+
+// A training provider's listing. Public only when status is ACTIVE, reviewStatus is APPROVED and the provider is approved.
+model Course {
+  id          String   @id @default(uuid())
+  providerId  String
+  slug        String   @unique
+  title       String
+  summary     String
+  description String
+  category    String
+  level       String   @default("ALL") // BEGINNER, INTERMEDIATE, ADVANCED, ALL
+  isFree      Boolean  @default(false)
+  priceGhs    Int?
+  durationWeeks Int?
+  format      String   @default("ONLINE") // ONLINE, IN_PERSON, HYBRID
+  location    String?
+  startDatesJson String @default("[]") // ["2026-12-01", ...]
+  rollingStart Boolean @default(false)
+  certificateOffered Boolean @default(false)
+  enrolUrl    String?
+  enquiryEnabled Boolean @default(true)
+  status      String   @default("ACTIVE") // the provider's own switch: ACTIVE, PAUSED, REMOVED
+  reviewStatus String  @default("PENDING") // admin: PENDING, APPROVED, REJECTED, REMOVED
+  reviewNote  String?
+  reviewedAt  DateTime?
+  featuredFrom  DateTime?
+  featuredUntil DateTime?
+  // Room for hosted lessons later. Not used yet.
+  videoProvider String?
+  videoRef      String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  provider  User             @relation("ProviderCourses", fields: [providerId], references: [id], onDelete: Cascade)
+  skills    CourseSkill[]
+  events    CourseEvent[]
+  enquiries CourseEnquiry[]
+  learners  LearnerCourse[]
+
+  @@index([providerId])
+  @@index([status, reviewStatus])
+  @@index([category])
+  @@index([featuredUntil])
+}
+
+// A skill the course teaches (from the shared skills list).
+model CourseSkill {
+  id       String @id @default(uuid())
+  courseId String
+  skill    String
+
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, skill])
+  @@index([skill])
+}
+
+// Views, clicks to the enrolment link and enquiries, per course. This is what providers are billed from, so each
+// visitor counts once per day (visitorHash is a keyed hash that includes the day; it cannot be turned back into an IP).
+model CourseEvent {
+  id          String   @id @default(uuid())
+  courseId    String
+  type        String   // VIEW, CLICK, ENQUIRY
+  visitorHash String
+  createdAt   DateTime @default(now())
+
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, type, visitorHash])
+  @@index([courseId, type, createdAt])
+}
+
+model CourseEnquiry {
+  id        String   @id @default(uuid())
+  courseId  String
+  userId    String?
+  name      String
+  email     String?
+  phone     String?
+  message   String
+  status    String   @default("NEW") // NEW, READ
+  createdAt DateTime @default(now())
+
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user   User?  @relation("CourseEnquiries", fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([courseId, createdAt])
+  @@index([userId])
+}
+
+// A course a learner says they completed. With a courseId it can be confirmed by that course's provider.
+model LearnerCourse {
+  id            String    @id @default(uuid())
+  userId        String
+  courseId      String?
+  title         String
+  providerName  String?
+  completedOn   DateTime?
+  certificateUrl String?
+  status        String    @default("SELF") // SELF, REQUESTED, CONFIRMED, DECLINED
+  confirmedAt   DateTime?
+  confirmedById String?
+  decisionNote  String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  user   User    @relation("LearnerCourses", fields: [userId], references: [id], onDelete: Cascade)
+  course Course? @relation(fields: [courseId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([courseId, status])
 }

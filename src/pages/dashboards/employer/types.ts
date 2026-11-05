@@ -101,6 +101,7 @@ export type JobApplicant = {
   seeker: {
     id: string
     email: string
+    learnerCourses?: Array<{ id: string; title: string; providerName: string | null; completedOn: string | null; certificateUrl: string | null; verified: boolean }>
     jobSeekerProfile?: {
       firstName?: string | null
       lastName?: string | null

@@ -6,6 +6,7 @@ import AddPhonePanel from '../../components/AddPhonePanel'
 import CvManager from '../../components/CvManager'
 import EarlyCareerProfile from '../../components/EarlyCareerProfile'
 import WhatsAppChannels from '../../components/WhatsAppChannels'
+import MyLearningPanel from '../../components/MyLearningPanel'
 import CompanyLogo from '../../components/CompanyLogo'
 import VerificationPanel from '../../components/VerificationPanel'
 import { Link } from 'react-router-dom'
@@ -381,6 +382,8 @@ export default function SeekerDashboard() {
             <EarlyCareerProfile />
 
             <CvManager />
+
+            <MyLearningPanel />
 
             <AddPhonePanel />
 

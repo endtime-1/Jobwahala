@@ -249,6 +249,8 @@ describe('deleting an account', () => {
       ['savedJob', 'deleteMany'], // bookmarked jobs
       ['seekerCv', 'deleteMany'], // saved CV files
       ['applicationReview', 'deleteMany'], // private employer notes by or about the member
+      ['learnerCourse', 'deleteMany'], // courses the member says they completed
+      ['courseEnquiry', 'deleteMany'], // enquiries they sent, or received as a provider
       ['notification', 'deleteMany'],
       ['emailVerificationToken', 'deleteMany'],
       ['passwordResetToken', 'deleteMany'],

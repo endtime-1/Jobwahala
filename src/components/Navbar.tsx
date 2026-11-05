@@ -34,6 +34,7 @@ type NavLinkItem = {
 const seekerLinks: NavLinkItem[] = [
   { name: 'Browse Jobs', href: '/jobs', icon: <Briefcase className="h-4 w-4" /> },
   { name: 'Internships & NSS', href: '/internships', icon: <GraduationCap className="h-4 w-4" /> },
+  { name: 'Courses', href: '/courses', icon: <BookOpen className="h-4 w-4" /> },
   { name: 'My applications', href: '/applications', icon: <FileCheck className="h-4 w-4" /> },
   { name: 'Saved jobs', href: '/saved-jobs', icon: <Bookmark className="h-4 w-4" /> },
   { name: 'Dashboard', href: '/dashboard', icon: <Rocket className="h-4 w-4" /> },
@@ -48,6 +49,7 @@ const seekerLinks: NavLinkItem[] = [
 const employerLinks: NavLinkItem[] = [
   { name: 'Browse Jobs', href: '/jobs', icon: <Briefcase className="h-4 w-4" /> },
   { name: 'Internships & NSS', href: '/internships', icon: <GraduationCap className="h-4 w-4" /> },
+  { name: 'Courses', href: '/courses', icon: <BookOpen className="h-4 w-4" /> },
   { name: 'Find Talent', href: '/freelancers', icon: <Users className="h-4 w-4" /> },
   { name: 'Dashboard', href: '/dashboard', icon: <Rocket className="h-4 w-4" /> },
   { name: 'Proposals', href: '/proposals', icon: <Handshake className="h-4 w-4" /> },
@@ -59,6 +61,7 @@ const employerLinks: NavLinkItem[] = [
 const freelancerLinks: NavLinkItem[] = [
   { name: 'Browse Jobs', href: '/jobs', icon: <Briefcase className="h-4 w-4" /> },
   { name: 'Internships & NSS', href: '/internships', icon: <GraduationCap className="h-4 w-4" /> },
+  { name: 'Courses', href: '/courses', icon: <BookOpen className="h-4 w-4" /> },
   { name: 'Marketplace', href: '/freelancers', icon: <Users className="h-4 w-4" /> },
   { name: 'Dashboard', href: '/dashboard', icon: <Rocket className="h-4 w-4" /> },
   { name: 'Proposals', href: '/proposals', icon: <Handshake className="h-4 w-4" /> },
@@ -71,12 +74,14 @@ const adminLinks: NavLinkItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: <ShieldCheck className="h-4 w-4" /> },
   { name: 'Browse Jobs', href: '/jobs', icon: <Briefcase className="h-4 w-4" /> },
   { name: 'Internships & NSS', href: '/internships', icon: <GraduationCap className="h-4 w-4" /> },
+  { name: 'Courses', href: '/courses', icon: <BookOpen className="h-4 w-4" /> },
   { name: 'Freelancers', href: '/freelancers', icon: <Users className="h-4 w-4" /> },
 ]
 
 const guestLinks: NavLinkItem[] = [
   { name: 'Browse Jobs', href: '/jobs', icon: <Briefcase className="h-4 w-4" /> },
   { name: 'Internships & NSS', href: '/internships', icon: <GraduationCap className="h-4 w-4" /> },
+  { name: 'Courses', href: '/courses', icon: <BookOpen className="h-4 w-4" /> },
   { name: 'Resources', href: '/blog', icon: <BookOpen className="h-4 w-4" /> },
 ]
 

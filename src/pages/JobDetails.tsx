@@ -11,6 +11,7 @@ import { apiApplyForJob, apiDeleteApplication, apiGetJobApplicationCoaching, api
 import { emailHandle, formatRelativeTime } from '../lib/display'
 import { closingSummary } from '../lib/jobLifecycle'
 import EarlyCareerChips from '../components/EarlyCareerChips'
+import CoursesForJob from '../components/CoursesForJob'
 import { isEarlyCareerType } from '../lib/earlyCareer'
 import CvChoice, { type CvChoiceValue } from '../components/CvChoice'
 import {
@@ -321,6 +322,8 @@ export default function JobDetails() {
               <h2 className="text-2xl font-black tracking-tight text-text-main">About this job</h2>
               <p className="mt-4 whitespace-pre-line text-lg font-medium leading-relaxed text-text-main">{job.description}</p>
             </section>
+
+            <CoursesForJob jobId={job.id} />
 
             <section className="rounded-2xl border border-surface-border bg-white p-6 sm:p-8">
               <h2 className="text-2xl font-black tracking-tight text-text-main">The job at a glance</h2>

@@ -10,6 +10,7 @@ const footerColumns = [
     links: [
       ['Browse jobs', '/jobs'],
       ['Internships & NSS', '/internships'],
+      ['Courses and training', '/courses'],
       ['Freelance gigs (coming soon)', '/#freelance-gigs'],
       ['My applications', '/applications'],
       ['Saved jobs', '/saved-jobs'],

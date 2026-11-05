@@ -1016,3 +1016,80 @@ export const apiDeleteAdminUser = (id: string) =>
     method: 'DELETE',
     headers: headers(true),
   }).then(handleResponse);
+
+// ---------------------------------------------------------------- Courses
+
+export const apiListCourses = (params: Record<string, string> = {}) => {
+  const query = new URLSearchParams(params).toString();
+  return fetch(`${BASE_URL}/courses${query ? `?${query}` : ''}`, { headers: headers() }).then(handleResponse);
+};
+
+export const apiGetCourse = async (slug: string) => {
+  const res = await fetch(`${BASE_URL}/courses/${encodeURIComponent(slug)}`, { headers: headers() });
+  if (res.status === 404) throw Object.assign(new Error('Course not found'), { status: 404 });
+  return handleResponse(res);
+};
+
+export const apiGetCourseLanding = async (kind: 'category' | 'skill', slug: string) => {
+  const res = await fetch(`${BASE_URL}/courses/landing/${kind}/${encodeURIComponent(slug)}`);
+  if (res.status === 404) throw Object.assign(new Error('Page not found'), { status: 404 });
+  return handleResponse(res);
+};
+
+export const apiGetProviderPage = async (id: string) => {
+  const res = await fetch(`${BASE_URL}/courses/providers/${encodeURIComponent(id)}`);
+  if (res.status === 404) throw Object.assign(new Error('Provider not found'), { status: 404 });
+  return handleResponse(res);
+};
+
+export const apiCoursesForJob = (jobId: string) => fetch(`${BASE_URL}/courses/for-job/${encodeURIComponent(jobId)}`).then(handleResponse);
+
+/** A view of a course page, or a click on its enrolment link. Fire and forget: it must never get in the way of the page. */
+export const apiTrackCourseEvent = (courseId: string, type: 'VIEW' | 'CLICK') =>
+  fetch(`${BASE_URL}/courses/${encodeURIComponent(courseId)}/events`, {
+    method: 'POST',
+    headers: headers(true),
+    body: JSON.stringify({ type }),
+    keepalive: true,
+  }).catch(() => undefined);
+
+export const apiCreateCourseEnquiry = (courseId: string, data: { name: string; email?: string; phone?: string; message: string }, captchaToken?: string) =>
+  fetch(`${BASE_URL}/courses/${encodeURIComponent(courseId)}/enquiries`, {
+    method: 'POST',
+    headers: headers(true),
+    body: JSON.stringify({ ...data, ...(captchaToken ? { captchaToken } : {}) }),
+  }).then(handleResponse);
+
+// Providers
+export const apiGetProviderStatus = () => fetch(`${BASE_URL}/provider/me`, { headers: headers(true) }).then(handleResponse);
+export const apiEnableProvider = () => fetch(`${BASE_URL}/provider/enable`, { method: 'POST', headers: headers(true) }).then(handleResponse);
+export const apiListMyCourses = () => fetch(`${BASE_URL}/provider/courses`, { headers: headers(true) }).then(handleResponse);
+export const apiCreateCourse = (data: Record<string, unknown>) =>
+  fetch(`${BASE_URL}/provider/courses`, { method: 'POST', headers: headers(true), body: JSON.stringify(data) }).then(handleResponse);
+export const apiUpdateCourse = (id: string, data: Record<string, unknown>) =>
+  fetch(`${BASE_URL}/provider/courses/${id}`, { method: 'PUT', headers: headers(true), body: JSON.stringify(data) }).then(handleResponse);
+export const apiPauseCourse = (id: string) => fetch(`${BASE_URL}/provider/courses/${id}/pause`, { method: 'POST', headers: headers(true) }).then(handleResponse);
+export const apiResumeCourse = (id: string) => fetch(`${BASE_URL}/provider/courses/${id}/resume`, { method: 'POST', headers: headers(true) }).then(handleResponse);
+export const apiRemoveCourse = (id: string) => fetch(`${BASE_URL}/provider/courses/${id}`, { method: 'DELETE', headers: headers(true) }).then(handleResponse);
+export const apiListCourseEnquiries = () => fetch(`${BASE_URL}/provider/enquiries`, { headers: headers(true) }).then(handleResponse);
+export const apiMarkCourseEnquiryRead = (id: string) => fetch(`${BASE_URL}/provider/enquiries/${id}/read`, { method: 'POST', headers: headers(true) }).then(handleResponse);
+export const apiListCompletionRequests = () => fetch(`${BASE_URL}/provider/completions`, { headers: headers(true) }).then(handleResponse);
+export const apiDecideCompletion = (id: string, decision: 'CONFIRM' | 'DECLINE', note?: string) =>
+  fetch(`${BASE_URL}/provider/completions/${id}`, { method: 'POST', headers: headers(true), body: JSON.stringify({ decision, ...(note ? { note } : {}) }) }).then(handleResponse);
+
+// Learners
+export const apiListLearnerCourses = () => fetch(`${BASE_URL}/learner/courses`, { headers: headers(true) }).then(handleResponse);
+export const apiAddLearnerCourse = (data: { courseId?: string; title?: string; providerName?: string; completedOn?: string; certificateUrl?: string }) =>
+  fetch(`${BASE_URL}/learner/courses`, { method: 'POST', headers: headers(true), body: JSON.stringify(data) }).then(handleResponse);
+export const apiRemoveLearnerCourse = (id: string) => fetch(`${BASE_URL}/learner/courses/${id}`, { method: 'DELETE', headers: headers(true) }).then(handleResponse);
+export const apiRequestCourseConfirmation = (id: string) =>
+  fetch(`${BASE_URL}/learner/courses/${id}/request-confirmation`, { method: 'POST', headers: headers(true) }).then(handleResponse);
+
+// Admin
+export const apiGetCourseQueue = () => fetch(`${BASE_URL}/admin/courses/queue`, { headers: headers(true) }).then(handleResponse);
+export const apiReviewCourseProvider = (userId: string, decision: 'APPROVE' | 'REJECT', reason?: string) =>
+  fetch(`${BASE_URL}/admin/providers/${userId}/review`, { method: 'POST', headers: headers(true), body: JSON.stringify({ decision, ...(reason ? { reason } : {}) }) }).then(handleResponse);
+export const apiReviewCourse = (id: string, decision: 'APPROVE' | 'REJECT' | 'REMOVE', reason?: string) =>
+  fetch(`${BASE_URL}/admin/courses/${id}/review`, { method: 'POST', headers: headers(true), body: JSON.stringify({ decision, ...(reason ? { reason } : {}) }) }).then(handleResponse);
+export const apiSetCourseFeatured = (id: string, days: number) =>
+  fetch(`${BASE_URL}/admin/courses/${id}/featured`, { method: 'POST', headers: headers(true), body: JSON.stringify({ days }) }).then(handleResponse);

@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const prismaMock = vi.hoisted(() => ({ job: { findMany: vi.fn() } }));
+const prismaMock = vi.hoisted(() => ({ job: { findMany: vi.fn() }, course: { findMany: vi.fn() } }));
 vi.mock('../../config/prisma', () => ({ default: prismaMock }));
 
 import {
@@ -418,6 +418,8 @@ describe('serving the pages', () => {
   beforeEach(() => {
     resetLandingCache();
     prismaMock.job.findMany.mockReset();
+    prismaMock.course.findMany.mockReset();
+    prismaMock.course.findMany.mockResolvedValue([]);
     prismaMock.job.findMany.mockResolvedValue([...rows(3, 'Accra'), ...rows(2, 'Tamale')]);
   });
 
