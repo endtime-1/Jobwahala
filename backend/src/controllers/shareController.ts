@@ -8,6 +8,8 @@ import { renderFreelancerSharePage, renderSharePageNotFound } from '../utils/sha
 import { renderJobListPage, renderJobPage, type SeoJob } from '../utils/seoPages';
 import { EARLY_CAREER_TYPES } from '../utils/earlyCareer';
 import { publicJobWhere } from '../utils/jobLifecycle';
+import { buildLandingIndex, buildLandingPage, landingSitemapPaths, type LandingIndex, type LandingJob } from '../utils/landingPages';
+import { renderLandingNotFound, renderLandingPage } from '../utils/landingRender';
 import { siteCopy } from '../content/siteCopy';
 import {
   buildSitemapXml,
@@ -153,6 +155,7 @@ export const getSitemap = async (req: Request, res: Response) => {
     const entries: SitemapEntry[] = [
       ...staticSitemapPaths,
       ...countryEntries(),
+      ...landingSitemapPaths(await loadLandingIndex()).map((path) => ({ path, changeFrequency: 'daily' as const, priority: 0.6 })),
       ...jobs.map((job) => ({
         path: `/jobs/${job.id}`,
         lastModified: job.updatedAt,
@@ -264,5 +267,81 @@ export const getJobListSharePage = async (req: Request, res: Response) => {
   } catch (error) {
     logger.error('job_list_share_page_error', { error: getErrorMessage(error) });
     return res.status(500).type('html').send(renderSharePageNotFound(siteUrl));
+  }
+};
+
+// Landing pages are made from the live jobs. Building them is cheap but not free, so a short-lived copy is shared.
+const LANDING_CACHE_MS = 2 * 60 * 1000;
+let landingCache: { at: number; index: LandingIndex } | null = null;
+
+export const resetLandingCache = () => {
+  landingCache = null;
+};
+
+export const loadLandingIndex = async (): Promise<LandingIndex> => {
+  if (landingCache && Date.now() - landingCache.at < LANDING_CACHE_MS) return landingCache.index;
+
+  const rows = await prisma.job.findMany({
+    where: publicJobWhere(),
+    select: {
+      id: true,
+      title: true,
+      location: true,
+      type: true,
+      category: true,
+      salary: true,
+      salaryMin: true,
+      createdAt: true,
+      employer: { select: { employerProfile: { select: { companyName: true } } } },
+    },
+    orderBy: { createdAt: 'desc' },
+    take: 5000,
+  });
+
+  const jobs: LandingJob[] = rows.map((row) => ({
+    id: row.id,
+    title: row.title,
+    location: row.location,
+    type: row.type,
+    category: row.category,
+    salary: row.salary,
+    salaryMin: row.salaryMin,
+    createdAt: row.createdAt,
+    employerName: row.employer.employerProfile?.companyName || 'A company on JobWahala',
+  }));
+
+  const index = buildLandingIndex(jobs);
+  landingCache = { at: Date.now(), index };
+  return index;
+};
+
+/** The page for crawlers: /jobs-in-accra, /banking-jobs, /banking-jobs-in-accra, /jobs-by-location ... */
+export const getLandingSharePage = async (req: Request, res: Response) => {
+  const siteUrl = publicSiteUrl(req);
+
+  try {
+    const page = buildLandingPage(singleValue(req.params.slug) || '', await loadLandingIndex());
+    if (!page) return res.status(404).type('html').send(renderLandingNotFound(siteUrl));
+
+    res.type('html');
+    res.set('Cache-Control', 'public, max-age=300');
+    return res.send(renderLandingPage(page, siteUrl));
+  } catch (error) {
+    logger.error('landing_page_error', { error: getErrorMessage(error) });
+    return res.status(500).type('html').send(renderLandingNotFound(siteUrl));
+  }
+};
+
+/** The same page as data, for the web app. */
+export const getLandingJson = async (req: Request, res: Response) => {
+  try {
+    const page = buildLandingPage(singleValue(req.params.slug) || '', await loadLandingIndex());
+    if (!page) return res.status(404).json({ success: false, message: 'Page not found' });
+
+    res.set('Cache-Control', 'public, max-age=300');
+    return res.json({ success: true, page });
+  } catch (error) {
+    logger.error('landing_page_error', { error: getErrorMessage(error) });
+    return res.status(500).json({ success: false, message: 'Unable to load this page right now' });
   }
 };

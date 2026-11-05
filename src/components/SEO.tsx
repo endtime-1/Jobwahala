@@ -7,6 +7,8 @@ interface SEOProps {
   ogImage?: string
   ogType?: 'website' | 'article' | 'profile'
   keywords?: string
+  /** Ask search engines to leave this page out of their results. */
+  noindex?: boolean
 }
 
 export default function SEO({
@@ -15,7 +17,8 @@ export default function SEO({
   canonical = 'https://jobwahala.com',
   ogImage = 'https://jobwahala.com/og-image.jpg',
   ogType = 'website',
-  keywords = 'jobs in africa, jobs in ghana, remote work africa, post a job free, verified employers, jobwahala'
+  keywords = 'jobs in africa, jobs in ghana, remote work africa, post a job free, verified employers, jobwahala',
+  noindex = false,
 }: SEOProps) {
   const siteTitle = 'JobWahala'
   const fullTitle = title ? `${title} | ${siteTitle}` : `${siteTitle} — Real jobs across Africa`
@@ -27,6 +30,7 @@ export default function SEO({
       <meta name="description" content={description} />
       <meta name="keywords" content={keywords} />
       <link rel="canonical" href={canonical} />
+      {noindex ? <meta name="robots" content="noindex, follow" /> : null}
 
       {/* Open Graph / Facebook */}
       <meta property="og:type" content={ogType} />

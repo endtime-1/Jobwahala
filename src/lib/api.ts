@@ -216,6 +216,13 @@ export const apiGetJobs = (params?: Record<string, string>) => {
   return fetch(`${BASE_URL}/jobs${query}`, { headers: headers() }).then(handleResponse);
 };
 
+// A search landing page ("jobs-in-accra", "banking-jobs"...). A missing page is reported with status 404.
+export const apiGetLandingPage = async (slug: string) => {
+  const res = await fetch(`${BASE_URL}/share/seo-json/${encodeURIComponent(slug)}`);
+  if (res.status === 404) throw Object.assign(new Error('Page not found'), { status: 404 });
+  return handleResponse(res);
+};
+
 export const apiGetJobById = (id: string) =>
   fetch(`${BASE_URL}/jobs/${id}`, { headers: headers() }).then(handleResponse);
 

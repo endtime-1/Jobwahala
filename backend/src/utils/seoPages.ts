@@ -151,16 +151,18 @@ type PageShell = {
   siteUrl: string;
   ogType?: string;
   jsonLd?: unknown;
+  /** Tells search engines to leave the page out of their results. */
+  noindex?: boolean;
   body: string;
 };
 
-const renderShell = ({ title, description, url, siteUrl, ogType = 'website', jsonLd, body }: PageShell) => `<!doctype html>
+export const renderShell = ({ title, description, url, siteUrl, ogType = 'website', jsonLd, noindex = false, body }: PageShell) => `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <title>${e(title)} | JobWahala</title>
 <meta name="description" content="${e(description)}">
-<link rel="canonical" href="${e(url)}">
+${noindex ? '<meta name="robots" content="noindex, follow">\n' : ''}<link rel="canonical" href="${e(url)}">
 <meta property="og:site_name" content="JobWahala">
 <meta property="og:type" content="${e(ogType)}">
 <meta property="og:title" content="${e(title)}">

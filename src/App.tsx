@@ -9,6 +9,7 @@ import { useFeatures } from './lib/features'
 const JobListings = lazy(() => import('./pages/JobListings'))
 const JobDetails = lazy(() => import('./pages/JobDetails'))
 const Internships = lazy(() => import('./pages/Internships'))
+const SearchLanding = lazy(() => import('./pages/SearchLanding'))
 const CVGenerator = lazy(() => import('./pages/CVGenerator'))
 const Messaging = lazy(() => import('./pages/Messaging'))
 const MyApplications = lazy(() => import('./pages/MyApplications'))
@@ -108,6 +109,8 @@ function App() {
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/verify-identity" element={renderProtected(<IdentityVerification />)} />
+          {/* Search landing pages: /jobs-in-accra, /banking-jobs, /banking-jobs-in-accra, /jobs-by-location */}
+          <Route path="/:slug" element={<SearchLanding />} />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>

@@ -18,6 +18,20 @@ const footerColumns = [
     ],
   },
   {
+    title: 'Find jobs',
+    links: [
+      ['Jobs by location', '/jobs-by-location'],
+      ['Jobs by category', '/jobs-by-category'],
+      ['Jobs in Accra', '/jobs-in-accra'],
+      ['Jobs in Kumasi', '/jobs-in-kumasi'],
+      ['Remote jobs', '/remote-jobs'],
+      ['Part-time jobs', '/part-time-jobs'],
+      ['Internships', '/internship-jobs'],
+      ['National Service (NSS)', '/nss-jobs'],
+      ['Fresher jobs', '/fresher-jobs'],
+    ],
+  },
+  {
     title: 'For employers',
     links: [
       ['Post a job', '/onboarding?role=employer'],
@@ -74,7 +88,7 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-12 grid grid-cols-2 gap-10 lg:grid-cols-[1.3fr_repeat(3,1fr)]">
+        <div className="mt-12 grid grid-cols-2 gap-10 lg:grid-cols-[1.3fr_repeat(4,1fr)]">
           <div className="col-span-2 max-w-sm lg:col-span-1">
             <Link to="/" className="inline-flex">
               <Logo tone="dark" size={40} />
