@@ -105,7 +105,7 @@ export default function EmployerDashboard() {
               <h1 className="text-4xl font-black leading-tight tracking-tighter text-text-main md:text-5xl">
                 Recruitment <span className="text-primary italic">Hub</span>
               </h1>
-              <VerifiedBadge type="employer" />
+              <VerifiedBadge type="employer" status={verification?.isVerified ? 'APPROVED' : 'UNVERIFIED'} hideWhenUnverified />
             </div>
             <p className="text-base font-medium tracking-tight text-text-muted md:text-lg">
               Live employer dashboard powered by your jobs, applicants, and hiring decisions.

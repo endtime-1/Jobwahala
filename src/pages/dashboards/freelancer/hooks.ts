@@ -38,7 +38,7 @@ export function useFreelancerDashboard() {
   return useQuery({
     queryKey: ['freelancer', 'dashboard'],
     queryFn: async () => {
-      const [data, requestsData] = await Promise.all([apiGetDashboard(), apiGetReceivedServiceRequests()])
+      const [data, requestsData] = await Promise.all([apiGetDashboard(), Promise.resolve().then(() => apiGetReceivedServiceRequests()).catch(() => ({ requests: [] }))])
       return {
         services: (data.services || []) as ServiceRecord[],
         recentMessages: (data.recentMessages || []) as RecentMessage[],

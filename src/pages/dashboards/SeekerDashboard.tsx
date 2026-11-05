@@ -115,7 +115,7 @@ export default function SeekerDashboard() {
             <div className="dashboard-kicker mb-4"><CheckCircle className="h-3.5 w-3.5" /> Seeker workspace</div>
             <div className="mb-3 flex items-center gap-4">
               <h1 className="text-4xl font-black leading-tight tracking-tighter text-text-main md:text-5xl">Hello, {userName}</h1>
-              <VerifiedBadge type="seeker" />
+              <VerifiedBadge type="seeker" status={data?.verification?.isVerified ? 'APPROVED' : 'UNVERIFIED'} hideWhenUnverified />
             </div>
             <p className="text-base font-medium tracking-tight text-text-muted md:text-lg">Live dashboard data from your recent applications, messages, and CV history.</p>
             <div className="dashboard-actions">

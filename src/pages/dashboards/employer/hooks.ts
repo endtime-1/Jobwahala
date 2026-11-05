@@ -28,7 +28,7 @@ export function useEmployerDashboard() {
     queryFn: async () => {
       const [data, requestsData] = await Promise.all([
         apiGetDashboard(),
-        apiGetSentServiceRequests(),
+        Promise.resolve().then(() => apiGetSentServiceRequests()).catch(() => ({ requests: [] })),
       ])
 
       return {

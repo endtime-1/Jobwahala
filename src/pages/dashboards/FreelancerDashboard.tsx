@@ -132,7 +132,7 @@ export default function FreelancerDashboard() {
             <div className="dashboard-kicker mb-4"><Star className="h-3.5 w-3.5" /> Freelancer workspace</div>
             <div className="mb-3 flex items-center gap-4">
               <h1 className="text-4xl font-black leading-tight tracking-tighter text-text-main md:text-5xl">Freelancer <span className="text-primary italic">Console</span></h1>
-              <VerifiedBadge type="freelancer" />
+              <VerifiedBadge type="freelancer" status={data?.verification?.isVerified ? 'APPROVED' : 'UNVERIFIED'} hideWhenUnverified />
             </div>
             <p className="text-base font-medium tracking-tight text-text-muted md:text-lg">Live overview of your services, profile strength, and conversation activity.</p>
             <div className="dashboard-actions">

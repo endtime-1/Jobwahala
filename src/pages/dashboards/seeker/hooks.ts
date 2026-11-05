@@ -48,7 +48,7 @@ export function useSeekerDashboard() {
   return useQuery({
     queryKey: ['seeker', 'dashboard'],
     queryFn: async () => {
-      const [data, requestsData] = await Promise.all([apiGetDashboard(), apiGetSentServiceRequests()])
+      const [data, requestsData] = await Promise.all([apiGetDashboard(), Promise.resolve().then(() => apiGetSentServiceRequests()).catch(() => ({ requests: [] }))])
       return {
         applications: (data.applications || []) as SeekerApplication[],
         recommendedJobs: (data.recommendedJobs || []) as RecommendedJob[],
