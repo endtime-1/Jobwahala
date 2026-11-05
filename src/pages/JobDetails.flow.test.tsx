@@ -202,3 +202,39 @@ describe('JobDetails closing date', () => {
     expect(await screen.findByTestId('job-closing')).toHaveTextContent(/closes .* \(5 days left\)/i)
   })
 })
+
+describe('JobDetails employer trust label', () => {
+  const load = async (isVerified: boolean) => {
+    useAuthMock.mockReturnValue({ user: null, role: null })
+    apiGetMyJobApplicationMock.mockResolvedValue({ application: null })
+    apiGetJobByIdMock.mockResolvedValue({
+      job: {
+        id: 'job-1',
+        title: 'Frontend Engineer',
+        description: 'Build things.',
+        type: 'Full-time',
+        createdAt: '2026-03-21T00:00:00.000Z',
+        employer: { id: 'employer-1', email: 'employer@example.com', isVerified, employerProfile: { companyName: 'JobWahala Labs' } },
+      },
+    })
+
+    render(
+      <MemoryRouter initialEntries={['/jobs/job-1']}>
+        <Routes>
+          <Route path="/jobs/:id" element={<JobDetails />} />
+        </Routes>
+      </MemoryRouter>,
+    )
+    await screen.findByRole('heading', { name: 'Frontend Engineer' })
+  }
+
+  it('labels a job from an unverified company', async () => {
+    await load(false)
+    expect(screen.getByText('Unverified employer')).toBeInTheDocument()
+  })
+
+  it('does not label a verified company', async () => {
+    await load(true)
+    expect(screen.queryByText('Unverified employer')).not.toBeInTheDocument()
+  })
+})

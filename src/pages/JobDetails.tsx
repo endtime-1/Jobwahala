@@ -4,6 +4,7 @@ import { CalendarClock, MapPin, CheckCircle, ChevronLeft, Send, Clock, Share2, B
 import ReportModal from '../components/ReportModal'
 import CompanyLogo from '../components/CompanyLogo'
 import VerifiedBadge from '../components/VerifiedBadge'
+import UnverifiedEmployerLabel from '../components/UnverifiedEmployerLabel'
 import { apiApplyForJob, apiDeleteApplication, apiGetJobApplicationCoaching, apiGetJobById, apiGetMyJobApplication } from '../lib/api'
 import { emailHandle, formatRelativeTime } from '../lib/display'
 import { closingSummary } from '../lib/jobLifecycle'
@@ -280,6 +281,7 @@ export default function JobDetails() {
                     status={job.employer.isVerified ? 'APPROVED' : 'UNVERIFIED'}
                     hideWhenUnverified
                   />
+                  {job.employer.isVerified ? null : <UnverifiedEmployerLabel className="bg-white/15 text-white" />}
                 </div>
                 <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 text-base font-semibold text-white/80">
                   <Link to={`/companies/${job.employer.id}`} className="inline-flex items-center gap-2 hover:text-gold hover:underline">

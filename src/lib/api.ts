@@ -740,11 +740,21 @@ export const apiGetProfileOptimization = () =>
 export const apiGetMyVerification = () =>
   fetch(`${BASE_URL}/users/verification`, { headers: headers(true) }).then(handleResponse);
 
-export const apiCreateVerificationRequest = (data: { details: string; documentUrl?: string }) =>
+export const apiCreateVerificationRequest = (data: Record<string, string | undefined>) =>
   fetch(`${BASE_URL}/users/verification`, {
     method: 'POST',
     headers: headers(true),
     body: JSON.stringify(data),
+  }).then(handleResponse);
+
+export const apiRequestVerificationCode = (requestId: string) =>
+  fetch(`${BASE_URL}/users/verification/${requestId}/code`, { method: 'POST', headers: headers(true) }).then(handleResponse);
+
+export const apiConfirmVerificationCode = (requestId: string, code: string) =>
+  fetch(`${BASE_URL}/users/verification/${requestId}/confirm`, {
+    method: 'POST',
+    headers: headers(true),
+    body: JSON.stringify({ code }),
   }).then(handleResponse);
 
 export const apiUpdateProfile = (data: Record<string, unknown>) =>

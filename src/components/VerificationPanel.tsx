@@ -4,12 +4,31 @@ import { Link } from 'react-router-dom'
 import VerifiedBadge from './VerifiedBadge'
 import EvidenceUploadField from './EvidenceUploadField'
 import EvidenceLink from './EvidenceLink'
+import BusinessVerificationForm from './BusinessVerificationForm'
+import ContactCodeStep from './ContactCodeStep'
+
+export type VerificationSubmission = {
+  details: string
+  documentUrl?: string
+  registrationNumber?: string
+  contactEmail?: string
+  contactPhone?: string
+  address?: string
+}
+
+type BusinessFields = {
+  registrationNumber?: string | null
+  contactEmail?: string | null
+  contactPhone?: string | null
+  address?: string | null
+  contactVerifiedAt?: string | null
+}
 
 type VerificationState = {
   requiredType?: string | null
   verificationStatus?: string | null
   isVerified?: boolean
-  latestVerificationRequest?: {
+  latestVerificationRequest?: ({
     id?: string
     type?: string
     status?: string
@@ -18,7 +37,7 @@ type VerificationState = {
     reviewNote?: string | null
     reviewedAt?: string | null
     createdAt?: string
-  } | null
+  } & BusinessFields) | null
   verificationHistory?: Array<{
     id?: string
     type?: string
@@ -35,7 +54,9 @@ type VerificationPanelProps = {
   type: 'seeker' | 'employer' | 'freelancer'
   verification?: VerificationState | null
   isSubmitting: boolean
-  onSubmit: (payload: { details: string; documentUrl?: string }) => Promise<void> | void
+  onSubmit: (payload: VerificationSubmission) => Promise<void> | void
+  /** Called after the employer confirms their company email, so the dashboard can reload. */
+  onVerificationChanged?: () => void
 }
 
 const copyForType = {
@@ -45,7 +66,7 @@ const copyForType = {
   },
   employer: {
     title: 'Business Verification',
-    description: 'Verify your company to show candidates that your jobs come from a trusted hiring team.',
+    description: 'Verify your company to earn the Verified employer badge. Your jobs rank above unverified ones and candidates trust them more.',
   },
   freelancer: {
     title: 'Professional Verification',
@@ -58,6 +79,7 @@ export default function VerificationPanel({
   verification,
   isSubmitting,
   onSubmit,
+  onVerificationChanged,
 }: VerificationPanelProps) {
   const [details, setDetails] = useState('')
   const [documentUrl, setDocumentUrl] = useState('')
@@ -140,6 +162,17 @@ export default function VerificationPanel({
               <Link2 className="h-3.5 w-3.5" /> Review linked evidence
             </EvidenceLink>
           ) : null}
+          {type === 'employer' && latestRequest?.contactEmail ? (
+            latestRequest.contactVerifiedAt ? (
+              <p className="mt-3 text-xs font-bold text-success">Company email confirmed: {latestRequest.contactEmail}</p>
+            ) : latestRequest.id ? (
+              <ContactCodeStep
+                requestId={latestRequest.id}
+                email={latestRequest.contactEmail}
+                onConfirmed={() => onVerificationChanged?.()}
+              />
+            ) : null
+          ) : null}
         </div>
       ) : null}
 
@@ -176,7 +209,30 @@ export default function VerificationPanel({
             ) : null}
           </div>
 
-          {isExpanded ? (
+          {isExpanded && type === 'employer' ? (
+            <BusinessVerificationForm
+              initial={{
+                registrationNumber: latestRequest?.registrationNumber ?? '',
+                documentUrl: latestRequest?.documentUrl ?? '',
+                contactEmail: latestRequest?.contactEmail ?? '',
+                contactPhone: latestRequest?.contactPhone ?? '',
+                address: latestRequest?.address ?? '',
+              }}
+              isSubmitting={isSubmitting}
+              onCancel={() => setIsExpanded(false)}
+              onSubmit={async (values) => {
+                await onSubmit({
+                  details: values.details,
+                  documentUrl: values.documentUrl,
+                  registrationNumber: values.registrationNumber,
+                  contactEmail: values.contactEmail,
+                  contactPhone: values.contactPhone || undefined,
+                  address: values.address,
+                })
+                setIsExpanded(false)
+              }}
+            />
+          ) : isExpanded ? (
             <form onSubmit={(event) => void handleSubmit(event)} className="rounded-2xl border border-surface-border bg-white p-4">
               <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.2em] text-text-light">
                 Verification Details

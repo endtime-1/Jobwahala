@@ -240,3 +240,58 @@ export const sendJobAlertEmail = async (
     html,
   });
 };
+
+export const sendVerificationCodeEmail = async (email: string, code: string, company?: string | null) => {
+  const e = escapeHtml;
+
+  const html = wrapHtml(`
+    <div class="header">
+      <h1>${APP_NAME}</h1>
+      <p>Confirm your company email</p>
+    </div>
+    <div class="body">
+      <p>Use this code to confirm this email address${company ? ` for <strong>${e(company)}</strong>` : ''} on ${APP_NAME}:</p>
+      <p style="text-align: center; margin: 28px 0;"><span class="code">${e(code)}</span></p>
+      <p class="muted">The code works for 10 minutes. If you did not ask for it, you can ignore this email.</p>
+    </div>
+    <div class="footer">
+      &copy; ${new Date().getFullYear()} ${APP_NAME}. All rights reserved.
+    </div>
+  `);
+
+  await transporter.sendMail({
+    from: env.smtpFrom,
+    to: email,
+    subject: `${code} is your ${APP_NAME} confirmation code`,
+    html,
+  });
+};
+
+export const sendVerificationDecisionEmail = async (email: string, update: { title: string; message: string }) => {
+  const e = escapeHtml;
+  const url = `${env.frontendBaseUrl}/dashboard`;
+
+  const html = wrapHtml(`
+    <div class="header">
+      <h1>${APP_NAME}</h1>
+      <p>An update on your verification</p>
+    </div>
+    <div class="body">
+      <p style="font-size: 18px; font-weight: 700; margin-bottom: 8px;">${e(update.title)}</p>
+      <p>${e(update.message)}</p>
+      <p style="text-align: center; margin: 32px 0;">
+        <a href="${url}" class="btn">Open my dashboard</a>
+      </p>
+    </div>
+    <div class="footer">
+      &copy; ${new Date().getFullYear()} ${APP_NAME}. All rights reserved.
+    </div>
+  `);
+
+  await transporter.sendMail({
+    from: env.smtpFrom,
+    to: email,
+    subject: update.title,
+    html,
+  });
+};

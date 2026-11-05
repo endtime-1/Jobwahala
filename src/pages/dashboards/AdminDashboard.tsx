@@ -94,7 +94,7 @@ export default function AdminDashboard() {
     const draft = verificationDrafts[id] || { reviewNote: '', internalNote: '' }
     const reviewNote = draft.reviewNote.trim() || undefined
     const internalNote = draft.internalNote.trim() || undefined
-    if (status === 'NEEDS_INFO' && !reviewNote) { setError('A requester-facing note is required.'); return }
+    if ((status === 'NEEDS_INFO' || status === 'REJECTED') && !reviewNote) { setError(status === 'REJECTED' ? 'Give a reason for rejecting. The requester will see it.' : 'Say what more information is needed. The requester will see it.'); return }
     void handleAction(async () => { await apiUpdateAdminVerificationStatus(id, status, reviewNote, internalNote); setVerificationDrafts((c) => { const n = { ...c }; delete n[id]; return n }) })
   }
 
@@ -335,9 +335,29 @@ export default function AdminDashboard() {
                         <p className="text-xl font-black text-text-main">{name}</p>
                         <p className="text-sm font-bold text-text-muted">{v.user.email}</p>
                         <p className="mt-4 text-sm text-text-main leading-relaxed whitespace-pre-wrap">{v.details}</p>
+                        {v.type === 'BUSINESS' ? (
+                          <dl className="mt-4 grid gap-x-6 gap-y-2 rounded-2xl border border-surface-border bg-white px-4 py-4 text-sm sm:grid-cols-2" aria-label="Business details">
+                            <div><dt className="text-[10px] font-black uppercase tracking-[0.2em] text-text-light">Registration number</dt><dd className="font-bold text-text-main">{v.registrationNumber || 'Not provided'}</dd></div>
+                            <div><dt className="text-[10px] font-black uppercase tracking-[0.2em] text-text-light">Address</dt><dd className="font-bold text-text-main">{v.address || 'Not provided'}</dd></div>
+                            <div><dt className="text-[10px] font-black uppercase tracking-[0.2em] text-text-light">Company email</dt><dd className="font-bold text-text-main">{v.contactEmail || 'Not provided'}{v.contactEmail ? (v.contactVerifiedAt ? <span className="ml-2 rounded-full bg-success/15 px-2 py-0.5 text-[10px] font-black uppercase text-success">Confirmed</span> : <span className="ml-2 rounded-full bg-error/10 px-2 py-0.5 text-[10px] font-black uppercase text-error">Not confirmed</span>) : null}</dd></div>
+                            <div><dt className="text-[10px] font-black uppercase tracking-[0.2em] text-text-light">Company phone</dt><dd className="font-bold text-text-main">{v.contactPhone || 'Not provided'}</dd></div>
+                          </dl>
+                        ) : null}
                         {v.documentUrl ? <EvidenceLink href={v.documentUrl} className="mt-4 inline-flex text-[10px] font-black uppercase tracking-[0.2em] text-primary hover:underline">Open evidence</EvidenceLink> : null}
                         {v.reviewNote ? <p className="mt-4 rounded-2xl border border-surface-border bg-white px-4 py-3 text-xs font-semibold text-text-muted">Review note: {v.reviewNote}</p> : null}
                         {v.internalNote ? <p className="mt-3 rounded-2xl border border-secondary/10 bg-secondary/5 px-4 py-3 text-xs font-semibold text-text-muted">Internal note: {v.internalNote}</p> : null}
+                        {v.auditTrail?.length ? (
+                          <div className="mt-4 rounded-2xl border border-surface-border bg-white px-4 py-3" aria-label="Decision log">
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-text-light">Decision log</p>
+                            <ul className="mt-2 space-y-1.5">
+                              {v.auditTrail.map((entry, index) => (
+                                <li key={index} className="text-xs font-semibold text-text-muted">
+                                  <span className="font-black text-text-main">{entry.action.replace('VERIFICATION_', '').replace('_', ' ')}</span> by {entry.adminEmail}, {formatRelativeTime(entry.createdAt)}{entry.reason ? `: ${entry.reason}` : ''}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        ) : null}
                         {v.history?.length ? (
                           <div className="mt-5 rounded-2xl border border-surface-border bg-white px-4 py-4">
                             <div className="flex items-center justify-between gap-3"><p className="text-[10px] font-black uppercase tracking-[0.2em] text-text-light">Previous submissions</p><span className="badge bg-surface-alt text-text-main">{v.submissionCount || v.history.length + 1}</span></div>
@@ -355,14 +375,14 @@ export default function AdminDashboard() {
                         ) : null}
                         {v.status === 'PENDING' ? (
                           <div className="mt-5 grid gap-4 xl:grid-cols-2">
-                            <div><label htmlFor={`vr-note-${v.id}`} className="block text-[10px] font-black uppercase tracking-[0.2em] text-text-light">Requester-facing note</label><textarea id={`vr-note-${v.id}`} value={draft.reviewNote} onChange={(e) => updateVerificationDraft(v.id, 'reviewNote', e.target.value)} className="mt-2 min-h-[110px] w-full rounded-2xl border border-surface-border bg-white px-4 py-3 text-sm text-text-main outline-none focus:border-primary" placeholder="Tell the requester what to improve." /><p className="mt-2 text-[10px] font-semibold text-text-light">Required for NEEDS_INFO.</p></div>
+                            <div><label htmlFor={`vr-note-${v.id}`} className="block text-[10px] font-black uppercase tracking-[0.2em] text-text-light">Requester-facing note</label><textarea id={`vr-note-${v.id}`} value={draft.reviewNote} onChange={(e) => updateVerificationDraft(v.id, 'reviewNote', e.target.value)} className="mt-2 min-h-[110px] w-full rounded-2xl border border-surface-border bg-white px-4 py-3 text-sm text-text-main outline-none focus:border-primary" placeholder="Tell the requester what to improve." /><p className="mt-2 text-[10px] font-semibold text-text-light">Required for Rejected and Needs info.</p></div>
                             <div><label htmlFor={`vi-note-${v.id}`} className="block text-[10px] font-black uppercase tracking-[0.2em] text-text-light">Internal admin note</label><textarea id={`vi-note-${v.id}`} value={draft.internalNote} onChange={(e) => updateVerificationDraft(v.id, 'internalNote', e.target.value)} className="mt-2 min-h-[110px] w-full rounded-2xl border border-surface-border bg-white px-4 py-3 text-sm text-text-main outline-none focus:border-primary" placeholder="Private moderation context." /><p className="mt-2 text-[10px] font-semibold text-text-light">Optional. Admin-only.</p></div>
                           </div>
                         ) : null}
                       </div>
                       <div className="flex flex-wrap items-center gap-3">
                         <span className={`badge ${v.status === 'APPROVED' ? 'bg-success text-white' : v.status === 'REJECTED' ? 'bg-error text-white' : v.status === 'NEEDS_INFO' ? 'bg-secondary text-white' : 'bg-primary text-white'}`}>{v.status}</span>
-                        {verificationStatuses.map((s) => (<button key={s} type="button" disabled={isActing || v.status === s || v.status !== 'PENDING'} onClick={() => handleVerificationAction(v.id, s as any)} className={`rounded-xl px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] transition-all ${v.status === s ? 'bg-primary text-white' : 'bg-white border border-surface-border text-text-muted hover:border-primary hover:text-primary'}`}>{s}</button>))}
+                        {verificationStatuses.map((s) => (<button key={s} type="button" disabled={isActing || v.status === s || v.status !== 'PENDING' || (s === 'APPROVED' && v.type === 'BUSINESS' && !(v.registrationNumber && v.documentUrl && v.address && v.contactVerifiedAt))} onClick={() => handleVerificationAction(v.id, s as any)} className={`rounded-xl px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] transition-all ${v.status === s ? 'bg-primary text-white' : 'bg-white border border-surface-border text-text-muted hover:border-primary hover:text-primary'}`}>{s}</button>))}
                       </div>
                     </div>
                   </div>

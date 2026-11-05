@@ -5,6 +5,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { apiCreateVerificationRequest } from '../../lib/api'
 import { subscribeToRealtimeEvents } from '../../lib/realtime'
 import VerifiedBadge from '../../components/VerifiedBadge'
+import type { VerificationSubmission } from '../../components/VerificationPanel'
 import { useFeatures } from '../../lib/features'
 import VerificationPanel from '../../components/VerificationPanel'
 
@@ -75,7 +76,7 @@ export default function EmployerDashboard() {
     setSelectedJobTitle(jobTitle)
   }
 
-  const handleSubmitVerification = async (payload: { details: string; documentUrl?: string }) => {
+  const handleSubmitVerification = async (payload: VerificationSubmission) => {
     setError('')
     setIsSubmittingVerification(true)
     try {
@@ -212,6 +213,7 @@ export default function EmployerDashboard() {
               verification={verification}
               isSubmitting={isSubmittingVerification}
               onSubmit={handleSubmitVerification}
+              onVerificationChanged={refreshDashboard}
             />
 
             {freelanceEnabled ? <EmployerServiceRequests sentRequests={sentRequests} onRefresh={refreshDashboard} /> : null}

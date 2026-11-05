@@ -1,9 +1,10 @@
-import { Search, MapPin, Clock, ChevronRight, Flag, Sparkles, Briefcase, X } from 'lucide-react'
+import { Search, MapPin, Clock, ChevronRight, Flag, Sparkles, Briefcase, ShieldCheck, X } from 'lucide-react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
 import ReportModal from '../components/ReportModal'
 import CompanyLogo from '../components/CompanyLogo'
 import VerifiedBadge from '../components/VerifiedBadge'
+import UnverifiedEmployerLabel from '../components/UnverifiedEmployerLabel'
 import { apiCompareJobs, apiGetJobs } from '../lib/api'
 import { emailHandle, formatMoney, formatRelativeTime } from '../lib/display'
 import {
@@ -69,6 +70,7 @@ export default function JobListings() {
     return wanted ? [wanted] : jobTypes
   })
   const [selectedLocation, setSelectedLocation] = useState('All of Africa')
+  const [onlyVerified, setOnlyVerified] = useState(() => searchParams.get('verified') === '1')
   const [selectedJobIds, setSelectedJobIds] = useState<string[]>([])
   const [comparison, setComparison] = useState<JobComparisonRecord | null>(null)
   const [comparisonError, setComparisonError] = useState('')
@@ -131,9 +133,11 @@ export default function JobListings() {
         (selectedLocation === 'Remote Only' && isRemoteJob(job.location)) ||
         location.toLowerCase().includes(selectedLocation.toLowerCase())
 
-      return matchesSearch && matchesType && matchesLocation && matchesTown && matchesField
+      const matchesVerified = !onlyVerified || Boolean(job.employer.isVerified)
+
+      return matchesSearch && matchesType && matchesLocation && matchesTown && matchesField && matchesVerified
     })
-  }, [jobs, search, selectedLocation, selectedTypes, town, category])
+  }, [jobs, search, selectedLocation, selectedTypes, town, category, onlyVerified])
 
   const remoteCount = useMemo(
     () => jobs.filter((job) => isRemoteJob(job.location)).length,
@@ -198,6 +202,7 @@ export default function JobListings() {
     Boolean(town.trim()) ||
     Boolean(category.trim()) ||
     selectedLocation !== 'All of Africa' ||
+    onlyVerified ||
     selectedTypes.length !== jobTypes.length
 
   const clearFilters = () => {
@@ -205,6 +210,7 @@ export default function JobListings() {
     setTown('')
     setCategory('')
     setSelectedLocation('All of Africa')
+    setOnlyVerified(false)
     setSelectedTypes(jobTypes)
   }
 
@@ -344,6 +350,18 @@ export default function JobListings() {
                 {type}
               </button>
             ))}
+            <button
+              type="button"
+              onClick={() => setOnlyVerified((value) => !value)}
+              aria-pressed={onlyVerified}
+              className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-bold transition-colors ${
+                onlyVerified
+                  ? 'border-success bg-success/10 text-success'
+                  : 'border-surface-border bg-white text-text-muted hover:border-success/40'
+              }`}
+            >
+              <ShieldCheck className="h-4 w-4" aria-hidden /> Verified employers only
+            </button>
             <div className="ml-auto flex items-center gap-3">
               <p className="text-sm font-bold text-text-main">
                 {filteredJobs.length} {filteredJobs.length === 1 ? 'job' : 'jobs'}
@@ -536,6 +554,7 @@ export default function JobListings() {
                             hideWhenUnverified
                             showText={false}
                           />
+                          {job.employer.isVerified ? null : <UnverifiedEmployerLabel />}
                         </div>
                         <Link
                           to={`/companies/${job.employer.id}`}

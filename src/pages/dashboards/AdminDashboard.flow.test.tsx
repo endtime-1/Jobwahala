@@ -1,6 +1,6 @@
 import { QueryClientProvider } from '@tanstack/react-query'
 import { makeTestQueryClient } from '../../test/queryClient'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import AdminDashboard from './AdminDashboard'
@@ -756,6 +756,11 @@ describe('AdminDashboard moderation flow', () => {
             type: 'BUSINESS',
             status: 'PENDING',
             details: 'Registered hiring company with a public website.',
+            registrationNumber: 'CS123456789',
+            documentUrl: 'https://x/cert.pdf',
+            address: '12 Ring Road, Accra',
+            contactEmail: 'hr@labs.example',
+            contactVerifiedAt: '2026-03-21T01:00:00.000Z',
             createdAt: '2026-03-21T00:00:00.000Z',
             user: {
               id: 'user-2',
@@ -928,6 +933,117 @@ describe('AdminDashboard moderation flow', () => {
       'Please add a clearer public portfolio link.',
       'Flag for manual identity cross-check after resubmission.',
     )
+  })
+
+  describe('business verification review', () => {
+    const businessRequest = (overrides: Record<string, unknown> = {}) => ({
+      id: 'verification-3',
+      type: 'BUSINESS',
+      status: 'PENDING',
+      details: 'Registration number CS123456789.',
+      registrationNumber: 'CS123456789',
+      documentUrl: 'https://x/cert.pdf',
+      address: '12 Ring Road, Accra',
+      contactEmail: 'hr@achiba.example',
+      contactPhone: '+233241234567',
+      contactVerifiedAt: null,
+      createdAt: '2026-03-21T00:00:00.000Z',
+      user: { id: 'user-3', email: 'owner@achiba.example', role: 'EMPLOYER', employerProfile: { companyName: 'Achiba Star Hotel' } },
+      ...overrides,
+    })
+
+    const openVerifications = async () => {
+      render(
+        <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
+          <AdminDashboard />
+        </MemoryRouter></QueryClientProvider>,
+      )
+      fireEvent.click(await screen.findByRole('button', { name: 'Verifications' }))
+      await screen.findByText('Achiba Star Hotel')
+    }
+
+    it('shows the company details and whether the contact is confirmed', async () => {
+      queueLoadAll([{ verifications: [businessRequest()] }])
+
+      await openVerifications()
+
+      const details = within(screen.getByLabelText('Business details'))
+      expect(details.getByText('CS123456789')).toBeInTheDocument()
+      expect(details.getByText('12 Ring Road, Accra')).toBeInTheDocument()
+      expect(details.getByText('hr@achiba.example')).toBeInTheDocument()
+      expect(details.getByText('Not confirmed')).toBeInTheDocument()
+      expect(details.getByText('+233241234567')).toBeInTheDocument()
+    })
+
+    it('cannot approve a company whose contact has not been confirmed, but can ask for more', async () => {
+      queueLoadAll([{ verifications: [businessRequest()] }])
+
+      await openVerifications()
+
+      expect(screen.getByRole('button', { name: 'APPROVED' })).toBeDisabled()
+      expect(screen.getByRole('button', { name: 'NEEDS_INFO' })).toBeEnabled()
+      expect(screen.getByRole('button', { name: 'REJECTED' })).toBeEnabled()
+    })
+
+    it('can approve once the contact is confirmed', async () => {
+      queueLoadAll([{ verifications: [businessRequest({ contactVerifiedAt: '2026-03-21T01:00:00.000Z' })] }])
+
+      await openVerifications()
+
+      expect(screen.getByRole('button', { name: 'APPROVED' })).toBeEnabled()
+      expect(within(screen.getByLabelText('Business details')).getByText('Confirmed')).toBeInTheDocument()
+    })
+
+    it('will not reject without a reason, then rejects with one', async () => {
+      queueLoadAll([{ verifications: [businessRequest()] }, { verifications: [] }])
+      apiUpdateAdminVerificationStatusMock.mockResolvedValue({ verification: { id: 'verification-3', status: 'REJECTED' } })
+
+      await openVerifications()
+      fireEvent.click(screen.getByRole('button', { name: 'REJECTED' }))
+
+      expect(await screen.findByText(/give a reason for rejecting/i)).toBeInTheDocument()
+      expect(apiUpdateAdminVerificationStatusMock).not.toHaveBeenCalled()
+
+      fireEvent.change(screen.getByLabelText('Requester-facing note'), {
+        target: { value: 'The certificate does not match the company name.' },
+      })
+      fireEvent.click(screen.getByRole('button', { name: 'REJECTED' }))
+
+      await waitFor(() =>
+        expect(apiUpdateAdminVerificationStatusMock).toHaveBeenCalledWith(
+          'verification-3',
+          'REJECTED',
+          'The certificate does not match the company name.',
+          undefined,
+        ),
+      )
+    })
+
+    it('shows who decided what, and why', async () => {
+      queueLoadAll([
+        {
+          verifications: [
+            businessRequest({
+              status: 'NEEDS_INFO',
+              auditTrail: [
+                {
+                  action: 'VERIFICATION_NEEDS_INFO',
+                  adminEmail: 'admin@jobwahala.com',
+                  reason: 'Please upload a clearer scan',
+                  createdAt: '2026-03-22T00:00:00.000Z',
+                },
+              ],
+            }),
+          ],
+        },
+      ])
+
+      await openVerifications()
+
+      const log = within(screen.getByLabelText('Decision log'))
+      expect(log.getByText(/admin@jobwahala.com/)).toBeInTheDocument()
+      expect(log.getByText(/Please upload a clearer scan/)).toBeInTheDocument()
+    })
   })
 
   it('resolves a dispute from the disputes tab', async () => {

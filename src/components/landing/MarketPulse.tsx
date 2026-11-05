@@ -1,6 +1,7 @@
 import { ArrowRight, Clock, MapPin } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import CompanyLogo from '../CompanyLogo'
+import UnverifiedEmployerLabel from '../UnverifiedEmployerLabel'
 import { companyOf, logoOf, recentAge, type HiringCompany, type LandingCounts, type LandingJob } from './types'
 
 type MarketPulseProps = {
@@ -76,6 +77,7 @@ export default function MarketPulse({ jobs, counts, companies = [] }: MarketPuls
               </div>
               <p className="mt-2 text-lg font-black leading-snug text-text-main">{job.title}</p>
               <p className="mt-1 text-sm font-semibold text-text-muted">{companyOf(job)}</p>
+              {job.employer?.isVerified === false ? <UnverifiedEmployerLabel className="mt-1.5" /> : null}
               <div className="mt-4 flex flex-wrap gap-x-3 gap-y-1 text-xs font-semibold text-text-light">
                 {job.location && (
                   <span className="inline-flex items-center gap-1">

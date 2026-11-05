@@ -10,7 +10,7 @@ export type LandingCounts = {
 }
 
 export type LandingJob = PreviewJob & {
-  employer?: { email?: string; employerProfile?: { companyName?: string | null; logoUrl?: string | null } | null } | null
+  employer?: { email?: string; isVerified?: boolean; employerProfile?: { companyName?: string | null; logoUrl?: string | null } | null } | null
   companyName?: string
 }
 

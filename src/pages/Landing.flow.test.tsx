@@ -260,3 +260,26 @@ describe('Landing page and the freelance flag', () => {
     expect(container.querySelector('a[href="/freelancers"]')).not.toBeNull()
   })
 })
+
+describe('Landing page job rows and employer verification', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    apiGetHiringCompaniesMock.mockResolvedValue({ companies: [] })
+    apiGetPlatformStatsMock.mockResolvedValue({ success: true, stats: { counts: {} } })
+  })
+
+  it('labels recent jobs from unverified companies and leaves verified ones alone', async () => {
+    const base = { description: 'Work', category: 'Hospitality', location: 'Accra', createdAt: recent }
+    apiGetJobsMock.mockResolvedValue({
+      jobs: [
+        { ...base, id: 'j1', title: 'Cook', employer: { isVerified: true, employerProfile: { companyName: 'Verified Foods' } } },
+        { ...base, id: 'j2', title: 'Driver', employer: { isVerified: false, employerProfile: { companyName: 'Unknown Ltd' } } },
+      ],
+    })
+
+    renderLanding()
+
+    await screen.findAllByText('Driver')
+    expect(screen.getAllByText('Unverified employer')).toHaveLength(1)
+  })
+})

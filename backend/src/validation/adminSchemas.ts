@@ -147,6 +147,13 @@ export const updateVerificationRequestStatusSchema = z.object({
           path: ['reviewNote'],
         });
       }
+      if (value.status === 'REJECTED' && !value.reviewNote) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'A reason is required when rejecting a verification request',
+          path: ['reviewNote'],
+        });
+      }
     }),
   params: idParamsSchema,
 });

@@ -7,6 +7,15 @@ import { singleValue } from '../utils/request';
 import { getRequiredVerificationType, serializeVerificationStatus } from '../utils/verification';
 import { getErrorMessage } from '../utils/errors';
 import { createNotification } from '../utils/notifications';
+import { recordAdminAction } from '../utils/adminAudit';
+import { sendVerificationDecisionEmail } from '../services/emailService';
+import { confirmContactCode, sendContactCode } from '../services/contactVerificationService';
+import { normalizePhone } from '../validation/interestSchemas';
+import {
+  describeVerificationDecision,
+  normalizeRegistrationNumber,
+  verificationDecisionProblem,
+} from '../utils/verification';
 
 const verificationUserSelect = {
   id: true,
@@ -150,10 +159,15 @@ export const createVerificationRequest = async (req: AuthRequest, res: Response)
     const userId = req.user!.id;
     const role = req.user!.role;
     const requiredType = getRequiredVerificationType(role);
-    const { details, documentUrl } = req.body as {
-      details: string;
+    const body = req.body as {
+      details?: string;
       documentUrl?: string;
+      registrationNumber?: string;
+      contactEmail?: string;
+      contactPhone?: string;
+      address?: string;
     };
+    const { documentUrl } = body;
 
     if (!requiredType) {
       return res.status(400).json({ success: false, message: 'Verification is not supported for this role' });
@@ -172,19 +186,77 @@ export const createVerificationRequest = async (req: AuthRequest, res: Response)
       return res.status(409).json({ success: false, message: 'You already have a pending verification request' });
     }
 
+    const isBusiness = requiredType === 'BUSINESS';
+    const registrationNumber = isBusiness && body.registrationNumber ? normalizeRegistrationNumber(body.registrationNumber) : null;
+
+    if (isBusiness && !registrationNumber) {
+      return res.status(400).json({ success: false, message: 'Enter your Registrar-General registration number' });
+    }
+
+    // One company, one account: the same registration number cannot be claimed by someone else.
+    if (registrationNumber) {
+      const claimed = await prisma.verificationRequest.findFirst({
+        where: {
+          type: 'BUSINESS',
+          registrationNumber,
+          userId: { not: userId },
+          status: { in: ['PENDING', 'APPROVED'] },
+        },
+        select: { id: true },
+      });
+      if (claimed) {
+        return res.status(409).json({
+          success: false,
+          message: 'This registration number is already being used by another account. Contact support if it is your company.',
+        });
+      }
+    }
+
+    // A contact already confirmed on an earlier request does not need confirming again.
+    let contactVerifiedAt: Date | null = null;
+    if (isBusiness && body.contactEmail) {
+      const earlier = await prisma.verificationRequest.findFirst({
+        where: { userId, type: 'BUSINESS', contactEmail: body.contactEmail, contactVerifiedAt: { not: null } },
+        orderBy: { createdAt: 'desc' },
+        select: { contactVerifiedAt: true },
+      });
+      contactVerifiedAt = earlier?.contactVerifiedAt ?? null;
+    }
+
+    const details =
+      body.details?.trim() ||
+      (isBusiness ? `Registration number ${registrationNumber}. Address: ${body.address?.trim()}.` : '');
+
     const verification = await prisma.verificationRequest.create({
       data: {
         userId,
         type: requiredType,
-        details: details.trim(),
+        details,
         documentUrl: documentUrl?.trim() || null,
+        ...(isBusiness
+          ? {
+              registrationNumber,
+              contactEmail: body.contactEmail,
+              contactPhone: body.contactPhone ? normalizePhone(body.contactPhone) : null,
+              address: body.address?.trim() || null,
+              contactVerifiedAt,
+            }
+          : {}),
       },
     });
+
+    // Email the confirmation code straight away, so the employer can finish in one sitting.
+    let codeSent = false;
+    if (isBusiness && !contactVerifiedAt) {
+      const sent = await sendContactCode(verification.id, userId).catch(() => null);
+      codeSent = Boolean(sent?.ok);
+    }
 
     return res.status(201).json({
       success: true,
       verification,
       requiredType,
+      contact: { confirmed: Boolean(contactVerifiedAt), codeSent },
       ...serializeVerificationStatus(verification, [verification]),
     });
   } catch (error) {
@@ -246,7 +318,23 @@ export const getVerificationRequests = async (req: AuthRequest, res: Response) =
       };
     });
 
-    return res.json({ success: true, verifications: verificationsWithHistory });
+    const trails = await prisma.adminActionLog.findMany({
+      where: { targetType: 'VerificationRequest', targetId: { in: verifications.map((verification) => verification.id) } },
+      orderBy: { createdAt: 'desc' },
+      select: { targetId: true, action: true, adminEmail: true, reason: true, createdAt: true },
+    });
+    const trailByRequest = new Map<string, typeof trails>();
+    for (const entry of trails) {
+      trailByRequest.set(entry.targetId, [...(trailByRequest.get(entry.targetId) || []), entry]);
+    }
+
+    return res.json({
+      success: true,
+      verifications: verificationsWithHistory.map((verification) => ({
+        ...verification,
+        auditTrail: trailByRequest.get(verification.id) || [],
+      })),
+    });
   } catch (error) {
     return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
@@ -283,6 +371,14 @@ export const updateVerificationRequestStatus = async (req: AuthRequest, res: Res
       return res.status(400).json({ success: false, message: 'Only pending verification requests can be reviewed' });
     }
 
+    const problem = verificationDecisionProblem(verification, status, reviewNote);
+    if (problem) {
+      return res.status(400).json({ success: false, message: problem });
+    }
+
+    const admin = await prisma.user.findUnique({ where: { id: reviewerId }, select: { id: true, email: true } });
+    const decision = describeVerificationDecision(status, verification.type, reviewNote);
+
     const updatedVerification = await prisma.$transaction(async (tx) => {
       const nextVerification = await tx.verificationRequest.update({
         where: { id: verificationId },
@@ -307,6 +403,15 @@ export const updateVerificationRequestStatus = async (req: AuthRequest, res: Res
         await tx.user.update({ where: { id: verification.userId }, data: { identityVerified: true } });
       }
 
+      await recordAdminAction(tx, {
+        admin: { id: reviewerId, email: admin?.email ?? 'unknown' },
+        action: `VERIFICATION_${status}`,
+        targetType: 'VerificationRequest',
+        targetId: verificationId,
+        reason: reviewNote,
+        metadata: { userId: verification.userId, type: verification.type, internalNoteAdded: Boolean(internalNote?.trim()) },
+      });
+
       await createNotification(tx, {
         userId: verification.userId,
         type:
@@ -315,25 +420,87 @@ export const updateVerificationRequestStatus = async (req: AuthRequest, res: Res
             : status === 'NEEDS_INFO'
               ? 'VERIFICATION_NEEDS_INFO'
               : 'VERIFICATION_REJECTED',
-        title:
-          status === 'APPROVED'
-            ? 'Verification approved'
-            : status === 'NEEDS_INFO'
-              ? 'More verification info needed'
-              : 'Verification update',
-        message:
-          status === 'APPROVED'
-            ? `Your ${verification.type.toLowerCase()} verification was approved.`
-            : status === 'NEEDS_INFO'
-              ? `Your ${verification.type.toLowerCase()} verification needs more detail before it can be approved.`
-              : `Your ${verification.type.toLowerCase()} verification needs attention.`,
+        title: decision.title,
+        message: decision.message,
         actionUrl: '/dashboard',
       });
 
       return nextVerification;
     });
 
+    // The email goes out after the decision is saved and never holds it up.
+    void sendVerificationDecisionEmail(verification.user.email, decision).catch((error) =>
+      logger.error('verification_decision_email_failed', { verificationId, error: getErrorMessage(error) }),
+    );
+
     return res.json({ success: true, verification: updatedVerification });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
+  }
+};
+
+/** Employer asks for a new one-time code to be emailed to the company contact. */
+export const requestContactCode = async (req: AuthRequest, res: Response) => {
+  try {
+    const id = singleValue(req.params.id);
+    const result = await sendContactCode(id || '', req.user!.id);
+
+    if (result.ok) return res.json({ success: true, message: 'We have emailed you a 6-digit code.' });
+
+    switch (result.reason) {
+      case 'NOT_FOUND':
+        return res.status(404).json({ success: false, message: 'Verification request not found' });
+      case 'NOT_OPEN':
+        return res.status(409).json({ success: false, message: 'This request is no longer open' });
+      case 'ALREADY_CONFIRMED':
+        return res.json({ success: true, alreadyConfirmed: true, message: 'This contact is already confirmed.' });
+      case 'NO_EMAIL':
+        return res.status(400).json({ success: false, message: 'Add a company email address to your request first.' });
+      case 'COOLDOWN':
+        return res.status(429).json({
+          success: false,
+          retryAfterSeconds: result.retryAfterSeconds,
+          message: `Please wait ${result.retryAfterSeconds} seconds before asking for another code.`,
+        });
+      case 'TOO_MANY':
+        return res.status(429).json({ success: false, message: 'Too many codes requested. Try again in an hour.' });
+      default:
+        return res.status(502).json({ success: false, message: 'We could not send the email just now. Please try again.' });
+    }
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
+  }
+};
+
+/** Employer types the code they received. */
+export const submitContactCode = async (req: AuthRequest, res: Response) => {
+  try {
+    const id = singleValue(req.params.id);
+    const { code } = req.body as { code: string };
+    const result = await confirmContactCode(id || '', req.user!.id, code);
+
+    if (result.ok) return res.json({ success: true, message: 'Your company email is confirmed.' });
+
+    switch (result.reason) {
+      case 'NOT_FOUND':
+        return res.status(404).json({ success: false, message: 'Verification request not found' });
+      case 'NOT_OPEN':
+        return res.status(409).json({ success: false, message: 'This request is no longer open' });
+      case 'ALREADY_CONFIRMED':
+        return res.json({ success: true, alreadyConfirmed: true, message: 'This contact is already confirmed.' });
+      case 'NO_CODE':
+        return res.status(400).json({ success: false, message: 'Ask for a code first.' });
+      case 'EXPIRED':
+        return res.status(400).json({ success: false, message: 'That code has expired. Ask for a new one.' });
+      case 'LOCKED':
+        return res.status(429).json({ success: false, message: 'Too many wrong tries. Ask for a new code.' });
+      default:
+        return res.status(400).json({
+          success: false,
+          attemptsLeft: result.attemptsLeft,
+          message: `That code is not right. ${result.attemptsLeft} ${result.attemptsLeft === 1 ? 'try' : 'tries'} left.`,
+        });
+    }
   } catch (error) {
     return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }

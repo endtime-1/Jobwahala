@@ -18,6 +18,7 @@ import {
   deleteUser 
 } from '../controllers/adminController';
 import { getVerificationRequests, updateVerificationRequestStatus } from '../controllers/verificationController';
+import { getAdminAuditLog } from '../controllers/adminAuditController';
 import { authMiddleware, roleMiddleware } from '../middleware/auth';
 import { validate } from '../middleware/validate';
 import {
@@ -46,6 +47,7 @@ router.get('/users', getAllUsers);
 router.get('/jobs', getAllJobs);
 router.get('/services', getAllServices);
 router.get('/verifications', getVerificationRequests);
+router.get('/audit-log', getAdminAuditLog);
 router.get('/disputes', getAgreementDisputes);
 router.post('/jobs', validate(createAdminJobSchema), createAdminJob);
 router.patch('/reports/bulk-status', validate(updateAdminBulkReportStatusSchema), updateReportsStatusBulk);

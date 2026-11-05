@@ -19,7 +19,7 @@ import {
   DEFAULT_JOB_DAYS,
   addDays,
 } from '../utils/jobLifecycle';
-import { approvedBusinessVerificationQuery, publicEmployerVerification } from '../utils/verification';
+import { approvedBusinessVerificationQuery, publicEmployerVerification, rankJobsByVerification, verifiedEmployerFilter } from '../utils/verification';
 import { getErrorMessage } from '../utils/errors';
 import logger from '../config/logger';
 import { createNotification } from '../utils/notifications';
@@ -144,6 +144,12 @@ export const getJobs = async (req: AuthRequest, res: Response) => {
 
     const where: any = { ...publicJobWhere() };
 
+    // ?verified=1 shows only jobs from companies with an approved business verification.
+    const verifiedOnly = ['1', 'true'].includes((singleValue(req.query.verified as string | string[] | undefined) || '').toLowerCase());
+    if (verifiedOnly) {
+      where.employer = verifiedEmployerFilter;
+    }
+
     // Full-text search across title + description
     if (q) {
       where.OR = [
@@ -179,17 +185,20 @@ export const getJobs = async (req: AuthRequest, res: Response) => {
       orderBy: { createdAt: 'desc' }
     });
 
+    // Verified employers first, then newest.
     res.json({
       success: true,
-      jobs: jobs.map((job) => ({
-        ...job,
-        employer: {
-          id: job.employer.id,
-          email: job.employer.email,
-          employerProfile: job.employer.employerProfile,
-          ...publicEmployerVerification(job.employer.verificationRequests),
-        },
-      })),
+      jobs: rankJobsByVerification(
+        jobs.map((job) => ({
+          ...job,
+          employer: {
+            id: job.employer.id,
+            email: job.employer.email,
+            employerProfile: job.employer.employerProfile,
+            ...publicEmployerVerification(job.employer.verificationRequests),
+          },
+        })),
+      ),
     });
   } catch (error) {
     res.status(500).json({ success: false, message: getErrorMessage(error) });

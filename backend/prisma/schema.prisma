@@ -389,7 +389,13 @@ model VerificationRequest {
   type        String   // IDENTITY, BUSINESS, PROFESSIONAL
   status      String   @default("PENDING") // PENDING, APPROVED, REJECTED
   details     String
-  documentUrl String?
+  documentUrl String?   // for a business: the registration certificate
+  // Business verification: Registrar-General number, company contact (verified by one-time code) and address.
+  registrationNumber String?
+  contactEmail String?
+  contactPhone String?
+  address     String?
+  contactVerifiedAt DateTime?
   reviewNote  String?
   internalNote String?
   reviewedAt  DateTime?
@@ -398,6 +404,7 @@ model VerificationRequest {
 
   user        User     @relation("VerificationRequester", fields: [userId], references: [id], onDelete: Cascade)
   reviewer    User?    @relation("VerificationReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+  contactCodes ContactVerificationCode[]
 
   @@index([userId, createdAt])
   @@index([reviewerId, createdAt])
@@ -647,4 +654,38 @@ model InterestSignup {
   @@unique([email, source])
   @@unique([phone, source])
   @@index([source, createdAt])
+}
+
+// One-time codes sent to a company's contact email (or phone, once SMS is set up). Only a hash is stored.
+model ContactVerificationCode {
+  id                    String   @id @default(uuid())
+  verificationRequestId String
+  channel               String   @default("EMAIL") // EMAIL, PHONE
+  target                String
+  codeHash              String
+  expiresAt             DateTime
+  attempts              Int      @default(0)
+  consumedAt            DateTime?
+  createdAt             DateTime @default(now())
+
+  verificationRequest   VerificationRequest @relation(fields: [verificationRequestId], references: [id], onDelete: Cascade)
+
+  @@index([verificationRequestId, createdAt])
+}
+
+// Who did what, and why. Admin ids and emails are copied in, so the record outlives the account.
+model AdminActionLog {
+  id         String   @id @default(uuid())
+  adminId    String
+  adminEmail String
+  action     String   // e.g. VERIFICATION_APPROVED, VERIFICATION_REJECTED, VERIFICATION_NEEDS_INFO
+  targetType String   // e.g. VerificationRequest
+  targetId   String
+  reason     String?
+  metadata   String?  // JSON
+  createdAt  DateTime @default(now())
+
+  @@index([targetType, targetId, createdAt])
+  @@index([adminId, createdAt])
+  @@index([createdAt])
 }
