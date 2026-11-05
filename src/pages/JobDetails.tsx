@@ -9,6 +9,7 @@ import SaveJobButton from '../components/SaveJobButton'
 import { apiApplyForJob, apiDeleteApplication, apiGetJobApplicationCoaching, apiGetJobById, apiGetMyJobApplication } from '../lib/api'
 import { emailHandle, formatRelativeTime } from '../lib/display'
 import { closingSummary } from '../lib/jobLifecycle'
+import CvChoice, { type CvChoiceValue } from '../components/CvChoice'
 import {
   formatJobLocationWithWorkMode,
   getJobWorkModeLabel,
@@ -70,6 +71,8 @@ export default function JobDetails() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
   const [coverLetter, setCoverLetter] = useState('')
+  // null until the picker knows what CVs the member has; then the CV to send, or 'NONE'.
+  const [cvChoice, setCvChoice] = useState<CvChoiceValue | null>(null)
   const [isApplying, setIsApplying] = useState(false)
   const [isWithdrawing, setIsWithdrawing] = useState(false)
   const [coaching, setCoaching] = useState<JobApplicationCoaching | null>(null)
@@ -150,7 +153,7 @@ export default function JobDetails() {
     setIsApplying(true)
 
     try {
-      const data = await apiApplyForJob(job.id, coverLetter)
+      const data = await (cvChoice ? apiApplyForJob(job.id, coverLetter, cvChoice) : apiApplyForJob(job.id, coverLetter))
       setApplication(data.application as JobApplication)
       setCoverLetter('')
       window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -480,6 +483,7 @@ export default function JobDetails() {
                       placeholder="Cover note for the employer..."
                       className="min-h-[140px] font-bold py-4"
                     />
+                    {user && role === 'SEEKER' ? <CvChoice value={cvChoice} onChange={setCvChoice} /> : null}
                     <button
                       onClick={handleApply}
                       disabled={isApplying}

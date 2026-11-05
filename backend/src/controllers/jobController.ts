@@ -370,7 +370,7 @@ export const getJobById = async (req: AuthRequest, res: Response) => {
 export const applyForJob = async (req: AuthRequest, res: Response) => {
   try {
     const jobId = singleValue(req.params.id);
-    const { coverLetter } = req.body;
+    const { coverLetter, cv } = req.body as { coverLetter?: string; cv?: 'UPLOADED' | 'BUILDER' | 'NONE' };
     const seekerId = req.user!.id;
 
     if (!jobId) {
@@ -394,11 +394,28 @@ export const applyForJob = async (req: AuthRequest, res: Response) => {
       return res.status(409).json({ success: false, message: 'You have already applied to this job' });
     }
 
+    // The CV the applicant chose is copied onto the application now, so the employer keeps what was sent
+    // even if the applicant later replaces or removes their CV.
+    let cvData: { cvSource?: string; cvFileUrl?: string; cvFileName?: string } = {};
+    if (cv === 'UPLOADED' || cv === 'BUILDER') {
+      const files = await prisma.seekerCv.findUnique({ where: { userId: seekerId } });
+      const url = cv === 'UPLOADED' ? files?.uploadedUrl : files?.builderUrl;
+      const name = cv === 'UPLOADED' ? files?.uploadedFileName : files?.builderFileName;
+      if (!url) {
+        return res.status(400).json({
+          success: false,
+          message: cv === 'UPLOADED' ? 'You have not uploaded a CV yet.' : 'You have not saved a CV from the CV builder yet.',
+        });
+      }
+      cvData = { cvSource: cv, cvFileUrl: url, cvFileName: name || 'CV' };
+    }
+
     const application = await prisma.application.create({
       data: {
         jobId,
         seekerId,
-        coverLetter: coverLetter?.trim() || null
+        coverLetter: coverLetter?.trim() || null,
+        ...cvData,
       }
     });
     res.status(201).json({ success: true, application });

@@ -47,6 +47,7 @@ export const buildUserDataExport = async (userId: string, now: Date = new Date()
     applications,
     savedSearches,
     savedJobs,
+    cvFiles,
     cvRequests,
     notifications,
     jobsPosted,
@@ -73,6 +74,8 @@ export const buildUserDataExport = async (userId: string, now: Date = new Date()
         id: true,
         status: true,
         coverLetter: true,
+        cvSource: true,
+        cvFileName: true,
         createdAt: true,
         statusChangedAt: true,
         job: { select: { id: true, title: true, location: true, employer: { select: { employerProfile: { select: { companyName: true } } } } } },
@@ -88,6 +91,7 @@ export const buildUserDataExport = async (userId: string, now: Date = new Date()
       take: LIMIT,
       select: { createdAt: true, job: { select: { id: true, title: true, employer: { select: { employerProfile: { select: { companyName: true } } } } } } },
     }),
+    prisma.seekerCv.findUnique({ where: { userId } }),
     prisma.cVGeneration.findMany({ where: { userId }, select: { prompt: true, createdAt: true }, take: LIMIT }),
     prisma.notification.findMany({
       where: { userId },
@@ -194,6 +198,7 @@ export const buildUserDataExport = async (userId: string, now: Date = new Date()
       company: application.job.employer.employerProfile?.companyName ?? null,
       status: application.status,
       coverLetter: application.coverLetter,
+      cvSent: application.cvSource ? { source: application.cvSource, fileName: application.cvFileName } : null,
       appliedAt: application.createdAt,
       statusLastChangedAt: application.statusChangedAt,
     })),
@@ -204,6 +209,13 @@ export const buildUserDataExport = async (userId: string, now: Date = new Date()
       company: saved.job.employer.employerProfile?.companyName ?? null,
       savedAt: saved.createdAt,
     })),
+    // The CV files themselves are not in this file (they are documents); this lists what is kept.
+    cvFiles: cvFiles
+      ? {
+          uploaded: cvFiles.uploadedFileName ? { fileName: cvFiles.uploadedFileName, uploadedAt: cvFiles.uploadedAt } : null,
+          builder: cvFiles.builderFileName ? { fileName: cvFiles.builderFileName, savedAt: cvFiles.builderSavedAt } : null,
+        }
+      : null,
     cvRequests,
     notifications,
     jobsPosted: jobsPosted.map(({ _count, ...job }) => ({ ...job, applicants: _count.applications })),
@@ -315,6 +327,7 @@ export const deleteAccount = async (
     // Alerts stop, and so does everything addressed to the member.
     await tx.savedSearch.deleteMany({ where: { userId } });
     await tx.savedJob.deleteMany({ where: { userId } });
+    await tx.seekerCv.deleteMany({ where: { userId } });
     await tx.notification.deleteMany({ where: { userId } });
     await tx.emailVerificationToken.deleteMany({ where: { userId } });
     await tx.passwordResetToken.deleteMany({ where: { userId } });
@@ -329,7 +342,7 @@ export const deleteAccount = async (
 
     // Applications: withdrawn, unless a work agreement hangs off one, in which case only the personal text goes.
     await tx.application.deleteMany({ where: { seekerId: userId, agreement: { is: null } } });
-    await tx.application.updateMany({ where: { seekerId: userId }, data: { coverLetter: null } });
+    await tx.application.updateMany({ where: { seekerId: userId }, data: { coverLetter: null, cvSource: null, cvFileUrl: null, cvFileName: null } });
 
     // Messages stay in the other person's conversation, but what the member wrote and attached is removed.
     await tx.message.updateMany({

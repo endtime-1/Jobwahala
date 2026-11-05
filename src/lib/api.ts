@@ -331,12 +331,27 @@ export const apiDeleteApplication = (applicationId: string) =>
     headers: headers(true),
   }).then(handleResponse);
 
-export const apiApplyForJob = (jobId: string, coverLetter: string) =>
+export const apiApplyForJob = (jobId: string, coverLetter: string, cv?: 'UPLOADED' | 'BUILDER' | 'NONE') =>
   fetch(`${BASE_URL}/jobs/${jobId}/apply`, {
     method: 'POST',
     headers: headers(true),
-    body: JSON.stringify({ coverLetter }),
+    body: JSON.stringify({ coverLetter, ...(cv ? { cv } : {}) }),
   }).then(handleResponse);
+
+// My CV files
+export const apiGetMyCvFiles = () => fetch(`${BASE_URL}/users/cv`, { headers: headers(true) }).then(handleResponse);
+
+export const apiSetUploadedCv = (data: { url: string; fileName: string }) =>
+  fetch(`${BASE_URL}/users/cv/uploaded`, { method: 'PUT', headers: headers(true), body: JSON.stringify(data) }).then(handleResponse);
+
+export const apiClearUploadedCv = () =>
+  fetch(`${BASE_URL}/users/cv/uploaded`, { method: 'DELETE', headers: headers(true) }).then(handleResponse);
+
+export const apiSetBuilderCv = (data: { url: string; fileName: string }) =>
+  fetch(`${BASE_URL}/users/cv/builder`, { method: 'PUT', headers: headers(true), body: JSON.stringify(data) }).then(handleResponse);
+
+export const apiClearBuilderCv = () =>
+  fetch(`${BASE_URL}/users/cv/builder`, { method: 'DELETE', headers: headers(true) }).then(handleResponse);
 
 // Freelance Services
 export const apiGetServices = (params?: Record<string, string>) => {

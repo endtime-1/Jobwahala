@@ -6,7 +6,7 @@ const API_ROOT = rawApiUrl ? rawApiUrl.replace(/\/$/, '') : '/api'
 // Signed links last 5 minutes; images on screen get a fresh one a little before that.
 const REFRESH_AFTER_MS = 4 * 60 * 1000
 
-const PRIVATE_UPLOAD_PATH = /^\/api\/uploads\/(verification|dispute|message)\/[^/]+$/
+const PRIVATE_UPLOAD_PATH = /^\/api\/uploads\/(verification|dispute|message|cv)\/[^/]+$/
 
 /** True for uploaded ID documents, dispute evidence and message attachments (not logos or pasted links). */
 export const isProtectedUploadUrl = (value: string | null | undefined) => {

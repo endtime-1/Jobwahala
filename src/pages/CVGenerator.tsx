@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { AlignmentType, BorderStyle, Document, HeadingLevel, Packer, Paragraph, TextRun } from 'docx'
 import { Sparkles, Download, Copy, RefreshCw, Layout, FileText, User, Briefcase, GraduationCap, Plus, Trash2, Wand2, History, Target, Eye, Pencil, CheckCircle2, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react'
-import { apiGetCVById, apiGetMyCVs, apiGetProfileOptimization, apiSaveCVGeneration } from '../lib/api'
+import { apiGetCVById, apiGetMyCVs, apiGetProfileOptimization, apiSaveCVGeneration, apiSetBuilderCv } from '../lib/api'
+import { toSiteRelativeUrl, uploadCvFile } from '../lib/evidenceUpload'
 import { useAuth } from '../context/AuthContext'
 import { formatRelativeTime } from '../lib/display'
 import { getErrorMessage } from '../lib/errors'
@@ -1220,6 +1221,31 @@ export default function CVGenerator() {
       })
   }
 
+  // Keeps the builder's Word file as the CV to send with applications (job seekers only).
+  const handleUseForApplications = () => {
+    const draftContent = previewText.trim()
+    if (!draftContent) {
+      setSaveStatus('Generate or load a CV draft before saving it for applications.')
+      return
+    }
+
+    void (async () => {
+      try {
+        setSaveStatus('Saving your CV for applications...')
+        const blob = await Packer.toBlob(buildCvDocxDocument(previewHeader, draftContent, selectedTemplate))
+        const fileName = `${getSafeCvFileName(previewHeader.heading)}.docx`
+        const file = new File([blob], fileName, {
+          type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        })
+        const uploaded = await uploadCvFile(file)
+        await apiSetBuilderCv({ url: toSiteRelativeUrl(uploaded.file.url), fileName })
+        setSaveStatus('Saved. You can now choose this CV when you apply for a job.')
+      } catch (err) {
+        setSaveStatus(err instanceof Error ? err.message : 'Unable to save your CV right now.')
+      }
+    })()
+  }
+
   const handleCopy = async () => {
     if (!previewText.trim()) {
       setSaveStatus('Generate or load a CV draft before copying it.')
@@ -1930,6 +1956,11 @@ const renderForm = () => (
         <button type="button" onClick={() => void handleCopy()} className="btn btn-outline btn-sm bg-white flex items-center gap-2 font-black text-[10px]">
           <Copy className="h-3.5 w-3.5" /> Copy
         </button>
+        {role === 'SEEKER' ? (
+          <button type="button" onClick={handleUseForApplications} className="btn btn-outline btn-sm bg-white flex items-center gap-2 font-black text-[10px]">
+            <FileText className="h-3.5 w-3.5" /> Use this CV for applications
+          </button>
+        ) : null}
         <button type="button" onClick={handleRegenerate} className="ml-auto flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-text-muted hover:text-primary transition-colors">
           <RefreshCw className="h-3.5 w-3.5" /> Regenerate
         </button>
@@ -2059,6 +2090,15 @@ const renderForm = () => (
               >
                 Download DOCX <FileText className="h-5 w-5" />
               </button>
+              {role === 'SEEKER' ? (
+                <button
+                  type="button"
+                  onClick={handleUseForApplications}
+                  className="btn btn-outline btn-lg w-full rounded-2xl bg-white flex items-center justify-center gap-3 font-black text-xs uppercase tracking-widest"
+                >
+                  Use this CV for applications <FileText className="h-5 w-5" />
+                </button>
+              ) : null}
               <button
                 type="button"
                 onClick={handleDownloadMarkdown}

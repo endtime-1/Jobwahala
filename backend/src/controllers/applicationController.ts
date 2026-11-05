@@ -18,6 +18,8 @@ export const listMyApplications = async (req: AuthRequest, res: Response) => {
         createdAt: true,
         updatedAt: true,
         statusChangedAt: true,
+        cvSource: true,
+        cvFileName: true,
         job: {
           select: {
             id: true,
@@ -41,6 +43,8 @@ export const listMyApplications = async (req: AuthRequest, res: Response) => {
         statusLabel: STAGE_LABEL[application.status] ?? application.status,
         appliedAt: application.createdAt,
         lastChangedAt: lastChangedAt(application),
+        // Which CV went with it, by name only: the address is for the employer.
+        cv: application.cvSource ? { source: application.cvSource, fileName: application.cvFileName } : null,
         job: {
           id: application.job.id,
           title: application.job.title,

@@ -4,6 +4,7 @@ import { isProtectedUploadUrl, resolveSignedUrl } from './evidenceAccess'
 describe('isProtectedUploadUrl', () => {
   it('recognises private uploads, relative or absolute', () => {
     expect(isProtectedUploadUrl('/api/uploads/verification/1-a.pdf')).toBe(true)
+    expect(isProtectedUploadUrl('/api/uploads/cv/1-a.docx')).toBe(true)
     expect(isProtectedUploadUrl('https://www.jobwahala.com/api/uploads/dispute/1-a.png')).toBe(true)
     expect(isProtectedUploadUrl('http://localhost:5173/api/uploads/message/1-a.webp')).toBe(true)
   })

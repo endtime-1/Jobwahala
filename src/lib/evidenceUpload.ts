@@ -149,3 +149,52 @@ export const evidenceUploadConstraints = {
   maxEvidenceFileBytes,
   supportedContentTypes: Array.from(supportedEvidenceTypes),
 } as const
+
+const DOCX_TYPE = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+const maxCvFileBytes = 3 * 1024 * 1024
+
+export const cvUploadConstraints = {
+  maxBytes: maxCvFileBytes,
+  accept: `.pdf,.docx,application/pdf,${DOCX_TYPE}`,
+  contentTypes: ['application/pdf', DOCX_TYPE],
+} as const
+
+/** Some phones leave the type blank, so fall back to the file ending. */
+const cvContentType = (file: File) => {
+  if (file.type) return file.type
+  const name = file.name.toLowerCase()
+  if (name.endsWith('.pdf')) return 'application/pdf'
+  if (name.endsWith('.docx')) return DOCX_TYPE
+  return ''
+}
+
+/** A CV: PDF or Word, 3 MB at most (the server checks the file itself again, and refuses macros and attachments). */
+export const uploadCvFile = async (file: File) => {
+  const contentType = cvContentType(file)
+
+  if (!(cvUploadConstraints.contentTypes as readonly string[]).includes(contentType)) {
+    throw new Error('Your CV must be a PDF or a Word (.docx) file')
+  }
+
+  if (file.size > maxCvFileBytes) {
+    throw new Error('Your CV must be 3 MB or smaller')
+  }
+
+  const token = localStorage.getItem('jobwahala_token')
+  if (!token) {
+    throw new Error('You need to be signed in to upload a CV')
+  }
+
+  const response = await fetch(`${API_ROOT}/uploads/evidence`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({
+      category: 'cv',
+      fileName: file.name,
+      contentType,
+      dataBase64: arrayBufferToBase64(await file.arrayBuffer()),
+    }),
+  })
+
+  return handleUploadResponse(response)
+}

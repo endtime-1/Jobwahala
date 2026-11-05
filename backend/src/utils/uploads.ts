@@ -3,9 +3,10 @@ import path from 'path';
 import env from '../config/env';
 import { persistEvidenceFile } from '../services/evidenceStorage';
 import { uploaderTag } from './fileAccess';
+import { CvFileError, DOCX_CONTENT_TYPE, assertCvFile } from './cvFiles';
 
 // "logo" files are shown publicly (company logos), so they get stricter checks than private evidence.
-export const uploadCategoryValues = ['verification', 'dispute', 'message', 'logo'] as const;
+export const uploadCategoryValues = ['verification', 'dispute', 'message', 'logo', 'cv'] as const;
 export type UploadCategory = typeof uploadCategoryValues[number];
 
 export const uploadContentTypeValues = [
@@ -13,6 +14,7 @@ export const uploadContentTypeValues = [
   'image/png',
   'image/jpeg',
   'image/webp',
+  DOCX_CONTENT_TYPE,
 ] as const;
 export type UploadContentType = typeof uploadContentTypeValues[number];
 
@@ -21,6 +23,7 @@ const extensionByContentType: Record<UploadContentType, string> = {
   'image/png': '.png',
   'image/jpeg': '.jpg',
   'image/webp': '.webp',
+  [DOCX_CONTENT_TYPE]: '.docx',
 };
 
 export const maxEvidenceFileBytes = 5 * 1024 * 1024;
@@ -53,6 +56,20 @@ export const assertUploadAllowed = ({
 }) => {
   if (!buffer.length) {
     throw new UploadValidationError('Evidence upload content is empty');
+  }
+
+  // CVs have their own, stricter rules: PDF or Word only, 3 MB, and no scripts, macros or embedded files.
+  if (category === 'cv') {
+    try {
+      assertCvFile(contentType, buffer);
+    } catch (error) {
+      throw error instanceof CvFileError ? new UploadValidationError(error.message) : error;
+    }
+    return;
+  }
+
+  if (contentType === DOCX_CONTENT_TYPE) {
+    throw new UploadValidationError('Word files are only accepted for CVs');
   }
 
   if (buffer.byteLength > maxEvidenceFileBytes) {

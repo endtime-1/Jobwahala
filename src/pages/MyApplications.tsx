@@ -16,6 +16,7 @@ type MyApplication = {
   lastChangedAt: string
   job: { id: string; title: string; location?: string | null; type?: string | null; isOpen: boolean }
   company: { id: string; name: string; logoUrl?: string | null }
+  cv?: { source: string; fileName?: string | null } | null
 }
 
 // What each stage means for the person who applied.
@@ -120,6 +121,9 @@ export default function MyApplications() {
                 <div className="flex flex-col gap-2 sm:items-end sm:text-right">
                   <span className={`badge self-start sm:self-end ${badgeClass(application.status)}`}>{application.statusLabel}</span>
                   <p className="text-sm font-semibold text-text-muted">Applied {formatShortDate(application.appliedAt)}</p>
+                  <p className="text-sm font-semibold text-text-muted">
+                    {application.cv ? `CV sent: ${application.cv.source === 'BUILDER' ? 'CV builder version' : 'uploaded CV'}` : 'No CV sent'}
+                  </p>
                   <p className="inline-flex items-center gap-1.5 text-sm font-semibold text-text-muted">
                     <Clock className="h-3.5 w-3.5" /> Updated {formatRelativeTime(application.lastChangedAt)}
                   </p>

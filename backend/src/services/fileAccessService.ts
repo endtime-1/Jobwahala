@@ -62,6 +62,22 @@ export const canViewUpload = async (viewer: Viewer, ref: UploadRef): Promise<boo
       return Boolean(message);
     }
 
+    case 'cv': {
+      // An employer may open a CV only if an applicant chose to send it with an application to one of THEIR jobs.
+      // The seeker themselves (the uploader) is let in above; this also covers their current saved CVs.
+      const [sentToThisEmployer, ownCurrent] = await Promise.all([
+        prisma.application.findFirst({
+          where: { cvFileUrl: { endsWith: tail }, job: { employerId: viewer.id } },
+          select: { id: true },
+        }),
+        prisma.seekerCv.findFirst({
+          where: { userId: viewer.id, OR: [{ uploadedUrl: { endsWith: tail } }, { builderUrl: { endsWith: tail } }] },
+          select: { id: true },
+        }),
+      ]);
+      return Boolean(sentToThisEmployer || ownCurrent);
+    }
+
     default:
       return false;
   }

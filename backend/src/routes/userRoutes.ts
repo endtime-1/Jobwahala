@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import { getProfile, updateProfile, getAllUsers, getDashboardData, getWorkspaceSignals, getDashboardWorkflowSummary, getDashboardOverview, getProfileOptimization } from '../controllers/userController';
 import { sendAddPhoneCode, confirmAddPhone } from '../controllers/authController';
+import { clearBuilderCv, clearUploadedCv, getMyCvFiles, setBuilderCv, setUploadedCv } from '../controllers/cvFileController';
+import { setCvFileSchema } from '../validation/cvFileSchemas';
 import { deleteMyAccount, exportMyData, getMyDeletionPreview, sendDeletionCode } from '../controllers/accountController';
 import { addPhoneSchema, confirmAddPhoneSchema, deleteAccountSchema } from '../validation/authSchemas';
 import { createVerificationRequest, getMyVerification, requestContactCode, submitContactCode } from '../controllers/verificationController';
@@ -50,6 +52,13 @@ router.get('/me/export', authMiddleware, exportLimit, exportMyData);
 router.get('/me/deletion-preview', authMiddleware, getMyDeletionPreview);
 router.post('/me/delete-code', authMiddleware, addPhoneSendLimit, sendDeletionCode);
 router.post('/me/delete', authMiddleware, deleteLimit, validate(deleteAccountSchema), deleteMyAccount);
+
+// A seeker's CV files (the upload itself goes through /api/uploads/evidence with category "cv").
+router.get('/cv', authMiddleware, roleMiddleware(['SEEKER']), getMyCvFiles);
+router.put('/cv/uploaded', authMiddleware, roleMiddleware(['SEEKER']), validate(setCvFileSchema), setUploadedCv);
+router.delete('/cv/uploaded', authMiddleware, roleMiddleware(['SEEKER']), clearUploadedCv);
+router.put('/cv/builder', authMiddleware, roleMiddleware(['SEEKER']), validate(setCvFileSchema), setBuilderCv);
+router.delete('/cv/builder', authMiddleware, roleMiddleware(['SEEKER']), clearBuilderCv);
 
 router.get('/profile', authMiddleware, getProfile);
 router.put('/profile', authMiddleware, validateWith((req) => getProfileUpdateSchema((req as any).user?.role)), updateProfile);

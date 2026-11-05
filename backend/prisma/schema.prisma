@@ -50,6 +50,7 @@ model User {
   notifications       Notification[]
   savedSearches       SavedSearch[]
   savedJobs           SavedJob[]
+  seekerCv            SeekerCv?
   paymentsSent        Payment[] @relation("PaymentPayer")
   paymentsReceived    Payment[] @relation("PaymentPayee")
   reviewsWritten      Review[]  @relation("ReviewAuthor")
@@ -180,6 +181,10 @@ model Application {
   firstRespondedAt DateTime?
   // Set once the employer has been reminded that this application sat in New for 14 days.
   newReminderSentAt DateTime?
+  // The CV the applicant chose to send, copied at the moment they applied (UPLOADED or BUILDER). Only this employer can open it.
+  cvSource    String?
+  cvFileUrl   String?
+  cvFileName  String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime  @updatedAt
 
@@ -731,4 +736,21 @@ model SavedJob {
 
   @@unique([userId, jobId])
   @@index([userId, createdAt])
+}
+
+// A job seeker's CV files. Kept apart from the public-ish profile so a file address can never travel
+// out with a profile by accident. Both are private uploads, opened only through signed links.
+model SeekerCv {
+  id               String    @id @default(uuid())
+  userId           String    @unique
+  uploadedUrl      String?   // a PDF or Word file they uploaded
+  uploadedFileName String?
+  uploadedAt       DateTime?
+  builderUrl       String?   // the Word file made by the CV builder
+  builderFileName  String?
+  builderSavedAt   DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 
 /** Folders whose files are private. Logos live in a separate, intentionally public folder. */
-export const privateUploadCategories = ['verification', 'dispute', 'message'] as const;
+export const privateUploadCategories = ['verification', 'dispute', 'message', 'cv'] as const;
 export type PrivateUploadCategory = (typeof privateUploadCategories)[number];
 
 export const SIGNED_LINK_TTL_MS = 5 * 60 * 1000;

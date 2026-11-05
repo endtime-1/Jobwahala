@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Sparkles } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useFeatures } from '../../../lib/features'
+import EvidenceLink from '../../../components/EvidenceLink'
 import {
   apiUpdateApplicationStatus,
   apiCreateJobProposal,
@@ -373,6 +374,14 @@ export default function EmployerApplicantsPanel({
                           </p>
                         ) : null}
                         <div className="mt-4 rounded-2xl bg-white border border-surface-border p-4">
+                          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-text-light mb-2">CV</p>
+                          {application.cvFileUrl ? (
+                            <EvidenceLink href={application.cvFileUrl} className="mb-4 inline-flex items-center gap-2 text-sm font-bold text-primary hover:underline">
+                              Download CV: {application.cvFileName || 'CV'} ({application.cvSource === 'BUILDER' ? 'made with the CV builder' : 'uploaded'})
+                            </EvidenceLink>
+                          ) : (
+                            <p className="mb-4 text-sm font-semibold text-text-muted">No CV was sent with this application.</p>
+                          )}
                           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-text-light mb-2">Cover Letter</p>
                           <p className="text-sm text-text-main leading-relaxed whitespace-pre-wrap">
                             {application.coverLetter?.trim() || 'No cover letter was provided for this application.'}

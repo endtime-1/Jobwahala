@@ -247,6 +247,7 @@ describe('deleting an account', () => {
     for (const [model, method] of [
       ['savedSearch', 'deleteMany'], // job alerts stop
       ['savedJob', 'deleteMany'], // bookmarked jobs
+      ['seekerCv', 'deleteMany'], // saved CV files
       ['notification', 'deleteMany'],
       ['emailVerificationToken', 'deleteMany'],
       ['passwordResetToken', 'deleteMany'],
@@ -291,7 +292,10 @@ describe('deleting an account', () => {
     await deleteAccount('u1');
 
     expect(prisma.application.deleteMany.mock.calls[0][0].where).toEqual({ seekerId: 'u1', agreement: { is: null } });
-    expect(prisma.application.updateMany.mock.calls[0][0]).toEqual({ where: { seekerId: 'u1' }, data: { coverLetter: null } });
+    expect(prisma.application.updateMany.mock.calls[0][0]).toEqual({
+      where: { seekerId: 'u1' },
+      data: { coverLetter: null, cvSource: null, cvFileUrl: null, cvFileName: null },
+    });
   });
 
   it('removes what the member wrote in messages and any files they attached', async () => {

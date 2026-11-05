@@ -65,6 +65,9 @@ export type RecentApplication = {
 export type JobApplicant = {
   id: string
   status: string
+  cvSource?: string | null
+  cvFileUrl?: string | null
+  cvFileName?: string | null
   createdAt: string
   coverLetter?: string | null
   fitScore?: number

@@ -96,6 +96,8 @@ export const serveProtectedUpload = (req: Request, res: Response) => {
     {
       dotfiles: 'deny',
       headers: {
+        // A CV is downloaded, never shown inside the page.
+        ...(ref.category === 'cv' ? { 'Content-Disposition': 'attachment' } : {}),
         'Cache-Control': 'private, no-store',
         'X-Content-Type-Options': 'nosniff',
         'Content-Security-Policy': "default-src 'none'",

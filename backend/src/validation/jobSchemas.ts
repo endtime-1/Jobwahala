@@ -70,6 +70,8 @@ export const applyForJobSchema = z.object({
   body: z
     .object({
       coverLetter: trimmedOptionalString(3000),
+      // Which CV to send: the one they uploaded, the one from the CV builder, or none.
+      cv: z.enum(['UPLOADED', 'BUILDER', 'NONE']).optional(),
     })
     .strict(),
 });
