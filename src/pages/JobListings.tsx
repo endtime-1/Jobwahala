@@ -5,6 +5,7 @@ import ReportModal from '../components/ReportModal'
 import CompanyLogo from '../components/CompanyLogo'
 import VerifiedBadge from '../components/VerifiedBadge'
 import UnverifiedEmployerLabel from '../components/UnverifiedEmployerLabel'
+import SaveJobButton from '../components/SaveJobButton'
 import { apiCompareJobs, apiGetJobs } from '../lib/api'
 import { emailHandle, formatMoney, formatRelativeTime } from '../lib/display'
 import {
@@ -586,6 +587,7 @@ export default function JobListings() {
                           {companyName}
                         </Link>
                       </div>
+                      <SaveJobButton jobId={job.id} className="flex-none" />
                       <button
                         onClick={(event) => {
                           event.stopPropagation()

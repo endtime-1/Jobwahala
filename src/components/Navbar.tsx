@@ -14,6 +14,7 @@ import {
   Users,
   X,
   BookOpen,
+  Bookmark,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { LogoMark } from './Logo'
@@ -32,6 +33,7 @@ type NavLinkItem = {
 const seekerLinks: NavLinkItem[] = [
   { name: 'Browse Jobs', href: '/jobs', icon: <Briefcase className="h-4 w-4" /> },
   { name: 'My applications', href: '/applications', icon: <FileCheck className="h-4 w-4" /> },
+  { name: 'Saved jobs', href: '/saved-jobs', icon: <Bookmark className="h-4 w-4" /> },
   { name: 'Dashboard', href: '/dashboard', icon: <Rocket className="h-4 w-4" /> },
   { name: 'Proposals', href: '/proposals', icon: <Handshake className="h-4 w-4" /> },
   { name: 'Agreements', href: '/agreements', icon: <FileCheck className="h-4 w-4" /> },
@@ -200,6 +202,7 @@ export default function Navbar() {
       return [
         { name: 'Jobs', href: '/jobs', icon: <Briefcase className="h-4 w-4" /> },
         { name: 'Applied', href: '/applications', icon: <FileCheck className="h-4 w-4" /> },
+        { name: 'Saved', href: '/saved-jobs', icon: <Bookmark className="h-4 w-4" /> },
         { name: 'Talent', href: '/freelancers', icon: <Users className="h-4 w-4" /> },
         { name: 'Hub', href: '/dashboard', icon: <Rocket className="h-4 w-4" /> },
         { name: 'Deals', href: '/proposals', icon: <Handshake className="h-4 w-4" /> },

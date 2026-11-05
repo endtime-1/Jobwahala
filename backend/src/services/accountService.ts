@@ -46,6 +46,7 @@ export const buildUserDataExport = async (userId: string, now: Date = new Date()
     freelancerProfile,
     applications,
     savedSearches,
+    savedJobs,
     cvRequests,
     notifications,
     jobsPosted,
@@ -80,6 +81,12 @@ export const buildUserDataExport = async (userId: string, now: Date = new Date()
     prisma.savedSearch.findMany({
       where: { userId },
       select: { query: true, location: true, jobType: true, emailAlerts: true, createdAt: true },
+    }),
+    prisma.savedJob.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      take: LIMIT,
+      select: { createdAt: true, job: { select: { id: true, title: true, employer: { select: { employerProfile: { select: { companyName: true } } } } } } },
     }),
     prisma.cVGeneration.findMany({ where: { userId }, select: { prompt: true, createdAt: true }, take: LIMIT }),
     prisma.notification.findMany({
@@ -191,6 +198,12 @@ export const buildUserDataExport = async (userId: string, now: Date = new Date()
       statusLastChangedAt: application.statusChangedAt,
     })),
     savedSearches,
+    savedJobs: savedJobs.map((saved) => ({
+      jobId: saved.job.id,
+      jobTitle: saved.job.title,
+      company: saved.job.employer.employerProfile?.companyName ?? null,
+      savedAt: saved.createdAt,
+    })),
     cvRequests,
     notifications,
     jobsPosted: jobsPosted.map(({ _count, ...job }) => ({ ...job, applicants: _count.applications })),
@@ -301,6 +314,7 @@ export const deleteAccount = async (
   await prisma.$transaction(async (tx) => {
     // Alerts stop, and so does everything addressed to the member.
     await tx.savedSearch.deleteMany({ where: { userId } });
+    await tx.savedJob.deleteMany({ where: { userId } });
     await tx.notification.deleteMany({ where: { userId } });
     await tx.emailVerificationToken.deleteMany({ where: { userId } });
     await tx.passwordResetToken.deleteMany({ where: { userId } });

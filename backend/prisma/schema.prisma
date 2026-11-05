@@ -49,6 +49,7 @@ model User {
   proposalRevisions   ProposalRevision[] @relation("ProposalRevisionAuthor")
   notifications       Notification[]
   savedSearches       SavedSearch[]
+  savedJobs           SavedJob[]
   paymentsSent        Payment[] @relation("PaymentPayer")
   paymentsReceived    Payment[] @relation("PaymentPayee")
   reviewsWritten      Review[]  @relation("ReviewAuthor")
@@ -154,6 +155,7 @@ model Job {
   postedByAdmin User?        @relation("AdminPostedJobs", fields: [postedByAdminId], references: [id], onDelete: SetNull)
   applications Application[]
   reports      Report[]      @relation("ReportedJob")
+  savedBy      SavedJob[]
 
   @@index([employerId])
   @@index([postedByAdminId])
@@ -715,4 +717,18 @@ model PhoneOtp {
 
   @@index([phone, createdAt])
   @@index([requestIp, createdAt])
+}
+
+// A job a seeker bookmarked to come back to.
+model SavedJob {
+  id        String   @id @default(uuid())
+  userId    String
+  jobId     String
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, jobId])
+  @@index([userId, createdAt])
 }

@@ -199,6 +199,17 @@ export const apiCreateInterestSignup = (data: { email?: string; phone?: string; 
     body: JSON.stringify(data),
   }).then(handleResponse);
 
+// Saved jobs
+export const apiGetSavedJobs = () => fetch(`${BASE_URL}/saved-jobs`, { headers: headers(true) }).then(handleResponse);
+
+export const apiGetSavedJobIds = () => fetch(`${BASE_URL}/saved-jobs/ids`, { headers: headers(true) }).then(handleResponse);
+
+export const apiSaveJob = (jobId: string) =>
+  fetch(`${BASE_URL}/saved-jobs/${encodeURIComponent(jobId)}`, { method: 'POST', headers: headers(true) }).then(handleResponse);
+
+export const apiUnsaveJob = (jobId: string) =>
+  fetch(`${BASE_URL}/saved-jobs/${encodeURIComponent(jobId)}`, { method: 'DELETE', headers: headers(true) }).then(handleResponse);
+
 // Jobs
 export const apiGetJobs = (params?: Record<string, string>) => {
   const query = params ? '?' + new URLSearchParams(params).toString() : '';

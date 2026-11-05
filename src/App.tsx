@@ -12,6 +12,7 @@ const CVGenerator = lazy(() => import('./pages/CVGenerator'))
 const Messaging = lazy(() => import('./pages/Messaging'))
 const MyApplications = lazy(() => import('./pages/MyApplications'))
 const AccountSettings = lazy(() => import('./pages/AccountSettings'))
+const SavedJobs = lazy(() => import('./pages/SavedJobs'))
 const AccountDeleted = lazy(() => import('./pages/AccountDeleted'))
 const Dashboard = lazy(() => import('./pages/Dashboard'))
 const Agreements = lazy(() => import('./pages/Agreements'))
@@ -90,6 +91,7 @@ function App() {
           <Route path="/cv-generator" element={renderProtected(<CVGenerator />)} />
           <Route path="/messaging" element={renderProtected(<Messaging />)} />
           <Route path="/applications" element={renderProtected(<MyApplications />)} />
+          <Route path="/saved-jobs" element={renderProtected(<SavedJobs />)} />
           <Route path="/settings" element={renderProtected(<AccountSettings />)} />
           <Route path="/account-deleted" element={<AccountDeleted />} />
           <Route path="/agreements" element={<FreelanceGate>{renderProtected(<Agreements />)}</FreelanceGate>} />

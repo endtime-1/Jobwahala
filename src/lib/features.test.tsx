@@ -68,6 +68,26 @@ describe('navigation with FREELANCE_ENABLED off', () => {
     expect(hrefs().filter((href) => href === '/applications').length).toBeGreaterThanOrEqual(2)
   })
 
+  it('gives job seekers a Saved jobs link, and nobody else', () => {
+    setFeaturesForTests({ freelanceEnabled: false })
+    signedIn('SEEKER')
+    const seeker = render(
+      <MemoryRouter>
+        <Navbar />
+      </MemoryRouter>,
+    )
+    expect(hrefs().filter((href) => href === '/saved-jobs').length).toBeGreaterThanOrEqual(2)
+    seeker.unmount()
+
+    signedIn('EMPLOYER')
+    render(
+      <MemoryRouter>
+        <Navbar />
+      </MemoryRouter>,
+    )
+    expect(hrefs()).not.toContain('/saved-jobs')
+  })
+
   it('does not show employers a My applications link', () => {
     setFeaturesForTests({ freelanceEnabled: false })
     signedIn('EMPLOYER')

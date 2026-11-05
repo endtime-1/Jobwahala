@@ -141,6 +141,18 @@ describe('downloading my data', () => {
     expect(JSON.stringify(data)).not.toMatch(/"(password|tokenVersion|internalNote)"\s*:/);
   });
 
+  it('includes the jobs the member saved', async () => {
+    prisma.user.findUnique.mockResolvedValue({ id: 'u1', email: null, phone: null });
+    prisma.savedJob.findMany.mockResolvedValue([
+      { createdAt: new Date('2026-11-01'), job: { id: 'j9', title: 'Cook', employer: { employerProfile: { companyName: 'Achiba' } } } },
+    ]);
+
+    const data = await buildUserDataExport('u1');
+
+    expect(prisma.savedJob.findMany.mock.calls[0][0].where).toEqual({ userId: 'u1' });
+    expect(data!.savedJobs).toEqual([{ jobId: 'j9', jobTitle: 'Cook', company: 'Achiba', savedAt: new Date('2026-11-01') }]);
+  });
+
   it('shortens the bank account number to its last four digits', async () => {
     prisma.user.findUnique.mockResolvedValue({ id: 'u1', email: null, phone: null });
     prisma.payoutAccount.findUnique.mockResolvedValue({ bankName: 'GCB', accountName: 'Ama Mensah', accountNumber: '1234567890', currency: 'GHS' });
@@ -234,6 +246,7 @@ describe('deleting an account', () => {
 
     for (const [model, method] of [
       ['savedSearch', 'deleteMany'], // job alerts stop
+      ['savedJob', 'deleteMany'], // bookmarked jobs
       ['notification', 'deleteMany'],
       ['emailVerificationToken', 'deleteMany'],
       ['passwordResetToken', 'deleteMany'],

@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
-import { CalendarClock, MapPin, CheckCircle, ChevronLeft, Send, Clock, Share2, Bookmark, AlertTriangle, Building2, Globe, ChevronRight, BriefcaseBusiness, Sparkles, ShieldCheck, MessageCircle } from 'lucide-react'
+import { CalendarClock, MapPin, CheckCircle, ChevronLeft, Send, Clock, Share2, AlertTriangle, Building2, Globe, ChevronRight, BriefcaseBusiness, Sparkles, ShieldCheck, MessageCircle } from 'lucide-react'
 import ReportModal from '../components/ReportModal'
 import CompanyLogo from '../components/CompanyLogo'
 import VerifiedBadge from '../components/VerifiedBadge'
 import UnverifiedEmployerLabel from '../components/UnverifiedEmployerLabel'
+import SaveJobButton from '../components/SaveJobButton'
 import { apiApplyForJob, apiDeleteApplication, apiGetJobApplicationCoaching, apiGetJobById, apiGetMyJobApplication } from '../lib/api'
 import { emailHandle, formatRelativeTime } from '../lib/display'
 import { closingSummary } from '../lib/jobLifecycle'
@@ -74,7 +75,6 @@ export default function JobDetails() {
   const [coaching, setCoaching] = useState<JobApplicationCoaching | null>(null)
   const [isCoachingLoading, setIsCoachingLoading] = useState(false)
   const [coachingError, setCoachingError] = useState('')
-  const [saved, setSaved] = useState(false)
   const [showReportModal, setShowReportModal] = useState(false)
 
   useEffect(() => {
@@ -242,16 +242,7 @@ export default function JobDetails() {
           >
             <Share2 className="h-5 w-5" />
           </button>
-          <button
-            onClick={() => setSaved((current) => !current)}
-            className={`flex h-11 w-11 items-center justify-center rounded-2xl border transition-all shadow-sm ${
-              saved
-                ? 'bg-secondary/10 border-secondary text-secondary'
-                : 'bg-surface border-surface-border text-text-muted hover:text-secondary hover:border-secondary'
-            }`}
-          >
-            <Bookmark className={`h-5 w-5 ${saved ? 'fill-secondary' : ''}`} />
-          </button>
+          <SaveJobButton jobId={job.id} />
         </div>
       </div>
 
@@ -497,16 +488,7 @@ export default function JobDetails() {
                       {isApplying ? 'Submitting...' : 'Apply Now'}
                       <Send className="h-5 w-5" />
                     </button>
-                    <button
-                      onClick={() => setSaved((current) => !current)}
-                      className={`btn w-full rounded-2xl font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-3 transition-all ${
-                        saved
-                          ? 'bg-secondary text-white shadow-secondary/20'
-                          : 'btn-outline border-surface-border text-text-muted hover:border-secondary hover:text-secondary'
-                      }`}
-                    >
-                      {saved ? 'Saved locally' : 'Save Job'}
-                    </button>
+                    <SaveJobButton jobId={job.id} variant="labelled" />
                   </div>
                 </>
               )}
