@@ -69,3 +69,44 @@ describe('dashboard data belongs to one person', () => {
     expect(auth.user).toBeNull()
   })
 })
+
+describe('staying signed in', () => {
+  const mount = () =>
+    render(
+      <AuthProvider>
+        <Probe />
+      </AuthProvider>,
+    )
+
+  it('a refusal from the server (the saved token is no good) signs the person out', async () => {
+    localStorage.setItem('jobwahala_token', 'old')
+    api.me.mockRejectedValue(Object.assign(new Error('Token is not valid'), { status: 401 }))
+    mount()
+
+    await waitFor(() => expect(auth.isLoading).toBe(false))
+
+    expect(auth.user).toBeNull()
+    expect(localStorage.getItem('jobwahala_token')).toBeNull()
+  })
+
+  it('a network error or a server that is restarting does not: it tries again and keeps the token', async () => {
+    localStorage.setItem('jobwahala_token', 'good')
+    api.me.mockRejectedValueOnce(new TypeError('Failed to fetch')).mockResolvedValue({ user: employer('akoko') })
+    mount()
+
+    await waitFor(() => expect(auth.user?.id).toBe('akoko'), { timeout: 4000 })
+
+    expect(api.me).toHaveBeenCalledTimes(2)
+    expect(localStorage.getItem('jobwahala_token')).toBe('good')
+  })
+
+  it('if the server stays down the token is still kept, so the next visit works', async () => {
+    localStorage.setItem('jobwahala_token', 'good')
+    api.me.mockRejectedValue(Object.assign(new Error('Bad gateway'), { status: 502 }))
+    mount()
+
+    await waitFor(() => expect(auth.isLoading).toBe(false), { timeout: 4000 })
+
+    expect(localStorage.getItem('jobwahala_token')).toBe('good')
+  })
+})

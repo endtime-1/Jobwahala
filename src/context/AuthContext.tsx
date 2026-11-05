@@ -143,13 +143,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    syncCurrentUser()
-      .catch(() => {
-        clearSession();
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
+    // Only a refusal from the server (the token is no good) ends the session. A network blip, a slow server or a redeploy must not
+    // sign anyone out: try once more, and if it still fails keep the saved token so the next visit works.
+    let cancelled = false;
+    const isRefusal = (error: unknown) => [401, 403].includes((error as { status?: number }).status ?? 0);
+
+    const load = async () => {
+      try {
+        await syncCurrentUser();
+      } catch (error) {
+        if (isRefusal(error)) {
+          clearSession();
+          return;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+        if (cancelled) return;
+        try {
+          await syncCurrentUser();
+        } catch (retryError) {
+          if (isRefusal(retryError)) clearSession();
+        }
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    };
+
+    void load();
+    return () => {
+      cancelled = true;
+    };
   }, [token]);
 
   const login = async (email: string, password: string) => {

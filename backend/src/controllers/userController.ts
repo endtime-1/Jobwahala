@@ -887,7 +887,8 @@ export const getProfile = async (req: AuthRequest, res: Response) => {
     }
 
     const latestVerificationRequest = user.verificationRequests[0] || null;
-    const { verificationRequests, ...profile } = user;
+    // The password hash and the sign-in version number never leave the server, not even to their owner.
+    const { verificationRequests, password: _password, tokenVersion: _tokenVersion, ...profile } = user;
 
     res.json({
       success: true,

@@ -81,6 +81,9 @@ function App() {
   // Pages for people looking for work. An employer has their own workspace instead, so they are sent to their dashboard.
   const seekerSide = (element: ReactElement) => (user?.role === 'EMPLOYER' ? <Navigate to="/dashboard" replace /> : element)
 
+  // Pages that only make sense for an employer. Anyone else goes to their own dashboard instead of seeing "access denied".
+  const employerSide = (element: ReactElement) => (user && user.role !== 'EMPLOYER' ? <Navigate to="/dashboard" replace /> : element)
+
   const renderProtected = (element: ReactElement) => {
     if (!user) return <Navigate to="/login" replace />
     if (!isOnboarded) return <Navigate to="/onboarding" replace />
@@ -113,12 +116,12 @@ function App() {
           <Route path="/providers/:id" element={<ProviderPage />} />
           <Route path="/provider" element={renderProtected(<ProviderDashboard />)} />
           <Route path="/billing" element={renderProtected(<Billing />)} />
-          <Route path="/plans" element={renderProtected(<Plans />)} />
-          <Route path="/team" element={renderProtected(<Team />)} />
+          <Route path="/plans" element={renderProtected(employerSide(<Plans />))} />
+          <Route path="/team" element={renderProtected(employerSide(<Team />))} />
           <Route path="/join-team" element={renderProtected(<JoinTeam />)} />
-          <Route path="/cv-database" element={renderProtected(<CvDatabase />)} />
-          <Route path="/hiring-reports" element={renderProtected(<HiringReports />)} />
-          <Route path="/company-page" element={renderProtected(<CompanyPageEditor />)} />
+          <Route path="/cv-database" element={renderProtected(employerSide(<CvDatabase />))} />
+          <Route path="/hiring-reports" element={renderProtected(employerSide(<HiringReports />))} />
+          <Route path="/company-page" element={renderProtected(employerSide(<CompanyPageEditor />))} />
           <Route path="/jobs/:id" element={<JobDetails />} />
           <Route path="/cv-generator" element={renderProtected(seekerSide(<CVGenerator />))} />
           <Route path="/messaging" element={renderProtected(<Messaging />)} />

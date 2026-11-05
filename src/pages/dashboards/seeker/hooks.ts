@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { apiGetDashboard, apiGetSentServiceRequests, apiGetProfileOptimization } from '../../../lib/api'
+import { useFeatures } from '../../../lib/features'
 import type { UpcomingMilestone, ProposalActionItem, ReviewActionItem, DisputeActionItem, PaymentActionItem, VerificationState, SentServiceRequest } from '../shared/types'
 
 export type SeekerApplication = {
@@ -45,10 +46,13 @@ export type ProfileOptimization = {
 }
 
 export function useSeekerDashboard() {
+  const { loaded, freelanceEnabled } = useFeatures()
+  const skipRequests = loaded && !freelanceEnabled
+
   return useQuery({
     queryKey: ['seeker', 'dashboard'],
     queryFn: async () => {
-      const [data, requestsData] = await Promise.all([apiGetDashboard(), Promise.resolve().then(() => apiGetSentServiceRequests()).catch(() => ({ requests: [] }))])
+      const [data, requestsData] = await Promise.all([apiGetDashboard(), skipRequests ? Promise.resolve({ requests: [] }) : Promise.resolve().then(() => apiGetSentServiceRequests()).catch(() => ({ requests: [] }))])
       return {
         applications: (data.applications || []) as SeekerApplication[],
         recommendedJobs: (data.recommendedJobs || []) as RecommendedJob[],

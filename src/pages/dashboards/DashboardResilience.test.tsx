@@ -64,4 +64,25 @@ describe('the employer dashboard when freelance is switched off', () => {
     renderDashboard()
     await waitFor(() => expect(screen.getAllByText('Verified Business').length).toBeGreaterThan(0))
   })
+
+  it('does not ask for the freelance request list at all while freelance is off', async () => {
+    api.dashboard.mockResolvedValue(dashboard({ requiredType: 'BUSINESS', isVerified: false, verificationStatus: 'UNVERIFIED' }))
+    renderDashboard()
+
+    await screen.findByText('B2B SALES EXECUTIVE')
+    expect(api.sent).not.toHaveBeenCalled()
+  })
+
+  it('shows a dash, not a 0, while the numbers are still loading', async () => {
+    let finish: (value: unknown) => void = () => undefined
+    api.dashboard.mockReturnValue(new Promise((resolve) => (finish = resolve)))
+    renderDashboard()
+
+    const roles = await screen.findByText('Roles')
+    expect(roles.previousElementSibling?.textContent).toBe('–')
+    expect(screen.queryAllByText('0')).toHaveLength(0)
+
+    finish(dashboard({ requiredType: 'BUSINESS', isVerified: false, verificationStatus: 'UNVERIFIED' }))
+    await waitFor(() => expect(screen.getByText('Roles').previousElementSibling?.textContent).toBe('1'))
+  })
 })

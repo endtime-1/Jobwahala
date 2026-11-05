@@ -1,9 +1,9 @@
 import { Briefcase, Users, MessageSquare } from 'lucide-react'
 
 type Props = {
-  jobCount: number
-  totalApplicants: number
-  unreadMessages: number
+  jobCount: number | string
+  totalApplicants: number | string
+  unreadMessages: number | string
   pendingPaymentActions: number
 }
 

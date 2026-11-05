@@ -7,6 +7,7 @@ import {
   apiGetSentServiceRequests,
   apiGetJobApplicants,
 } from '../../../lib/api'
+import { useFeatures } from '../../../lib/features'
 import type {
   EmployerJob,
   RecentApplication,
@@ -23,12 +24,16 @@ import type {
 // --- Full initial dashboard load ---
 
 export function useEmployerDashboard() {
+  // The freelance request list does not exist while freelance is switched off, so do not ask for it.
+  const { loaded, freelanceEnabled } = useFeatures()
+  const skipRequests = loaded && !freelanceEnabled
+
   return useQuery({
     queryKey: ['employer', 'dashboard'],
     queryFn: async () => {
       const [data, requestsData] = await Promise.all([
         apiGetDashboard(),
-        Promise.resolve().then(() => apiGetSentServiceRequests()).catch(() => ({ requests: [] })),
+        skipRequests ? Promise.resolve({ requests: [] }) : Promise.resolve().then(() => apiGetSentServiceRequests()).catch(() => ({ requests: [] })),
       ])
 
       return {

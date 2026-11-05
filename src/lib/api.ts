@@ -48,6 +48,7 @@ const handleResponse = async (res: Response) => {
       retryAfterSeconds: data.retryAfterSeconds as number | undefined,
       attemptsLeft: data.attemptsLeft as number | undefined,
       code: data.code as string | undefined,
+      status: res.status,
     });
   }
   return data;

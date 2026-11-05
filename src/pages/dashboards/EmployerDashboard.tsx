@@ -33,6 +33,8 @@ export default function EmployerDashboard() {
   const [error, setError] = useState('')
 
   const jobs = data?.jobs ?? []
+  // While the numbers are on their way show a dash, never a 0 that looks like "you have no jobs".
+  const shown = (value: number) => (isLoading ? '–' : value)
   const recentApplications = data?.recentApplications ?? []
   const sentRequests = data?.sentRequests ?? []
   const unreadMessages = data?.unreadMessages ?? 0
@@ -133,16 +135,16 @@ export default function EmployerDashboard() {
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-text-light">Hiring snapshot</p>
             <div className={`mt-4 grid gap-3 ${freelanceEnabled ? 'grid-cols-3' : 'grid-cols-2'}`}>
               <div className="rounded-2xl bg-white/80 px-3 py-4 text-center shadow-premium-sm">
-                <p className="text-2xl font-black text-text-main">{jobs.length}</p>
+                <p className="text-2xl font-black text-text-main">{shown(jobs.length)}</p>
                 <p className="mt-1 text-[9px] font-black uppercase tracking-[0.18em] text-text-light">Roles</p>
               </div>
               <div className="rounded-2xl bg-white/80 px-3 py-4 text-center shadow-premium-sm">
-                <p className="text-2xl font-black text-text-main">{totalApplicants}</p>
+                <p className="text-2xl font-black text-text-main">{shown(totalApplicants)}</p>
                 <p className="mt-1 text-[9px] font-black uppercase tracking-[0.18em] text-text-light">Applicants</p>
               </div>
               {freelanceEnabled ? (
                 <div className="rounded-2xl bg-white/80 px-3 py-4 text-center shadow-premium-sm">
-                  <p className="text-2xl font-black text-text-main">{pendingPaymentActions}</p>
+                  <p className="text-2xl font-black text-text-main">{shown(pendingPaymentActions)}</p>
                   <p className="mt-1 text-[9px] font-black uppercase tracking-[0.18em] text-text-light">Payouts</p>
                 </div>
               ) : null}
@@ -169,9 +171,9 @@ export default function EmployerDashboard() {
       </div>
 
       <EmployerStatsCards
-        jobCount={jobs.length}
-        totalApplicants={totalApplicants}
-        unreadMessages={unreadMessages}
+        jobCount={shown(jobs.length)}
+        totalApplicants={shown(totalApplicants)}
+        unreadMessages={shown(unreadMessages)}
         pendingPaymentActions={pendingPaymentActions}
       />
 
