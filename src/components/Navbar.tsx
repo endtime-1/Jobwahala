@@ -47,17 +47,17 @@ const seekerLinks: NavLinkItem[] = [
   { name: 'Freelance gigs', href: '/freelancers', icon: <Users className="h-4 w-4" /> },
 ]
 
+// An employer works from their own workspace: the dashboard (jobs, internships and NSS posts, applicants), the CV database,
+// billing and plans, and messages. Job seekers' pages (browsing jobs, internships, courses) are not part of it.
 const employerLinks: NavLinkItem[] = [
-  { name: 'Browse Jobs', href: '/jobs', icon: <Briefcase className="h-4 w-4" /> },
-  { name: 'Internships & NSS', href: '/internships', icon: <GraduationCap className="h-4 w-4" /> },
-  { name: 'Courses', href: '/courses', icon: <BookOpen className="h-4 w-4" /> },
-  { name: 'Find Talent', href: '/freelancers', icon: <Users className="h-4 w-4" /> },
   { name: 'Dashboard', href: '/dashboard', icon: <Rocket className="h-4 w-4" /> },
-  { name: 'Billing', href: '/billing', icon: <CreditCard className="h-4 w-4" /> },
+  { name: 'CV database', href: '/cv-database', icon: <Users className="h-4 w-4" /> },
+  { name: 'Plans & billing', href: '/billing', icon: <CreditCard className="h-4 w-4" /> },
+  { name: 'Team', href: '/team', icon: <UserCircle2 className="h-4 w-4" /> },
+  { name: 'Find Talent', href: '/freelancers', icon: <Users className="h-4 w-4" /> },
   { name: 'Proposals', href: '/proposals', icon: <Handshake className="h-4 w-4" /> },
   { name: 'Agreements', href: '/agreements', icon: <FileCheck className="h-4 w-4" /> },
   { name: 'Messages', href: '/messaging', icon: <MessageSquare className="h-4 w-4" /> },
-  { name: 'Resources', href: '/blog', icon: <BookOpen className="h-4 w-4" /> },
 ]
 
 const freelancerLinks: NavLinkItem[] = [
@@ -223,10 +223,10 @@ export default function Navbar() {
 
     if (role === 'EMPLOYER') {
       return [
-        { name: 'Jobs', href: '/jobs', icon: <Briefcase className="h-4 w-4" /> },
-        { name: 'Talent', href: '/freelancers', icon: <Users className="h-4 w-4" /> },
         { name: 'Hub', href: '/dashboard', icon: <Rocket className="h-4 w-4" /> },
-        { name: 'Deals', href: '/proposals', icon: <Handshake className="h-4 w-4" /> },
+        { name: 'CVs', href: '/cv-database', icon: <Users className="h-4 w-4" /> },
+        { name: 'Billing', href: '/billing', icon: <CreditCard className="h-4 w-4" /> },
+        { name: 'Messages', href: '/messaging', icon: <MessageSquare className="h-4 w-4" /> },
       ]
     }
 

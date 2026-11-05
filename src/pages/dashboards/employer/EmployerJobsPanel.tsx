@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { ChevronRight, Sparkles } from 'lucide-react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Sparkles } from 'lucide-react'
+import { useSearchParams } from 'react-router-dom'
 import { apiCreateJob, apiGenerateJobDraft } from '../../../lib/api'
 import { latestClosingDate, toDateInputValue } from '../../../lib/jobLifecycle'
 import EmployerJobCard from './EmployerJobCard'
@@ -265,9 +265,6 @@ export default function EmployerJobsPanel({
       <section className="dashboard-panel p-5 sm:p-7 lg:p-8">
         <div className="flex justify-between items-center mb-10 pb-6 border-b border-surface-border/50">
           <h2 className="font-black text-xs uppercase tracking-[0.2em] text-text-main">Posted Positions</h2>
-          <Link to="/jobs" className="text-[10px] font-black text-primary uppercase tracking-widest hover:underline flex items-center gap-2">
-            Open Jobs Board <ChevronRight className="h-4 w-4" />
-          </Link>
         </div>
 
         {jobs.length === 0 ? (

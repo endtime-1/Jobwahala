@@ -50,7 +50,9 @@ describe('navigation with FREELANCE_ENABLED off', () => {
         </MemoryRouter>,
       )
 
-      expect(hrefs()).toContain('/jobs')
+      // An employer works from their own workspace, so the job seeker pages are not in their menu.
+      if (role === 'EMPLOYER') expect(hrefs()).not.toContain('/jobs')
+      else expect(hrefs()).toContain('/jobs')
       expect(freelanceLinks()).toEqual([])
     })
   }

@@ -78,6 +78,9 @@ function App() {
   }
 
   const authRedirect = user ? (isOnboarded ? '/dashboard' : '/onboarding') : '/login'
+  // Pages for people looking for work. An employer has their own workspace instead, so they are sent to their dashboard.
+  const seekerSide = (element: ReactElement) => (user?.role === 'EMPLOYER' ? <Navigate to="/dashboard" replace /> : element)
+
   const renderProtected = (element: ReactElement) => {
     if (!user) return <Navigate to="/login" replace />
     if (!isOnboarded) return <Navigate to="/onboarding" replace />
@@ -101,11 +104,11 @@ function App() {
 
         <Route element={<Layout />}>
           <Route path="/" element={<Landing />} />
-          <Route path="/jobs" element={<JobListings />} />
+          <Route path="/jobs" element={seekerSide(<JobListings />)} />
           <Route path="/jobs-in/:country" element={<JobListings />} />
-          <Route path="/internships" element={<Internships />} />
-          <Route path="/courses" element={<Courses />} />
-          <Route path="/courses/category/:category" element={<CourseCategoryPage />} />
+          <Route path="/internships" element={seekerSide(<Internships />)} />
+          <Route path="/courses" element={seekerSide(<Courses />)} />
+          <Route path="/courses/category/:category" element={seekerSide(<CourseCategoryPage />)} />
           <Route path="/courses/:slug" element={<CourseDetail />} />
           <Route path="/providers/:id" element={<ProviderPage />} />
           <Route path="/provider" element={renderProtected(<ProviderDashboard />)} />
@@ -117,10 +120,10 @@ function App() {
           <Route path="/hiring-reports" element={renderProtected(<HiringReports />)} />
           <Route path="/company-page" element={renderProtected(<CompanyPageEditor />)} />
           <Route path="/jobs/:id" element={<JobDetails />} />
-          <Route path="/cv-generator" element={renderProtected(<CVGenerator />)} />
+          <Route path="/cv-generator" element={renderProtected(seekerSide(<CVGenerator />))} />
           <Route path="/messaging" element={renderProtected(<Messaging />)} />
-          <Route path="/applications" element={renderProtected(<MyApplications />)} />
-          <Route path="/saved-jobs" element={renderProtected(<SavedJobs />)} />
+          <Route path="/applications" element={renderProtected(seekerSide(<MyApplications />))} />
+          <Route path="/saved-jobs" element={renderProtected(seekerSide(<SavedJobs />))} />
           <Route path="/settings" element={renderProtected(<AccountSettings />)} />
           <Route path="/account-deleted" element={<AccountDeleted />} />
           <Route path="/agreements" element={<FreelanceGate>{renderProtected(<Agreements />)}</FreelanceGate>} />
