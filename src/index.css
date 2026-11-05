@@ -242,6 +242,30 @@ button {
       transform 0.18s ease;
   }
 
+  /* Tick boxes and round buttons are small controls, not full-width text boxes. */
+  input[type='checkbox'],
+  input[type='radio'] {
+    width: 1.1rem;
+    height: 1.1rem;
+    flex: none;
+    padding: 0;
+    border-radius: 0.3rem;
+    background: none;
+    box-shadow: none;
+    accent-color: var(--color-secondary, #2f6df6);
+    cursor: pointer;
+  }
+
+  input[type='radio'] {
+    border-radius: 9999px;
+  }
+
+  /* A dropdown has its height set by the page; vertical padding on top of that clips the text. */
+  select {
+    padding-block: 0;
+    min-height: 2.75rem;
+  }
+
   input::placeholder,
   textarea::placeholder {
     color: rgba(83, 98, 117, 0.58);
