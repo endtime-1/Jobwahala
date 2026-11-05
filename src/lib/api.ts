@@ -1093,3 +1093,40 @@ export const apiReviewCourse = (id: string, decision: 'APPROVE' | 'REJECT' | 'RE
   fetch(`${BASE_URL}/admin/courses/${id}/review`, { method: 'POST', headers: headers(true), body: JSON.stringify({ decision, ...(reason ? { reason } : {}) }) }).then(handleResponse);
 export const apiSetCourseFeatured = (id: string, days: number) =>
   fetch(`${BASE_URL}/admin/courses/${id}/featured`, { method: 'POST', headers: headers(true), body: JSON.stringify({ days }) }).then(handleResponse);
+
+// ---------------------------------------------------------------- Billing
+
+export const apiGetBillingCatalogue = () => fetch(`${BASE_URL}/billing/catalogue`, { headers: headers(true) }).then(handleResponse);
+export const apiGetMyBilling = () => fetch(`${BASE_URL}/billing/me`, { headers: headers(true) }).then(handleResponse);
+export const apiStartCheckout = (productId: string, targetId?: string) =>
+  fetch(`${BASE_URL}/billing/checkout`, { method: 'POST', headers: headers(true), body: JSON.stringify({ productId, ...(targetId ? { targetId } : {}) }) }).then(handleResponse);
+export const apiGetPaymentStatus = (reference: string) =>
+  fetch(`${BASE_URL}/billing/payments/${encodeURIComponent(reference)}/status`, { headers: headers(true) }).then(handleResponse);
+export const apiPromoteJob = (jobId: string, type: 'FEATURE' | 'BOOST') =>
+  fetch(`${BASE_URL}/billing/jobs/${jobId}/promote`, { method: 'POST', headers: headers(true), body: JSON.stringify({ type }) }).then(handleResponse);
+export const apiCancelSubscription = (id: string) => fetch(`${BASE_URL}/billing/subscriptions/${id}/cancel`, { method: 'POST', headers: headers(true) }).then(handleResponse);
+
+/** Downloads a receipt as a file. The server only gives it to the person who paid. */
+export const apiDownloadReceipt = async (paymentId: string) => {
+  const res = await fetch(`${BASE_URL}/billing/payments/${paymentId}/receipt`, { headers: headers(true) });
+  if (!res.ok) throw new Error('We could not download that receipt.');
+  const disposition = res.headers.get('content-disposition') ?? '';
+  const name = /filename="([^"]+)"/.exec(disposition)?.[1] ?? 'receipt.html';
+  return { blob: await res.blob(), name };
+};
+
+// Admin
+export const apiAdminBillingProducts = () => fetch(`${BASE_URL}/admin/billing/products`, { headers: headers(true) }).then(handleResponse);
+export const apiAdminSaveProduct = (data: Record<string, unknown>, id?: string) =>
+  fetch(`${BASE_URL}/admin/billing/products${id ? `/${id}` : ''}`, { method: id ? 'PUT' : 'POST', headers: headers(true), body: JSON.stringify(data) }).then(handleResponse);
+export const apiAdminBillingSettings = () => fetch(`${BASE_URL}/admin/billing/settings`, { headers: headers(true) }).then(handleResponse);
+export const apiAdminSaveBillingSettings = (data: Record<string, unknown>) =>
+  fetch(`${BASE_URL}/admin/billing/settings`, { method: 'PUT', headers: headers(true), body: JSON.stringify(data) }).then(handleResponse);
+export const apiAdminRevenue = (months = 12) => fetch(`${BASE_URL}/admin/billing/revenue?months=${months}`, { headers: headers(true) }).then(handleResponse);
+export const apiAdminBillingPayments = (params: Record<string, string> = {}) =>
+  fetch(`${BASE_URL}/admin/billing/payments?${new URLSearchParams(params).toString()}`, { headers: headers(true) }).then(handleResponse);
+export const apiAdminRefund = (id: string, data: { amountGhs?: number; reason: string; reverseBenefits: boolean }) =>
+  fetch(`${BASE_URL}/admin/billing/payments/${id}/refund`, { method: 'POST', headers: headers(true), body: JSON.stringify(data) }).then(handleResponse);
+export const apiAdminLookupAccount = (email: string) => fetch(`${BASE_URL}/admin/billing/account?email=${encodeURIComponent(email)}`, { headers: headers(true) }).then(handleResponse);
+export const apiAdminAdjustCredits = (data: { email: string; type: 'FEATURE' | 'BOOST'; delta: number; reason: string }) =>
+  fetch(`${BASE_URL}/admin/billing/credits`, { method: 'POST', headers: headers(true), body: JSON.stringify(data) }).then(handleResponse);

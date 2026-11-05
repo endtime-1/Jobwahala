@@ -30,6 +30,7 @@ import interestRoutes from './routes/interestRoutes';
 import applicationRoutes from './routes/applicationRoutes';
 import savedJobRoutes from './routes/savedJobRoutes';
 import courseRoutes from './routes/courseRoutes';
+import billingRoutes from './routes/billingRoutes';
 import providerRoutes from './routes/providerRoutes';
 import learnerCourseRoutes from './routes/learnerCourseRoutes';
 import { requireFreelanceEnabled } from './middleware/featureFlags';
@@ -88,7 +89,8 @@ const apiRateLimit = createRateLimit({
   skip: (req) =>
     req.path === '/health' ||
     req.path === '/ready' ||
-    req.path.startsWith('/payments/webhooks'),
+    req.path.startsWith('/payments/webhooks') ||
+    req.path.startsWith('/billing/webhooks'),
 });
 
 app.disable('x-powered-by');
@@ -150,7 +152,15 @@ app.get('/ready', async (_req: Request, res: Response) => {
 });
 
 app.use(cors(corsOptions));
-app.use(express.json({ limit: env.bodyLimit }));
+// Paystack signs the exact bytes it sends, so the billing webhook keeps them.
+app.use(
+  express.json({
+    limit: env.bodyLimit,
+    verify: (req, _res, buffer) => {
+      if ((req.url ?? '').startsWith('/api/billing/webhooks/')) (req as typeof req & { rawBody?: Buffer }).rawBody = Buffer.from(buffer);
+    },
+  }),
+);
 app.use(express.urlencoded({ extended: true, limit: env.bodyLimit }));
 
 if (isLocalEvidenceStorage) {
@@ -193,6 +203,7 @@ app.use('/api/interest', interestRoutes);
 app.use('/api/applications', applicationRoutes);
 app.use('/api/saved-jobs', savedJobRoutes);
 app.use('/api/courses', courseRoutes);
+app.use('/api/billing', billingRoutes);
 app.use('/api/provider', providerRoutes);
 app.use('/api/learner/courses', learnerCourseRoutes);
 app.use('/api/verifications', verificationRoutes);

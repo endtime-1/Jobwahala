@@ -27,6 +27,9 @@ model User {
   jobSeekerProfile   JobSeekerProfile?
   // Courses: as a training provider, as a learner, and enquiries made.
   courses             Course[] @relation("ProviderCourses")
+  billingPayments     BillingPayment[] @relation("BillingPayments")
+  subscriptions       Subscription[] @relation("Subscriptions")
+  creditAccount       CreditAccount? @relation("CreditAccount")
   learnerCourses      LearnerCourse[] @relation("LearnerCourses")
   courseEnquiries     CourseEnquiry[] @relation("CourseEnquiries")
   employerProfile    EmployerProfile?
@@ -159,6 +162,9 @@ model Job {
   salaryMin   Int?
   salaryMax   Int?
   salaryParsedAt DateTime? // set once we have tried to read numbers out of old text pay
+  // Paid promotion: both end by themselves (every query compares them to now).
+  featuredUntil DateTime?
+  boostedUntil  DateTime? // "Urgently hiring"
   currency    String   @default("GHS")
   category    String?
   // Early-career details (internships, National Service, attachments, graduate jobs). For these types the pay
@@ -909,4 +915,159 @@ model LearnerCourse {
 
   @@index([userId])
   @@index([courseId, status])
+}
+
+// ---------------------------------------------------------------- Billing (Paystack, GHS). Money is whole pesewas.
+
+// What can be bought. Managed by admins: price, duration, credits and what is included change without code.
+model Product {
+  id          String   @id @default(uuid())
+  kind        String   // FEATURED_JOB, JOB_BOOST, JOB_PACK, FEATURED_COURSE, SUBSCRIPTION
+  slug        String   @unique
+  name        String
+  description String   @default("")
+  audience    String   @default("EMPLOYER") // EMPLOYER or PROVIDER (a training provider)
+  pricePesewas Int
+  durationDays Int?    // featured job / boost / featured course
+  featuredCredits Int  @default(0) // given by a pack, or every period by a subscription
+  boostCredits    Int  @default(0)
+  interval    String?  // MONTHLY or YEARLY (subscriptions)
+  includesJson String  @default("[]") // ["What is included", ...]
+  active      Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  paystackPlanCode   String?
+  paystackPlanAmount Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  payments      BillingPayment[]
+  subscriptions Subscription[]
+
+  @@index([kind, active])
+}
+
+// Every charge: one-off purchases and subscription renewals. The product is copied in, so later price changes never rewrite history.
+model BillingPayment {
+  id            String   @id @default(uuid())
+  userId        String
+  productId     String?
+  productKind   String
+  productName   String
+  targetType    String?  // JOB or COURSE
+  targetId      String?
+  reference     String   @unique
+  status        String   @default("PENDING") // PENDING, PAID, FAILED, REFUNDED, PARTIALLY_REFUNDED
+  subtotalPesewas Int
+  vatPesewas    Int
+  totalPesewas  Int
+  vatRateBps    Int      // 1500 = 15%
+  channel       String?  // card, mobile_money ...
+  billToName    String?
+  billToEmail   String?
+  receiptNumber String?  @unique
+  paidAt        DateTime?
+  refundedPesewas Int    @default(0)
+  failureReason String?
+  subscriptionId String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user    User     @relation("BillingPayments", fields: [userId], references: [id], onDelete: Cascade)
+  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  refunds BillingRefund[]
+
+  @@index([userId, createdAt])
+  @@index([status, paidAt])
+  @@index([productKind, paidAt])
+}
+
+model Subscription {
+  id            String   @id @default(uuid())
+  userId        String
+  productId     String
+  status        String   @default("ACTIVE") // ACTIVE, PAST_DUE, CANCELLED, EXPIRED
+  paystackSubscriptionCode String? @unique
+  paystackCustomerCode     String?
+  paystackEmailToken       String?
+  currentPeriodStart DateTime
+  currentPeriodEnd   DateTime
+  cancelAtPeriodEnd  Boolean @default(false)
+  cancelledAt        DateTime?
+  reminderSentForPeriodEnd DateTime? // the period end we already sent a renewal reminder for
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user    User    @relation("Subscriptions", fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@index([userId, status])
+  @@index([status, currentPeriodEnd])
+}
+
+// Current credit balances. Spending is one conditional update, so the same credit cannot be spent twice.
+model CreditAccount {
+  id             String @id @default(uuid())
+  userId         String @unique
+  featuredCredits Int   @default(0)
+  boostCredits    Int   @default(0)
+  updatedAt      DateTime @updatedAt
+
+  user User @relation("CreditAccount", fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// The audit trail behind the balances.
+model CreditLedger {
+  id        String   @id @default(uuid())
+  userId    String
+  creditType String  // FEATURE or BOOST
+  delta     Int
+  reason    String   // PURCHASE, SUBSCRIPTION, SPEND, REFUND, ADMIN_ADJUSTMENT
+  paymentId String?
+  jobId     String?
+  adminId   String?
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+// One row of settings the admin can change: VAT, company details for receipts, the receipt counter.
+model BillingSettings {
+  id           String  @id @default("default")
+  vatRatePercent Float  @default(15)
+  pricesIncludeVat Boolean @default(true)
+  companyName  String  @default("JobWahala")
+  companyAddress String @default("")
+  companyTin   String  @default("")
+  companyEmail String  @default("")
+  companyPhone String  @default("")
+  receiptFooter String @default("Thank you for using JobWahala.")
+  receiptSeq   Int     @default(0)
+  updatedAt    DateTime @updatedAt
+}
+
+// Each Paystack webhook is handled once; a repeat is recognised and ignored.
+model PaystackEvent {
+  id          String   @id @default(uuid())
+  eventKey    String   @unique
+  type        String
+  reference   String?
+  outcome     String?
+  receivedAt  DateTime @default(now())
+}
+
+model BillingRefund {
+  id         String   @id @default(uuid())
+  paymentId  String
+  amountPesewas Int
+  reason     String
+  adminId    String
+  paystackRefundId String?
+  status     String   @default("PENDING") // PENDING, PROCESSED, FAILED
+  reversedBenefits Boolean @default(false)
+  createdAt  DateTime @default(now())
+
+  payment BillingPayment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  @@index([paymentId])
 }

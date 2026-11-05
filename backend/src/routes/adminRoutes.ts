@@ -21,6 +21,8 @@ import { getVerificationRequests, updateVerificationRequestStatus } from '../con
 import { getAdminAuditLog } from '../controllers/adminAuditController';
 import { getCourseQueue, reviewCourse, reviewProvider, setFeatured } from '../controllers/adminCourseController';
 import { courseReviewSchema, featuredSchema, providerReviewSchema } from '../validation/courseSchemas';
+import { adjustUserCredits, createProduct, getBillingSettings, getRevenue, listPayments, listProducts, lookupAccount, refund, updateBillingSettings, updateProduct } from '../controllers/adminBillingController';
+import { creditAdjustmentSchema, createProductSchema, refundSchema, settingsSchema, updateProductSchema } from '../validation/billingSchemas';
 import { authMiddleware, roleMiddleware } from '../middleware/auth';
 import { validate } from '../middleware/validate';
 import {
@@ -70,5 +72,16 @@ router.get('/courses/queue', getCourseQueue);
 router.post('/providers/:userId/review', validate(providerReviewSchema), reviewProvider);
 router.post('/courses/:id/review', validate(courseReviewSchema), reviewCourse);
 router.post('/courses/:id/featured', validate(featuredSchema), setFeatured);
+
+router.get('/billing/products', listProducts);
+router.post('/billing/products', validate(createProductSchema), createProduct);
+router.put('/billing/products/:id', validate(updateProductSchema), updateProduct);
+router.get('/billing/settings', getBillingSettings);
+router.put('/billing/settings', validate(settingsSchema), updateBillingSettings);
+router.get('/billing/revenue', getRevenue);
+router.get('/billing/payments', listPayments);
+router.post('/billing/payments/:id/refund', validate(refundSchema), refund);
+router.get('/billing/account', lookupAccount);
+router.post('/billing/credits', validate(creditAdjustmentSchema), adjustUserCredits);
 
 export default router;

@@ -6,6 +6,7 @@ import CompanyLogo from '../components/CompanyLogo'
 import VerifiedBadge from '../components/VerifiedBadge'
 import UnverifiedEmployerLabel from '../components/UnverifiedEmployerLabel'
 import SaveJobButton from '../components/SaveJobButton'
+import PromotionBadge from '../components/PromotionBadge'
 import ShareOnWhatsApp from '../components/ShareOnWhatsApp'
 import { apiCompareJobs, apiGetJobs } from '../lib/api'
 import { emailHandle, formatMoney, formatRelativeTime } from '../lib/display'
@@ -40,6 +41,7 @@ type JobRecord = {
   startDate?: string | null
   schedule?: string | null
   possibleJobOffer?: boolean
+  promotion?: string | null
   category?: string | null
   createdAt: string
   matchScore?: number
@@ -579,6 +581,7 @@ export default function JobListings() {
                           <h3 className="text-xl font-extrabold leading-snug tracking-tight text-text-main transition-colors group-hover:text-secondary">
                             {job.title}
                           </h3>
+                          <PromotionBadge promotion={job.promotion} />
                           {isNew ? <span className="rounded-full bg-gold px-2.5 py-0.5 text-xs font-extrabold text-primary">New</span> : null}
                           <VerifiedBadge
                             type="employer"

@@ -295,3 +295,54 @@ export const sendVerificationDecisionEmail = async (email: string, update: { tit
     html,
   });
 };
+
+// ---- Billing
+
+const billingMail = async (email: string, subject: string, heading: string, lines: string[], button: { label: string; path: string }) => {
+  const e = escapeHtml;
+  const html = wrapHtml(`
+    <div class="header">
+      <h1>${APP_NAME}</h1>
+      <p>${e(heading)}</p>
+    </div>
+    <div class="body">
+      ${lines.map((line) => `<p>${e(line)}</p>`).join('\n')}
+      <p style="text-align: center; margin: 32px 0;">
+        <a href="${env.frontendBaseUrl}${button.path}" class="btn">${e(button.label)}</a>
+      </p>
+    </div>
+    <div class="footer">
+      &copy; ${new Date().getFullYear()} ${APP_NAME}. All rights reserved.
+    </div>
+  `);
+
+  await transporter.sendMail({ from: env.smtpFrom, to: email, subject, html });
+};
+
+/** Sent when a payment is confirmed. The receipt itself (with VAT) is on the billing page. */
+export const sendPaymentReceiptEmail = (email: string, data: { receiptNumber: string; productName: string; total: string; vat: string }) =>
+  billingMail(
+    email,
+    `Your ${APP_NAME} receipt ${data.receiptNumber}`,
+    'Payment received',
+    [`Thank you. We received ${data.total} for ${data.productName}.`, `Receipt ${data.receiptNumber}. VAT included: ${data.vat}.`, 'You can download the full receipt from your billing page.'],
+    { label: 'Open my billing page', path: '/billing' },
+  );
+
+export const sendRenewalReminderEmail = (email: string, data: { planName: string; renewsOn: string; amount: string }) =>
+  billingMail(
+    email,
+    `Your ${APP_NAME} plan renews on ${data.renewsOn}`,
+    'Your plan renews soon',
+    [`Your ${data.planName} plan renews on ${data.renewsOn}. We will charge ${data.amount} to the payment method you used.`, 'If you do not want to renew, you can cancel on your billing page before then.'],
+    { label: 'Manage my plan', path: '/billing' },
+  );
+
+export const sendPaymentFailedEmail = (email: string, data: { productName: string; reason?: string | null }) =>
+  billingMail(
+    email,
+    `Your ${APP_NAME} payment did not go through`,
+    'Payment problem',
+    [`We could not take the payment for ${data.productName}.${data.reason ? ` The bank said: ${data.reason}.` : ''}`, 'Nothing has been charged for this attempt. You can try again, or use a different card or mobile money number.'],
+    { label: 'Go to my billing page', path: '/billing' },
+  );

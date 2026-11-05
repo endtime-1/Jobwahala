@@ -16,6 +16,7 @@ import {
   BookOpen,
   Bookmark,
   GraduationCap,
+  CreditCard,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { LogoMark } from './Logo'
@@ -52,6 +53,7 @@ const employerLinks: NavLinkItem[] = [
   { name: 'Courses', href: '/courses', icon: <BookOpen className="h-4 w-4" /> },
   { name: 'Find Talent', href: '/freelancers', icon: <Users className="h-4 w-4" /> },
   { name: 'Dashboard', href: '/dashboard', icon: <Rocket className="h-4 w-4" /> },
+  { name: 'Billing', href: '/billing', icon: <CreditCard className="h-4 w-4" /> },
   { name: 'Proposals', href: '/proposals', icon: <Handshake className="h-4 w-4" /> },
   { name: 'Agreements', href: '/agreements', icon: <FileCheck className="h-4 w-4" /> },
   { name: 'Messages', href: '/messaging', icon: <MessageSquare className="h-4 w-4" /> },

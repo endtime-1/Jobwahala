@@ -11,6 +11,7 @@ const JobListings = lazy(() => import('./pages/JobListings'))
 const JobDetails = lazy(() => import('./pages/JobDetails'))
 const Internships = lazy(() => import('./pages/Internships'))
 const Courses = lazy(() => import('./pages/Courses'))
+const Billing = lazy(() => import('./pages/Billing'))
 const CourseDetail = lazy(() => import('./pages/CourseDetail'))
 const ProviderPage = lazy(() => import('./pages/ProviderPage'))
 const ProviderDashboard = lazy(() => import('./pages/ProviderDashboard'))
@@ -102,6 +103,7 @@ function App() {
           <Route path="/courses/:slug" element={<CourseDetail />} />
           <Route path="/providers/:id" element={<ProviderPage />} />
           <Route path="/provider" element={renderProtected(<ProviderDashboard />)} />
+          <Route path="/billing" element={renderProtected(<Billing />)} />
           <Route path="/jobs/:id" element={<JobDetails />} />
           <Route path="/cv-generator" element={renderProtected(<CVGenerator />)} />
           <Route path="/messaging" element={renderProtected(<Messaging />)} />

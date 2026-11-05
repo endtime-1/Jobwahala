@@ -19,6 +19,7 @@ import CompanyLogo from '../components/CompanyLogo'
 import JobAlerts from '../components/JobAlerts'
 import SEO from '../components/SEO'
 import SaveJobButton from '../components/SaveJobButton'
+import PromotionBadge from '../components/PromotionBadge'
 import ShareOnWhatsApp from '../components/ShareOnWhatsApp'
 import UnverifiedEmployerLabel from '../components/UnverifiedEmployerLabel'
 import VerifiedBadge from '../components/VerifiedBadge'
@@ -56,6 +57,7 @@ type EarlyJob = {
   startDate?: string | null
   schedule?: string | null
   possibleJobOffer?: boolean
+  promotion?: string | null
   createdAt: string
   employer: {
     id: string
@@ -399,6 +401,7 @@ export default function Internships() {
                         <div className="min-w-0 flex-1">
                           <p className="flex flex-wrap items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-secondary">
                             {job.type}
+                            <PromotionBadge promotion={job.promotion} />
                             {suits ? <span className="rounded-full bg-gold px-2.5 py-0.5 text-[11px] normal-case tracking-normal text-primary">Suits you</span> : null}
                           </p>
                           <h2 className="mt-1 text-xl font-extrabold leading-snug tracking-tight text-text-main">

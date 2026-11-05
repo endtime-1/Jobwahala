@@ -11,6 +11,7 @@ import { apiApplyForJob, apiDeleteApplication, apiGetJobApplicationCoaching, api
 import { emailHandle, formatRelativeTime } from '../lib/display'
 import { closingSummary } from '../lib/jobLifecycle'
 import EarlyCareerChips from '../components/EarlyCareerChips'
+import PromotionBadge from '../components/PromotionBadge'
 import CoursesForJob from '../components/CoursesForJob'
 import { isEarlyCareerType } from '../lib/earlyCareer'
 import CvChoice, { type CvChoiceValue } from '../components/CvChoice'
@@ -34,6 +35,7 @@ type JobDetail = {
   startDate?: string | null
   schedule?: string | null
   possibleJobOffer?: boolean
+  promotion?: string | null
   category?: string | null
   createdAt: string
   closesAt?: string | null
@@ -310,7 +312,8 @@ export default function JobDetails() {
                   <span className="rounded-full bg-white/15 px-4 py-2 text-sm font-bold">{workModeLabel}</span>
                   {job.category ? <span className="rounded-full bg-white/15 px-4 py-2 text-sm font-bold">{job.category}</span> : null}
                 </div>
-                <div className="mt-4">
+                <div className="mt-4 flex flex-wrap items-center gap-2">
+                  <PromotionBadge promotion={job.promotion} />
                   <EarlyCareerChips job={job} />
                 </div>
               </div>

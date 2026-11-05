@@ -1,3 +1,4 @@
+import { promotionOf } from './billing';
 export const getRequiredVerificationType = (role?: string | null) => {
   if (role === 'SEEKER') return 'IDENTITY';
   if (role === 'EMPLOYER') return 'BUSINESS';
@@ -147,9 +148,18 @@ export const verifiedEmployerFilter = {
  * Verified employers' jobs first, then newest first. The sort is stable, so jobs that tie
  * keep the order they arrived in.
  */
-export const rankJobsByVerification = <T extends { createdAt: Date | string; employer: { isVerified?: boolean } }>(jobs: T[]) =>
+export const rankJobsByVerification = <
+  T extends { createdAt: Date | string; employer: { isVerified?: boolean }; featuredUntil?: Date | string | null; boostedUntil?: Date | string | null },
+>(
+  jobs: T[],
+  now = new Date(),
+) =>
   [...jobs].sort((a, b) => {
+    // Verified always comes first, whatever was paid.
     const byVerified = Number(Boolean(b.employer.isVerified)) - Number(Boolean(a.employer.isVerified));
     if (byVerified !== 0) return byVerified;
+    // Within the same verification level, a featured or boosted job comes before one that is not.
+    const byPromotion = Number(Boolean(promotionOf(b, now))) - Number(Boolean(promotionOf(a, now)));
+    if (byPromotion !== 0) return byPromotion;
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   });

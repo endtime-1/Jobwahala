@@ -7,6 +7,8 @@ import { getErrorMessage } from '../../../lib/errors'
 import { closingSummary, daysUntil, formatClosingDate, latestClosingDate, toDateInputValue } from '../../../lib/jobLifecycle'
 import type { EmployerJob } from './types'
 import { earlyCareerTypes, isEarlyCareerType } from '../../../lib/earlyCareer'
+import { promotionOf } from '../../../lib/billing'
+import PromotionBadge from '../../../components/PromotionBadge'
 import EarlyCareerFields from './EarlyCareerFields'
 import { toEarlyCareerPayload } from './utils'
 
@@ -120,7 +122,10 @@ export default function EmployerJobCard({ job, highlighted = false, onChanged, o
     >
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
-          <h3 className="text-xl font-extrabold leading-snug tracking-tight text-text-main">{job.title}</h3>
+          <h3 className="flex flex-wrap items-center gap-2 text-xl font-extrabold leading-snug tracking-tight text-text-main">
+            {job.title}
+            <PromotionBadge promotion={promotionOf(job)} />
+          </h3>
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <span className={`rounded-full px-3 py-1 text-xs font-extrabold ${STATUS_STYLE[status] ?? 'bg-surface-alt text-text-muted'}`}>
               {STATUS_LABEL[status] ?? status}
@@ -199,6 +204,11 @@ export default function EmployerJobCard({ job, highlighted = false, onChanged, o
               <button type="button" disabled={busy} onClick={() => void setStatus('ACTIVE')} className="btn btn-outline btn-sm bg-white disabled:opacity-60">
                 Reopen Role
               </button>
+            ) : null}
+            {status === 'ACTIVE' ? (
+              <Link to="/billing" className="btn btn-outline btn-sm bg-white">
+                Promote
+              </Link>
             ) : null}
             <button type="button" onClick={() => setEditing((open) => !open)} className="btn btn-outline btn-sm bg-white">
               <Pencil className="h-3.5 w-3.5" /> {editing ? 'Cancel edit' : 'Edit'}

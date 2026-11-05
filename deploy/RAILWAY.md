@@ -97,7 +97,9 @@ SENTRY_DSN=
 VITE_SENTRY_DSN=
 ```
 
-For live payments set `PAYMENT_PROVIDER=PAYSTACK`, the Paystack keys, and point the Paystack dashboard webhook at `https://your-web-domain/api/payments/webhooks/paystack`. Ghana cedi checkouts offer mobile money first, so enable mobile money on the Paystack account.
+Billing (featured jobs, job boosts, packs, plans and featured courses) uses Paystack too. On the backend service set `PAYSTACK_SECRET_KEY` to your TEST secret key (`sk_test_...`) while you try it out; the Billing page shows a "Test mode" banner until you switch to a live key (`sk_live_...`). In the Paystack dashboard (Settings, API Keys & Webhooks) set the webhook URL to `https://your-web-domain/api/billing/webhooks/paystack`. Every payment is also checked with Paystack directly, so a webhook that never arrives only delays the purchase, it never loses it. Prices, durations, what each product includes, VAT and your company details on receipts are all changed in the admin Billing tab, with no code change.
+
+For live freelance escrow payments set `PAYMENT_PROVIDER=PAYSTACK`, the Paystack keys, and point the Paystack dashboard webhook at `https://your-web-domain/api/payments/webhooks/paystack`. Ghana cedi checkouts offer mobile money first, so enable mobile money on the Paystack account.
 
 Also set any feature-specific secrets you are using:
 

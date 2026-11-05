@@ -11,6 +11,7 @@ import { getErrorMessage } from './utils/errors';
 import { JOB_SWEEP_INTERVAL_MS, runJobLifecycleSweepSafely } from './services/jobLifecycleService';
 import { runApplicationRemindersSafely } from './services/applicationReminderService';
 import { backfillJobSalariesSafely } from './services/salaryBackfillService';
+import { runBillingSweepSafely } from './services/billingService';
 
 const httpServer = createServer(app);
 initSocket(httpServer);
@@ -71,6 +72,8 @@ const runDailySweeps = async () => {
   await runApplicationRemindersSafely();
   // Reads numbers out of older jobs' pay text. Finishes once, then finds nothing to do.
   await backfillJobSalariesSafely();
+  // Renewal reminders three days ahead, and ends plans that were not renewed.
+  await runBillingSweepSafely();
 };
 const jobSweepFirstRun = setTimeout(() => void runDailySweeps(), 60 * 1000);
 const jobSweepTask = setInterval(() => void runDailySweeps(), JOB_SWEEP_INTERVAL_MS);

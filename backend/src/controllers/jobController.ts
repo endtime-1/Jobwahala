@@ -22,6 +22,7 @@ import {
 import { approvedBusinessVerificationQuery, publicEmployerVerification, rankJobsByVerification, verifiedEmployerFilter } from '../utils/verification';
 import { getErrorMessage } from '../utils/errors';
 import { resolvePay } from '../utils/salary';
+import { promotionOf } from '../utils/billing';
 import { EARLY_CAREER_TYPES, EarlyCareerError, UNPAID_PAY, canonicalEarlyCareerType, earlyCareerData, isEarlyCareerType, parseDay, type EarlyCareerInput } from '../utils/earlyCareer';
 import logger from '../config/logger';
 import { createNotification } from '../utils/notifications';
@@ -250,6 +251,8 @@ export const getJobs = async (req: AuthRequest, res: Response) => {
       jobs: rankJobsByVerification(
         jobs.map((job) => ({
           ...job,
+          // "Urgently hiring" or "Featured" while a paid promotion is running; it ends by itself.
+          promotion: promotionOf(job),
           employer: {
             id: job.employer.id,
             email: job.employer.email,
@@ -395,6 +398,7 @@ export const getJobById = async (req: AuthRequest, res: Response) => {
       success: true,
       job: {
         ...job,
+        promotion: promotionOf(job),
         employer: {
           id: job.employer.id,
           email: job.employer.email,
