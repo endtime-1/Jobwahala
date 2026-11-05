@@ -1,3 +1,4 @@
+import { employmentTypeFor } from './earlyCareer';
 import { escapeHtml } from './sharePage';
 
 /**
@@ -20,6 +21,10 @@ export type SeoJob = {
   createdAt: Date;
   /** Last day to apply; becomes validThrough in the JobPosting data. */
   closesAt?: Date;
+  /** FULL_TIME or PART_TIME, set on early-career roles. */
+  schedule?: string | null;
+  durationMonths?: number | null;
+  unpaid?: boolean;
   employerName: string;
   employerLogoUrl?: string | null;
   employerWebsite?: string | null;
@@ -60,7 +65,11 @@ export const detectCountry = (location?: string | null) => {
 
 export const isRemoteLocation = (location?: string | null) => /remote/i.test(location ?? '');
 
-export const mapEmploymentType = (type: string) => {
+export const mapEmploymentType = (type: string, schedule?: string | null) => {
+  // Internships, attachments and National Service have their own values; the rest are the usual ones.
+  const early = employmentTypeFor(type, schedule);
+  if (early !== 'OTHER') return early;
+
   switch (type.trim().toLowerCase()) {
     case 'full-time':
       return 'FULL_TIME';
@@ -108,7 +117,7 @@ export const buildJobPostingJsonLd = (job: SeoJob, siteUrl: string) => {
           },
         }
       : {}),
-    employmentType: mapEmploymentType(job.type),
+    employmentType: mapEmploymentType(job.type, job.schedule),
     url: `${siteUrl}/jobs/${job.id}`,
     hiringOrganization: {
       '@type': 'Organization',

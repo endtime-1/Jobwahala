@@ -41,7 +41,7 @@ describe('helpers', () => {
     expect(mapEmploymentType('part-time')).toBe('PART_TIME');
     expect(mapEmploymentType('Contract')).toBe('CONTRACTOR');
     expect(mapEmploymentType('Freelance')).toBe('CONTRACTOR');
-    expect(mapEmploymentType('Internship')).toBe('OTHER');
+    expect(mapEmploymentType('Seasonal')).toBe('OTHER');
   });
 });
 

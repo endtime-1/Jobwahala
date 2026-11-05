@@ -78,6 +78,11 @@ model JobSeekerProfile {
   skills      String   @default("")
   experience  String?
   resumeFileUrl String?
+  // Early career: STUDENT, NSS or GRADUATE, used to show the most relevant internships and graduate jobs first.
+  careerStage    String?
+  institution    String?
+  programme      String?
+  completionYear Int?
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
@@ -145,6 +150,14 @@ model Job {
   salaryParsedAt DateTime? // set once we have tried to read numbers out of old text pay
   currency    String   @default("GHS")
   category    String?
+  // Early-career details (internships, National Service, attachments, graduate jobs). For these types the pay
+  // numbers above are the monthly stipend; unpaid = true says so plainly and leaves them empty.
+  unpaid            Boolean   @default(false)
+  durationMonths    Int?
+  startsImmediately Boolean   @default(false)
+  startDate         DateTime?
+  schedule          String? // FULL_TIME or PART_TIME
+  possibleJobOffer  Boolean   @default(false)
   status      String   @default("ACTIVE") // DRAFT, ACTIVE, PAUSED, CLOSED, EXPIRED (owner); FLAGGED, SUSPENDED (admin)
   // Last day the job can be applied for. Existing rows and admin-posted jobs get 30 days from creation.
   closesAt    DateTime @default(dbgenerated("(strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '+30 days'))"))
@@ -167,6 +180,7 @@ model Job {
   @@index([createdAt])
   @@index([status, closesAt])
   @@index([salaryMax])
+  @@index([type, status, closesAt])
 }
 
 model Application {

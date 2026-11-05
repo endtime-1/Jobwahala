@@ -6,6 +6,8 @@ import { latestClosingDate, toDateInputValue } from '../../../lib/jobLifecycle'
 import EmployerJobCard from './EmployerJobCard'
 import type { EmployerJob, JobCopilotDraft } from './types'
 import { makeInitialJobForm, toJobPayload } from './utils'
+import { earlyCareerTypes, isEarlyCareerType } from '../../../lib/earlyCareer'
+import EarlyCareerFields from './EarlyCareerFields'
 import { getErrorMessage } from '../../../lib/errors'
 
 type Props = {
@@ -71,7 +73,7 @@ export default function EmployerJobsPanel({
 
     try {
       // The closing date is not part of the writing help.
-      const { closesAt: _closesAt, salaryMin: _salaryMin, salaryMax: _salaryMax, ...draftInput } = jobForm
+      const { closesAt: _closesAt, salaryMin: _salaryMin, salaryMax: _salaryMax, unpaid: _unpaid, durationMonths: _months, startMode: _startMode, startDate: _startDate, schedule: _schedule, possibleJobOffer: _offer, ...draftInput } = jobForm
       const data = await apiGenerateJobDraft({
         ...draftInput,
         focus: jobForm.description || undefined,
@@ -171,10 +173,13 @@ export default function EmployerJobsPanel({
                 <option>Part-time</option>
                 <option>Contract</option>
                 <option>Freelance</option>
+                {earlyCareerTypes.map((type) => (
+                  <option key={type}>{type}</option>
+                ))}
               </select>
             </div>
             <div className="space-y-1.5">
-              <p className="block text-base font-bold text-text-main">Pay (GHS a month)</p>
+              <p className="block text-base font-bold text-text-main">{isEarlyCareerType(jobForm.type) ? 'Stipend (GHS a month)' : 'Pay (GHS a month)'}</p>
               <div className="grid grid-cols-2 gap-3">
                 <input
                   id="job-salary-min"
@@ -184,6 +189,7 @@ export default function EmployerJobsPanel({
                   placeholder="From, e.g. 3000"
                   aria-label="Pay from (GHS a month)"
                   value={jobForm.salaryMin}
+                  disabled={jobForm.unpaid && isEarlyCareerType(jobForm.type)}
                   onChange={(e) => setJobForm((c) => ({ ...c, salaryMin: e.target.value }))}
                   className="h-14 text-base font-semibold"
                 />
@@ -195,6 +201,7 @@ export default function EmployerJobsPanel({
                   placeholder="To (optional)"
                   aria-label="Pay to (GHS a month)"
                   value={jobForm.salaryMax}
+                  disabled={jobForm.unpaid && isEarlyCareerType(jobForm.type)}
                   onChange={(e) => setJobForm((c) => ({ ...c, salaryMax: e.target.value }))}
                   className="h-14 text-base font-semibold"
                 />
@@ -206,6 +213,7 @@ export default function EmployerJobsPanel({
               <input id="job-salary" type="text" placeholder="Salary" value={jobForm.salary} onChange={(e) => setJobForm((c) => ({ ...c, salary: e.target.value }))} className="h-14 text-base font-semibold" />
               <p className="text-sm text-text-muted">Optional. Left empty, we write it from the numbers, e.g. GHS 3,000 - 4,500 a month.</p>
             </div>
+            <EarlyCareerFields form={jobForm} onChange={(patch) => setJobForm((c) => ({ ...c, ...patch }))} />
             <div className="space-y-1.5">
               <label htmlFor="job-closes" className="block text-base font-bold text-text-main">Closing date</label>
               <input

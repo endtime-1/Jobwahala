@@ -5,6 +5,10 @@ import { emailHandle, getDisplayName } from '../lib/display';
 export type UserRole = 'SEEKER' | 'EMPLOYER' | 'FREELANCER' | 'ADMIN';
 
 interface JobSeekerProfile {
+  careerStage?: string | null;
+  institution?: string | null;
+  programme?: string | null;
+  completionYear?: number | null;
   firstName?: string | null;
   lastName?: string | null;
   skills?: string | null;

@@ -1,3 +1,5 @@
+import { EARLY_CAREER_ALERT_TYPE, isEarlyCareerType } from './earlyCareer';
+
 export type SearchCriteria = {
   query?: string | null;
   location?: string | null;
@@ -39,7 +41,11 @@ export const searchMatchesJob = (criteria: SearchCriteria, job: AlertableJob) =>
   if (location && !norm(job.location).includes(location)) return false;
 
   const jobType = norm(criteria.jobType);
-  if (jobType && norm(job.type) !== jobType) return false;
+  if (jobType === norm(EARLY_CAREER_ALERT_TYPE)) {
+    if (!isEarlyCareerType(job.type)) return false;
+  } else if (jobType && norm(job.type) !== jobType) {
+    return false;
+  }
 
   return true;
 };

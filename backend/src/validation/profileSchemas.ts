@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { matchesStoredUploadUrl } from '../services/evidenceStorage';
+import { CAREER_STAGES } from '../utils/earlyCareer';
 
 const trimmedOptionalString = (max: number) =>
   z.preprocess(
@@ -28,6 +29,11 @@ const seekerProfileBodySchema = z
     skills: trimmedOptionalString(500),
     experience: trimmedOptionalString(2000),
     resumeFileUrl: optionalUrl(),
+    // Early career. An empty value clears it.
+    careerStage: z.union([z.enum(CAREER_STAGES), z.literal('')]).optional(),
+    institution: trimmedOptionalString(120),
+    programme: trimmedOptionalString(120),
+    completionYear: z.number().int().min(1990).max(new Date().getFullYear() + 8).nullable().optional(),
   })
   .strict();
 

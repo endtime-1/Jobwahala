@@ -6,6 +6,9 @@ import { emailHandle, formatRelativeTime } from '../../../lib/display'
 import { getErrorMessage } from '../../../lib/errors'
 import { closingSummary, daysUntil, formatClosingDate, latestClosingDate, toDateInputValue } from '../../../lib/jobLifecycle'
 import type { EmployerJob } from './types'
+import { earlyCareerTypes, isEarlyCareerType } from '../../../lib/earlyCareer'
+import EarlyCareerFields from './EarlyCareerFields'
+import { toEarlyCareerPayload } from './utils'
 
 const STATUS_LABEL: Record<string, string> = {
   DRAFT: 'Draft',
@@ -44,11 +47,17 @@ export default function EmployerJobCard({ job, highlighted = false, onChanged, o
     description: job.description ?? '',
     location: job.location ?? '',
     type: job.type ?? 'Full-time',
-    salary: job.salary ?? '',
+    salary: job.unpaid ? '' : job.salary ?? '',
     salaryMin: job.salaryMin != null ? String(job.salaryMin) : '',
     salaryMax: job.salaryMax != null ? String(job.salaryMax) : '',
     category: job.category ?? '',
     closesAt: toDateInputValue(new Date(job.closesAt ?? Date.now())),
+    unpaid: Boolean(job.unpaid),
+    durationMonths: job.durationMonths != null ? String(job.durationMonths) : '',
+    startMode: (job.startDate ? 'DATE' : 'IMMEDIATE') as 'IMMEDIATE' | 'DATE',
+    startDate: job.startDate ? job.startDate.slice(0, 10) : '',
+    schedule: job.schedule ?? '',
+    possibleJobOffer: Boolean(job.possibleJobOffer),
   })
 
   const status = job.status
@@ -79,7 +88,9 @@ export default function EmployerJobCard({ job, highlighted = false, onChanged, o
     event.preventDefault()
     // If only the numbers changed, leave the shown pay out so the server rewrites it to match.
     const numbersChanged = form.salaryMin !== (job.salaryMin != null ? String(job.salaryMin) : '') || form.salaryMax !== (job.salaryMax != null ? String(job.salaryMax) : '')
-    const textChanged = form.salary !== (job.salary ?? '')
+    const early = toEarlyCareerPayload(form)
+    const unpaidNow = isEarlyCareerType(form.type) && form.unpaid
+    const textChanged = form.salary !== (job.unpaid ? '' : job.salary ?? '')
     const toNumber = (value: string) => (value.trim() === '' ? null : Math.round(Number(value)))
     const saved = await run(
       () =>
@@ -88,8 +99,9 @@ export default function EmployerJobCard({ job, highlighted = false, onChanged, o
           description: form.description,
           location: form.location,
           type: form.type,
-          ...(textChanged || !numbersChanged ? { salary: form.salary } : {}),
-          ...(numbersChanged ? { salaryMin: toNumber(form.salaryMin), salaryMax: toNumber(form.salaryMax) } : {}),
+          ...(unpaidNow ? {} : textChanged || !numbersChanged ? { salary: form.salary } : {}),
+          ...(unpaidNow ? {} : numbersChanged ? { salaryMin: toNumber(form.salaryMin), salaryMax: toNumber(form.salaryMax) } : {}),
+          ...early,
           category: form.category,
           // An expired job gets a new date through Extend.
           ...(status === 'EXPIRED' ? {} : { closesAt: form.closesAt }),
@@ -250,10 +262,13 @@ export default function EmployerJobCard({ job, highlighted = false, onChanged, o
                 <option>Part-time</option>
                 <option>Contract</option>
                 <option>Freelance</option>
+                {earlyCareerTypes.map((type) => (
+                  <option key={type}>{type}</option>
+                ))}
               </select>
             </label>
             <label className="space-y-1.5 text-sm font-bold text-text-main">
-              Pay from (GHS a month)
+              {isEarlyCareerType(form.type) ? 'Stipend from (GHS a month)' : 'Pay from (GHS a month)'}
               <input type="number" min={0} inputMode="numeric" value={form.salaryMin} onChange={(e) => setForm((c) => ({ ...c, salaryMin: e.target.value }))} className="h-12 text-base font-semibold" />
             </label>
             <label className="space-y-1.5 text-sm font-bold text-text-main">
@@ -264,6 +279,7 @@ export default function EmployerJobCard({ job, highlighted = false, onChanged, o
               Pay as shown on the job
               <input value={form.salary} onChange={(e) => setForm((c) => ({ ...c, salary: e.target.value }))} className="h-12 text-base font-semibold" />
             </label>
+            <EarlyCareerFields form={form} onChange={(patch) => setForm((c) => ({ ...c, ...patch }))} />
             <label className="space-y-1.5 text-sm font-bold text-text-main">
               Field
               <input value={form.category} onChange={(e) => setForm((c) => ({ ...c, category: e.target.value }))} className="h-12 text-base font-semibold" />

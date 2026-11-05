@@ -1,4 +1,6 @@
-export const jobTypeOptions = ['Full-time', 'Part-time', 'Contract', 'Freelance'] as const
+import { earlyCareerTypes } from './earlyCareer'
+
+export const jobTypeOptions = ['Full-time', 'Part-time', 'Contract', 'Freelance', ...earlyCareerTypes] as const
 
 /** Common fields people search by. Matching is loose, so employers' own wording still works. */
 export const jobFieldOptions = [

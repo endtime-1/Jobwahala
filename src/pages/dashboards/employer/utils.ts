@@ -1,6 +1,7 @@
 import type { PaymentActionItem, ApplicantDecisionBriefRecord, AgreementDecisionBriefRecord } from './types'
 
 import { defaultClosingDate } from '../../../lib/jobLifecycle'
+import { isEarlyCareerType } from '../../../lib/earlyCareer'
 
 // A function, so the default closing date is always 30 days from today, even on a page left open for days.
 export const makeInitialJobForm = () => ({
@@ -14,6 +15,13 @@ export const makeInitialJobForm = () => ({
   salaryMax: '',
   category: '',
   closesAt: defaultClosingDate(),
+  // Internships, National Service, attachments and graduate jobs only.
+  unpaid: false,
+  durationMonths: '',
+  startMode: 'IMMEDIATE' as 'IMMEDIATE' | 'DATE',
+  startDate: '',
+  schedule: '',
+  possibleJobOffer: false,
 })
 
 const toWholeNumber = (value: string) => {
@@ -21,12 +29,41 @@ const toWholeNumber = (value: string) => {
   return value.trim() !== '' && Number.isFinite(number) ? Math.round(number) : null
 }
 
+type EarlyFormFields = {
+  type: string
+  unpaid: boolean
+  durationMonths: string
+  startMode: 'IMMEDIATE' | 'DATE'
+  startDate: string
+  schedule: string
+  possibleJobOffer: boolean
+}
+
+/** The early-career part of the form as the API wants it. Nothing at all for ordinary jobs. */
+export const toEarlyCareerPayload = (form: EarlyFormFields) => {
+  if (!isEarlyCareerType(form.type)) return {}
+  const months = toWholeNumber(form.durationMonths)
+  return {
+    unpaid: form.unpaid,
+    durationMonths: months,
+    schedule: form.schedule || null,
+    possibleJobOffer: form.possibleJobOffer,
+    ...(form.startMode === 'DATE' && form.startDate ? { startsImmediately: false, startDate: form.startDate } : { startsImmediately: true, startDate: null }),
+  }
+}
+
 /** The job form as the API wants it: pay as numbers when typed, and nothing extra when not. */
 export const toJobPayload = (form: ReturnType<typeof makeInitialJobForm>) => {
-  const { salaryMin, salaryMax, ...rest } = form
+  const { salaryMin, salaryMax, unpaid, durationMonths, startMode, startDate, schedule, possibleJobOffer, ...rest } = form
+  const early = toEarlyCareerPayload({ type: form.type, unpaid, durationMonths, startMode, startDate, schedule, possibleJobOffer })
+  // An unpaid role has no pay to send; the server labels it "Unpaid".
+  if (isEarlyCareerType(form.type) && unpaid) {
+    const { salary: _salary, ...withoutPay } = rest
+    return { ...withoutPay, ...early }
+  }
   const min = toWholeNumber(salaryMin)
   const max = toWholeNumber(salaryMax)
-  return { ...rest, ...(min !== null ? { salaryMin: min } : {}), ...(max !== null ? { salaryMax: max } : {}) }
+  return { ...rest, ...(min !== null ? { salaryMin: min } : {}), ...(max !== null ? { salaryMax: max } : {}), ...early }
 }
 
 export const applicationStatuses = ['SUBMITTED', 'SHORTLISTED', 'INTERVIEW', 'OFFERED', 'REJECTED', 'HIRED']

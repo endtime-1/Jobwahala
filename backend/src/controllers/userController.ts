@@ -916,6 +916,9 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
     normalizeNullableField('logoUrl');
     normalizeNullableField('website');
     normalizeNullableField('portfolioUrl');
+    normalizeNullableField('careerStage');
+    normalizeNullableField('institution');
+    normalizeNullableField('programme');
 
     let updatedProfile;
 

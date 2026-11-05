@@ -9,6 +9,8 @@ import SaveJobButton from '../components/SaveJobButton'
 import { apiApplyForJob, apiDeleteApplication, apiGetJobApplicationCoaching, apiGetJobById, apiGetMyJobApplication } from '../lib/api'
 import { emailHandle, formatRelativeTime } from '../lib/display'
 import { closingSummary } from '../lib/jobLifecycle'
+import EarlyCareerChips from '../components/EarlyCareerChips'
+import { isEarlyCareerType } from '../lib/earlyCareer'
 import CvChoice, { type CvChoiceValue } from '../components/CvChoice'
 import {
   formatJobLocationWithWorkMode,
@@ -24,6 +26,12 @@ type JobDetail = {
   location?: string | null
   salary?: string | null
   type: string
+  unpaid?: boolean
+  durationMonths?: number | null
+  startsImmediately?: boolean
+  startDate?: string | null
+  schedule?: string | null
+  possibleJobOffer?: boolean
   category?: string | null
   createdAt: string
   closesAt?: string | null
@@ -299,6 +307,9 @@ export default function JobDetails() {
                   <span className="rounded-full bg-white/15 px-4 py-2 text-sm font-bold">{workModeLabel}</span>
                   {job.category ? <span className="rounded-full bg-white/15 px-4 py-2 text-sm font-bold">{job.category}</span> : null}
                 </div>
+                <div className="mt-4">
+                  <EarlyCareerChips job={job} />
+                </div>
               </div>
             </div>
           </div>
@@ -316,7 +327,7 @@ export default function JobDetails() {
                   { label: 'Work type', value: job.type, icon: <BriefcaseBusiness className="h-5 w-5 text-secondary" /> },
                   { label: 'Work mode', value: workModeLabel, icon: <Globe className="h-5 w-5 text-secondary" /> },
                   { label: 'Location', value: locationLabel, icon: <MapPin className="h-5 w-5 text-secondary" /> },
-                  { label: 'Pay', value: job.salary || 'Salary on request', icon: <CheckCircle className="h-5 w-5 text-secondary" /> },
+                  { label: isEarlyCareerType(job.type) ? 'Stipend' : 'Pay', value: job.unpaid ? 'Unpaid' : job.salary || (isEarlyCareerType(job.type) ? 'Not stated' : 'Salary on request'), icon: <CheckCircle className="h-5 w-5 text-secondary" /> },
                   { label: 'Category', value: job.category || 'General', icon: <Building2 className="h-5 w-5 text-secondary" /> },
                 ].map((item) => (
                   <div key={item.label} className="rounded-xl bg-surface-alt/60 p-4">

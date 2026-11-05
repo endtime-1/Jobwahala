@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { MAX_SALARY, salaryRangeProblem } from '../utils/salary';
+import { SCHEDULES } from '../utils/earlyCareer';
 
 export const applicationStatusValues = ['SUBMITTED', 'SHORTLISTED', 'INTERVIEW', 'OFFERED', 'REJECTED', 'HIRED'] as const;
 export const ownerJobStatusValues = ['ACTIVE', 'PAUSED', 'CLOSED'] as const;
@@ -16,6 +17,17 @@ const salaryNumber = z.number().int().min(0).max(MAX_SALARY).nullable().optional
 const rejectBackwardsPay = (body: { salaryMin?: number | null; salaryMax?: number | null }, ctx: z.RefinementCtx) => {
   const problem = salaryRangeProblem(body.salaryMin, body.salaryMax);
   if (problem) ctx.addIssue({ code: z.ZodIssueCode.custom, message: problem, path: ['salaryMax'] });
+};
+
+/** Extra details for internships, National Service, attachments and graduate jobs. */
+const earlyCareerFields = {
+  unpaid: z.boolean().optional(),
+  durationMonths: z.number().int().min(1).max(36).nullable().optional(),
+  startsImmediately: z.boolean().optional(),
+  // A day, like 2026-12-01. null clears it.
+  startDate: z.string().trim().max(40).nullable().optional(),
+  schedule: z.enum(SCHEDULES).nullable().optional(),
+  possibleJobOffer: z.boolean().optional(),
 };
 
 const jobIdParams = z.object({
@@ -37,6 +49,7 @@ export const createJobSchema = z.object({
       status: z.enum(['DRAFT', 'ACTIVE']).optional(),
       salaryMin: salaryNumber,
       salaryMax: salaryNumber,
+      ...earlyCareerFields,
     })
     .strict()
     .superRefine(rejectBackwardsPay),
@@ -55,6 +68,7 @@ export const updateJobSchema = z.object({
       closesAt: trimmedOptionalString(40),
       salaryMin: salaryNumber,
       salaryMax: salaryNumber,
+      ...earlyCareerFields,
     })
     .strict()
     .superRefine(rejectBackwardsPay)

@@ -6,6 +6,7 @@ import { singleValue } from '../utils/request';
 import { getErrorMessage } from '../utils/errors';
 import { renderFreelancerSharePage, renderSharePageNotFound } from '../utils/sharePage';
 import { renderJobListPage, renderJobPage, type SeoJob } from '../utils/seoPages';
+import { EARLY_CAREER_TYPES } from '../utils/earlyCareer';
 import { publicJobWhere } from '../utils/jobLifecycle';
 import { siteCopy } from '../content/siteCopy';
 import {
@@ -35,6 +36,9 @@ const seoJobSelect = {
   salaryMax: true,
   createdAt: true,
   closesAt: true,
+  schedule: true,
+  durationMonths: true,
+  unpaid: true,
   employer: { select: { employerProfile: { select: { companyName: true, logoUrl: true, website: true } } } },
 } as const;
 
@@ -50,6 +54,9 @@ type SeoJobRow = {
   salaryMax: number | null;
   createdAt: Date;
   closesAt: Date;
+  schedule: string | null;
+  durationMonths: number | null;
+  unpaid: boolean;
   employer: { employerProfile: { companyName: string; logoUrl: string | null; website: string | null } | null };
 };
 
@@ -68,6 +75,9 @@ const toSeoJob = (row: SeoJobRow, siteUrl: string): SeoJob => {
     salaryMax: row.salaryMax,
     createdAt: row.createdAt,
     closesAt: row.closesAt,
+    schedule: row.schedule,
+    durationMonths: row.durationMonths,
+    unpaid: row.unpaid,
     employerName: row.employer.employerProfile?.companyName || 'A company on JobWahala',
     employerLogoUrl: logo ? (/^https?:\/\//i.test(logo) ? logo : `${siteUrl}${logo}`) : null,
     employerWebsite: row.employer.employerProfile?.website ?? null,
@@ -197,13 +207,20 @@ export const getJobListSharePage = async (req: Request, res: Response) => {
   const siteUrl = publicSiteUrl(req);
 
   try {
-    const kind = req.path.includes('/jobs-in/') ? 'country' : req.path.endsWith('/home') ? 'home' : 'jobs';
+    const kind = req.path.includes('/jobs-in/')
+      ? 'country'
+      : req.path.endsWith('/home')
+        ? 'home'
+        : req.path.endsWith('/internships')
+          ? 'internships'
+          : 'jobs';
     const country = kind === 'country' ? countryNameFromSlug(singleValue(req.params.country) || '') : '';
 
     const rows = await prisma.job.findMany({
       where: {
         ...publicJobWhere(),
         ...(country ? { location: { contains: country } } : {}),
+        ...(kind === 'internships' ? { type: { in: [...EARLY_CAREER_TYPES] } } : {}),
       },
       select: seoJobSelect,
       orderBy: { createdAt: 'desc' },
@@ -219,6 +236,14 @@ export const getJobListSharePage = async (req: Request, res: Response) => {
             intro: `Real jobs from employers you can check in ${country}.`,
             path: `/jobs-in/${req.params.country}`,
           }
+        : kind === 'internships'
+          ? {
+              heading: 'Internships, National Service and graduate jobs in Africa',
+              description:
+                'Find internships, National Service (NSS) placements, industrial attachments and entry-level graduate jobs. See the stipend, duration and start date up front.',
+              intro: 'Early-career opportunities for students, National Service personnel and graduates.',
+              path: '/internships',
+            }
         : kind === 'jobs'
           ? {
               heading: 'Open jobs across Africa',

@@ -22,6 +22,7 @@ import {
 import { approvedBusinessVerificationQuery, publicEmployerVerification, rankJobsByVerification, verifiedEmployerFilter } from '../utils/verification';
 import { getErrorMessage } from '../utils/errors';
 import { resolvePay } from '../utils/salary';
+import { EARLY_CAREER_TYPES, EarlyCareerError, UNPAID_PAY, canonicalEarlyCareerType, earlyCareerData, isEarlyCareerType, parseDay, type EarlyCareerInput } from '../utils/earlyCareer';
 import logger from '../config/logger';
 import { createNotification } from '../utils/notifications';
 import { sendApplicationStatusEmail } from '../services/emailService';
@@ -63,7 +64,7 @@ const mapRankedApplications = <
 
 export const createJob = async (req: AuthRequest, res: Response) => {
   try {
-    const { title, description, location, type, salary, category, closesAt: closesAtInput, status: requestedStatus, salaryMin, salaryMax } = req.body;
+    const { title, description, location, type, salary, category, closesAt: closesAtInput, status: requestedStatus, salaryMin, salaryMax, ...earlyInput } = req.body;
     if (!title?.trim() || !description?.trim() || !type?.trim()) {
       return res.status(400).json({ success: false, message: 'Title, description, and type are required' });
     }
@@ -80,6 +81,16 @@ export const createJob = async (req: AuthRequest, res: Response) => {
 
     const status = requestedStatus === 'DRAFT' ? 'DRAFT' : 'ACTIVE';
 
+    // Early-career details; unpaid means no stipend numbers, and says so in the pay text.
+    let early;
+    try {
+      early = earlyCareerData(earlyInput, type.trim());
+    } catch (error) {
+      if (error instanceof EarlyCareerError) return res.status(400).json({ success: false, message: error.message });
+      throw error;
+    }
+    const unpaid = early.unpaid === true;
+
     const job = await prisma.job.create({
       data: {
         status,
@@ -87,9 +98,10 @@ export const createJob = async (req: AuthRequest, res: Response) => {
         title: title.trim(),
         description: description.trim(),
         location: location?.trim() || null,
-        type: type.trim(),
+        type: canonicalEarlyCareerType(type) ?? type.trim(),
         // Pay: the numbers if they were given, otherwise read from the text, so the job can be found by salary.
-        ...resolvePay({ salary, salaryMin, salaryMax }),
+        ...(unpaid ? UNPAID_PAY : resolvePay({ salary, salaryMin, salaryMax })),
+        ...early,
         salaryParsedAt: new Date(),
         category: category?.trim() || null,
         employerId: req.user!.id
@@ -165,7 +177,15 @@ export const getJobs = async (req: AuthRequest, res: Response) => {
       where.category = { contains: category };
     }
 
-    if (type) {
+    // The Internships & NSS section: ?section=early limits it to early-career types, and ?types=a,b picks some of them.
+    const sectionEarly = singleValue(req.query.section as string | string[] | undefined) === 'early';
+    const typeList = (singleValue(req.query.types as string | string[] | undefined) || '')
+      .split(',')
+      .map((value) => canonicalEarlyCareerType(value))
+      .filter((value): value is NonNullable<typeof value> => Boolean(value));
+    if (sectionEarly || typeList.length > 0) {
+      where.type = { in: typeList.length > 0 ? typeList : [...EARLY_CAREER_TYPES] };
+    } else if (type) {
       where.type = { contains: type };
     }
 
@@ -183,6 +203,27 @@ export const getJobs = async (req: AuthRequest, res: Response) => {
     }
     if (Number.isFinite(wantedMax) && wantedMax > 0) {
       and.push({ OR: [{ salaryMin: { lte: Math.floor(wantedMax) } }, { salaryMin: null, salaryMax: { lte: Math.floor(wantedMax) } }] });
+    }
+    // Early-career filters: paid only, longest duration, when it starts, offer possible, full or part time.
+    const flag = (name: string) => ['1', 'true'].includes((singleValue(req.query[name] as string | string[] | undefined) || '').toLowerCase());
+    if (flag('paid')) and.push({ unpaid: false });
+    if (flag('offer')) and.push({ possibleJobOffer: true });
+    const maxDuration = Number(singleValue(req.query.maxDuration as string | string[] | undefined));
+    if (Number.isFinite(maxDuration) && maxDuration > 0) and.push({ durationMonths: { lte: Math.floor(maxDuration) } });
+    const schedule = singleValue(req.query.schedule as string | string[] | undefined);
+    if (schedule === 'FULL_TIME' || schedule === 'PART_TIME') and.push({ schedule });
+    if (flag('startsNow')) {
+      and.push({ startsImmediately: true });
+    } else {
+      const startBy = singleValue(req.query.startBy as string | string[] | undefined);
+      if (startBy) {
+        try {
+          const by = parseDay(startBy);
+          and.push({ OR: [{ startsImmediately: true }, { startDate: { lte: by } }] });
+        } catch {
+          // An unreadable date is ignored rather than failing the search.
+        }
+      }
     }
     if (and.length > 0) {
       where.AND = and;
@@ -1226,6 +1267,28 @@ export const updateOwnedJob = async (req: AuthRequest, res: Response) => {
       Object.assign(data, pay, { salaryParsedAt: new Date() });
     }
 
+    // Early-career details. A job that is (or becomes) a normal job carries none; unpaid replaces any stipend.
+    const earlyKeys = ['unpaid', 'durationMonths', 'startsImmediately', 'startDate', 'schedule', 'possibleJobOffer'] as const;
+    const typeChanged = typeof body.type === 'string';
+    const earlyTouched = earlyKeys.some((key) => (req.body as Record<string, unknown>)[key] !== undefined);
+    if (typeChanged || earlyTouched) {
+      const effectiveType = typeof data.type === 'string' ? data.type : job.type;
+      try {
+        const early = earlyCareerData(req.body as EarlyCareerInput, effectiveType);
+        Object.assign(data, early);
+        if (isEarlyCareerType(effectiveType)) data.type = canonicalEarlyCareerType(effectiveType);
+        if (early.unpaid === true) {
+          Object.assign(data, UNPAID_PAY, { salaryParsedAt: new Date() });
+        } else if (early.unpaid === false && job.unpaid && rawBody.salary === undefined && rawBody.salaryMin === undefined && rawBody.salaryMax === undefined) {
+          // No longer unpaid, and no new pay given: drop the "Unpaid" label.
+          Object.assign(data, { salary: null, salaryMin: null, salaryMax: null, salaryParsedAt: new Date() });
+        }
+      } catch (error) {
+        if (error instanceof EarlyCareerError) return res.status(400).json({ success: false, message: error.message });
+        throw error;
+      }
+    }
+
     if (body.closesAt !== undefined && body.closesAt !== '') {
       if (job.status === 'EXPIRED') {
         return res.status(409).json({ success: false, message: 'This job has expired. Use Extend to open it again.' });
@@ -1265,6 +1328,12 @@ export const duplicateOwnedJob = async (req: AuthRequest, res: Response) => {
         salaryMin: job.salaryMin,
         salaryMax: job.salaryMax,
         salaryParsedAt: new Date(),
+        unpaid: job.unpaid,
+        durationMonths: job.durationMonths,
+        startsImmediately: job.startsImmediately,
+        startDate: job.startDate && job.startDate.getTime() > Date.now() ? job.startDate : null,
+        schedule: job.schedule,
+        possibleJobOffer: job.possibleJobOffer,
         currency: job.currency,
         category: job.category,
         status: 'DRAFT',

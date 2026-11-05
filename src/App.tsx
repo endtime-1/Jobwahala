@@ -8,6 +8,7 @@ import { useFeatures } from './lib/features'
 
 const JobListings = lazy(() => import('./pages/JobListings'))
 const JobDetails = lazy(() => import('./pages/JobDetails'))
+const Internships = lazy(() => import('./pages/Internships'))
 const CVGenerator = lazy(() => import('./pages/CVGenerator'))
 const Messaging = lazy(() => import('./pages/Messaging'))
 const MyApplications = lazy(() => import('./pages/MyApplications'))
@@ -87,6 +88,7 @@ function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/jobs" element={<JobListings />} />
           <Route path="/jobs-in/:country" element={<JobListings />} />
+          <Route path="/internships" element={<Internships />} />
           <Route path="/jobs/:id" element={<JobDetails />} />
           <Route path="/cv-generator" element={renderProtected(<CVGenerator />)} />
           <Route path="/messaging" element={renderProtected(<Messaging />)} />

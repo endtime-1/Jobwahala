@@ -8,6 +8,7 @@ router.get('/freelancers/:id', getFreelancerSharePage);
 router.get('/jobs/:id', getJobSharePage);
 router.get('/pages/home', getJobListSharePage);
 router.get('/pages/jobs', getJobListSharePage);
+router.get('/pages/internships', getJobListSharePage);
 router.get('/pages/jobs-in/:country', getJobListSharePage);
 
 export default router;

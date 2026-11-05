@@ -20,6 +20,8 @@ import JobAlerts from '../components/JobAlerts'
 import { alertCriteriaFromFilters } from '../lib/jobAlerts'
 import { countryFromSlug, matchesJobField, matchesSalaryFloor, parseJobType, parseSalaryFloor, salaryFloorOptions } from '../lib/jobSearch'
 import { getErrorMessage } from '../lib/errors'
+import { earlyCareerTypes } from '../lib/earlyCareer'
+import EarlyCareerChips from '../components/EarlyCareerChips'
 
 type JobRecord = {
   id: string
@@ -31,6 +33,12 @@ type JobRecord = {
   salaryMax?: number | null
   currency?: string | null
   type: string
+  unpaid?: boolean
+  durationMonths?: number | null
+  startsImmediately?: boolean
+  startDate?: string | null
+  schedule?: string | null
+  possibleJobOffer?: boolean
   category?: string | null
   createdAt: string
   matchScore?: number
@@ -53,7 +61,7 @@ type JobComparisonRecord = {
   jobs: JobRecord[]
 }
 
-const jobTypes = ['Full-time', 'Part-time', 'Contract', 'Freelance']
+const jobTypes: string[] = ['Full-time', 'Part-time', 'Contract', 'Freelance', ...earlyCareerTypes]
 const locationOptions = ['All of Africa', 'Ghana', 'Nigeria', 'Kenya', 'South Africa', 'Rwanda', 'Remote Only']
 
 export default function JobListings() {
@@ -611,6 +619,8 @@ export default function JobListings() {
                       <span className={`rounded-full px-3 py-1 ${getJobWorkModeBadgeClass(job.location)}`}>{workModeLabel}</span>
                       {job.category ? <span className="rounded-full bg-surface-alt px-3 py-1">{job.category}</span> : null}
                     </div>
+
+                    <EarlyCareerChips job={job} />
 
                     <div className="mt-auto flex flex-wrap items-center justify-between gap-3 border-t border-surface-border pt-4">
                       <div>

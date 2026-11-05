@@ -27,6 +27,12 @@ export type EmployerJob = {
   salaryMin?: number | null
   salaryMax?: number | null
   category?: string | null
+  unpaid?: boolean
+  durationMonths?: number | null
+  startsImmediately?: boolean
+  startDate?: string | null
+  schedule?: string | null
+  possibleJobOffer?: boolean
   status: string
   closesAt?: string | null
   createdAt: string
