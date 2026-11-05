@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { apiGetMe, apiGoogleAuth, apiLogin, apiLoginWithPhone, apiRegister, apiSignupWithPhone } from '../lib/api';
 import { emailHandle, getDisplayName } from '../lib/display';
+import { queryClient } from '../lib/queryClient';
 
 export type UserRole = 'SEEKER' | 'EMPLOYER' | 'FREELANCER' | 'ADMIN';
 
@@ -119,6 +120,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const clearSession = () => {
+    // Dashboard data is cached per screen, not per person. Drop it all so the next account never sees this one's numbers.
+    queryClient.clear();
     setUser(null);
     setToken(null);
     setIsOnboarded(false);
@@ -151,6 +154,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     const data = await apiLogin(email, password);
+    queryClient.clear();
     persistToken(data.token);
 
     try {
@@ -163,6 +167,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signup = async (email: string, password: string, role: UserRole, captchaToken?: string, options?: { cvVisibility?: 'HIDDEN' | 'VERIFIED_EMPLOYERS' }) => {
+    queryClient.clear();
     const data = options ? await apiRegister(email, password, role, captchaToken, options) : captchaToken ? await apiRegister(email, password, role, captchaToken) : await apiRegister(email, password, role);
     persistToken(data.token);
 
@@ -175,6 +180,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const startSession = async (data: { token: string; user: AuthUser }, isNewAccount: boolean) => {
+    // Signing in as someone else on the same browser must start from an empty cache too.
+    queryClient.clear();
     persistToken(data.token);
 
     try {
