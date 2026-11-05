@@ -1,4 +1,3 @@
-import path from 'path';
 import { Response } from 'express';
 import env from '../config/env';
 import prisma from '../config/prisma';
@@ -25,7 +24,7 @@ export const getMyCvFiles = async (req: AuthRequest, res: Response) => {
   }
 };
 
-const cleanFileName = (value: string) => path.basename(value).replace(/[^\w .()-]+/g, '_').slice(0, 120) || 'CV';
+const cleanFileName = (value: string) => value.split(/[\\/]/).pop()!.replace(/[^\w .()-]+/g, '_').slice(0, 120) || 'CV';
 
 const saveSlot = (slot: Slot) => async (req: AuthRequest, res: Response) => {
   try {

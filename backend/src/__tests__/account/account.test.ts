@@ -15,7 +15,7 @@ const db = vi.hoisted(() => {
     if (method === 'findUnique' || method === 'findFirst') return async () => null;
     return async () => ({});
   };
-  const model = (name: string): Mocks =>
+  const model = (_name: string): Mocks =>
     new Proxy({} as Mocks, {
       get(target, method: string) {
         if (!(method in target)) target[method] = vi.fn(defaultFor(method));
