@@ -87,6 +87,8 @@ const smtpPort = parseNumber(process.env.SMTP_PORT, 587);
 const smtpUser = process.env.SMTP_USER || '';
 const smtpPass = process.env.SMTP_PASS || '';
 const smtpFrom = process.env.SMTP_FROM || 'noreply@jobwahala.com';
+// Brevo's web API. When set, email goes out over HTTPS instead of SMTP (hosts that block mail ports need this).
+const brevoApiKey = (process.env.BREVO_API_KEY || '').trim();
 
 // Error reporting (Sentry). Empty means off. Personal data is stripped before anything is sent.
 const sentryDsn = (process.env.SENTRY_DSN || '').trim();
@@ -103,8 +105,8 @@ const smsProvider = (process.env.SMS_PROVIDER || (isProduction ? 'ARKESEL' : 'CO
 const arkeselApiKey = (process.env.ARKESEL_API_KEY || '').trim();
 const arkeselSenderId = (process.env.ARKESEL_SENDER_ID || 'JobWahala').trim().slice(0, 11);
 
-if (isProduction && !smtpUser) {
-  console.warn('[jobwahala] SMTP_USER is not set. Email sending will likely fail in production.');
+if (isProduction && !smtpUser && !brevoApiKey) {
+  console.warn('[jobwahala] Neither BREVO_API_KEY nor SMTP_USER is set. Email sending will likely fail in production.');
 }
 
 const env = {
@@ -124,6 +126,7 @@ const env = {
   smtpUser,
   smtpPass,
   smtpFrom,
+  brevoApiKey,
   smsProvider,
   sentryDsn,
   sentryRelease,

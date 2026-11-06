@@ -178,3 +178,11 @@ Then test:
 6. agreements
 7. admin moderation
 
+
+## Email on Railway (Hobby and Trial plans block SMTP)
+
+Railway's cheaper plans block the usual mail ports, so SMTP calls time out ("Connection timeout" in the logs). Send email over HTTPS with Brevo's web API instead: on the backend service set `BREVO_API_KEY` (Brevo, SMTP & API, API Keys, Generate a new API key) and `SMTP_FROM=noreply@your-domain`. When `BREVO_API_KEY` is set it is used instead of SMTP. Authenticate your domain in Brevo first (Senders, Domains & Dedicated IPs).
+
+## Uploads survive deploys
+
+Attach a Railway Volume to the backend service (mount path `/data`) and set `EVIDENCE_STORAGE_LOCAL_DIR=/data/uploads`. Without a volume every deploy erases uploaded logos, CVs and verification documents.
