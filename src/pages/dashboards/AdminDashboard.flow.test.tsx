@@ -113,7 +113,7 @@ describe('AdminDashboard moderation flow', () => {
 
     render(
       <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
-        <AdminDashboard />
+        <AdminDashboard initialTab="reports" />
       </MemoryRouter></QueryClientProvider>,
     )
 
@@ -178,7 +178,7 @@ describe('AdminDashboard moderation flow', () => {
 
     render(
       <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
-        <AdminDashboard />
+        <AdminDashboard initialTab="reports" />
       </MemoryRouter></QueryClientProvider>,
     )
 
@@ -226,7 +226,7 @@ describe('AdminDashboard moderation flow', () => {
 
     render(
       <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
-        <AdminDashboard />
+        <AdminDashboard initialTab="reports" />
       </MemoryRouter></QueryClientProvider>,
     )
 
@@ -288,7 +288,7 @@ describe('AdminDashboard moderation flow', () => {
 
     render(
       <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
-        <AdminDashboard />
+        <AdminDashboard initialTab="reports" />
       </MemoryRouter></QueryClientProvider>,
     )
 
@@ -347,7 +347,7 @@ describe('AdminDashboard moderation flow', () => {
 
     render(
       <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
-        <AdminDashboard />
+        <AdminDashboard initialTab="reports" />
       </MemoryRouter></QueryClientProvider>,
     )
 
@@ -417,7 +417,7 @@ describe('AdminDashboard moderation flow', () => {
 
     render(
       <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
-        <AdminDashboard />
+        <AdminDashboard initialTab="reports" />
       </MemoryRouter></QueryClientProvider>,
     )
 
@@ -499,7 +499,7 @@ describe('AdminDashboard moderation flow', () => {
 
     render(
       <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
-        <AdminDashboard />
+        <AdminDashboard initialTab="reports" />
       </MemoryRouter></QueryClientProvider>,
     )
 
@@ -591,7 +591,7 @@ describe('AdminDashboard moderation flow', () => {
 
     render(
       <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
-        <AdminDashboard />
+        <AdminDashboard initialTab="reports" />
       </MemoryRouter></QueryClientProvider>,
     )
 
@@ -648,7 +648,7 @@ describe('AdminDashboard moderation flow', () => {
 
     render(
       <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
-        <AdminDashboard />
+        <AdminDashboard initialTab="reports" />
       </MemoryRouter></QueryClientProvider>,
     )
 
@@ -730,7 +730,7 @@ describe('AdminDashboard moderation flow', () => {
 
     render(
       <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
-        <AdminDashboard />
+        <AdminDashboard initialTab="reports" />
       </MemoryRouter></QueryClientProvider>,
     )
 
@@ -801,7 +801,7 @@ describe('AdminDashboard moderation flow', () => {
 
     render(
       <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
-        <AdminDashboard />
+        <AdminDashboard initialTab="reports" />
       </MemoryRouter></QueryClientProvider>,
     )
 
@@ -903,7 +903,7 @@ describe('AdminDashboard moderation flow', () => {
 
     render(
       <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
-        <AdminDashboard />
+        <AdminDashboard initialTab="reports" />
       </MemoryRouter></QueryClientProvider>,
     )
 
@@ -952,13 +952,15 @@ describe('AdminDashboard moderation flow', () => {
       ...overrides,
     })
 
-    const openVerifications = async () => {
+    const openVerifications = async (showAll = false) => {
       render(
         <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
-          <AdminDashboard />
+          <AdminDashboard initialTab="reports" />
         </MemoryRouter></QueryClientProvider>,
       )
       fireEvent.click(await screen.findByRole('button', { name: 'Verifications' }))
+      // The tab starts on requests waiting for review; decided ones are under All.
+      if (showAll) fireEvent.click(await screen.findByRole('button', { name: /^All [(]/ }))
       await screen.findByText('Achiba Star Hotel')
     }
 
@@ -1038,7 +1040,7 @@ describe('AdminDashboard moderation flow', () => {
         },
       ])
 
-      await openVerifications()
+      await openVerifications(true)
 
       const log = within(screen.getByLabelText('Decision log'))
       expect(log.getByText(/admin@jobwahala.com/)).toBeInTheDocument()
@@ -1122,7 +1124,7 @@ describe('AdminDashboard moderation flow', () => {
 
     render(
       <QueryClientProvider client={makeTestQueryClient()}><MemoryRouter>
-        <AdminDashboard />
+        <AdminDashboard initialTab="reports" />
       </MemoryRouter></QueryClientProvider>,
     )
 

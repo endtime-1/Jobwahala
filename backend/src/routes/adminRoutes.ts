@@ -1,3 +1,4 @@
+import { getAdminOverview, getSystemHealth } from '../controllers/adminOverviewController';
 import { Router } from 'express';
 import { 
   createAdminJob,
@@ -46,6 +47,8 @@ const router = Router();
 router.use(authMiddleware, roleMiddleware(['ADMIN']));
 
 // Collections
+router.get('/overview', getAdminOverview);
+router.get('/health', getSystemHealth);
 router.get('/reports', getReports);
 router.get('/users', getAllUsers);
 router.get('/jobs', getAllJobs);

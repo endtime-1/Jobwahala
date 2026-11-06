@@ -14,6 +14,8 @@ import { emailHandle, formatMoney, formatRelativeTime, getDisplayName } from '..
 import { useAdminDashboard } from './admin/hooks'
 import AdminCoursesPanel from '../../components/AdminCoursesPanel'
 import AdminBillingPanel from '../../components/AdminBillingPanel'
+import AdminHealthPanel from '../../components/AdminHealthPanel'
+import AdminOverviewPanel, { type AdminTab } from '../../components/AdminOverviewPanel'
 import { getErrorMessage } from '../../lib/errors'
 
 const moderationStatuses = ['ACTIVE', 'FLAGGED', 'SUSPENDED']
@@ -28,11 +30,13 @@ const pruneSelection = (selected: string[], items: { id: string }[]) => {
   return next.length === selected.length ? selected : next
 }
 
-export default function AdminDashboard() {
+/** Opens on the overview. `initialTab` is for tests and deep links. */
+export default function AdminDashboard({ initialTab = 'overview' }: { initialTab?: AdminTab } = {}) {
   const queryClient = useQueryClient()
   const { data, isLoading, error: dashboardError } = useAdminDashboard()
   const [error, setError] = useState('')
-  const [activeTab, setActiveTab] = useState<'reports' | 'users' | 'jobs' | 'services' | 'verifications' | 'disputes' | 'courses' | 'billing'>('reports')
+  const [activeTab, setActiveTab] = useState<AdminTab>(initialTab)
+  const [verificationFilter, setVerificationFilter] = useState<'PENDING' | 'ALL'>('PENDING')
   const [isActing, setIsActing] = useState(false)
   const [verificationDrafts, setVerificationDrafts] = useState<Record<string, { reviewNote: string; internalNote: string }>>({})
   const [disputeDrafts, setDisputeDrafts] = useState<Record<string, { resolutionNote: string }>>({})
@@ -162,7 +166,7 @@ export default function AdminDashboard() {
       </div>
 
       <div className="dashboard-actions mb-8">
-        {(['reports', 'users', 'jobs', 'services', 'verifications', 'disputes', 'courses', 'billing'] as const).map((tab) => (
+        {(['overview', 'reports', 'users', 'jobs', 'services', 'verifications', 'disputes', 'courses', 'billing', 'system'] as const).map((tab) => (
           <button key={tab} type="button" onClick={() => setActiveTab(tab)} className={`dashboard-action-chip ${activeTab === tab ? 'border-primary/30 bg-primary/10 text-primary' : ''}`}>{tab.charAt(0).toUpperCase() + tab.slice(1)}</button>
         ))}
       </div>
@@ -171,6 +175,10 @@ export default function AdminDashboard() {
         <div className="dashboard-panel p-6 sm:p-10"><p className="text-sm font-black uppercase tracking-[0.2em] text-text-light">Loading admin dashboard...</p></div>
       ) : (
         <div className="dashboard-panel p-5 sm:p-7 lg:p-8">
+          {activeTab === 'overview' ? <AdminOverviewPanel onOpenTab={setActiveTab} /> : null}
+
+          {activeTab === 'system' ? <AdminHealthPanel /> : null}
+
           {activeTab === 'reports' ? (
             <div className="space-y-6">
               <div className="rounded-3xl border border-surface-border bg-white/80 p-5 sm:p-6">
@@ -326,7 +334,14 @@ export default function AdminDashboard() {
 
           {activeTab === 'verifications' ? (
             <div className="space-y-6">
-              {verifications.length === 0 ? <p className="text-sm font-semibold text-text-light">No verification requests submitted yet.</p> : verifications.map((v) => {
+              <div className="flex flex-wrap items-center gap-3" role="group" aria-label="Show verification requests">
+                {(['PENDING', 'ALL'] as const).map((value) => (
+                  <button key={value} type="button" aria-pressed={verificationFilter === value} onClick={() => setVerificationFilter(value)} className={`dashboard-action-chip ${verificationFilter === value ? 'border-primary/30 bg-primary/10 text-primary' : ''}`}>
+                    {value === 'PENDING' ? `Waiting for review (${verifications.filter((v) => v.status === 'PENDING').length})` : `All (${verifications.length})`}
+                  </button>
+                ))}
+              </div>
+              {(verificationFilter === 'PENDING' ? verifications.filter((v) => v.status === 'PENDING') : verifications).length === 0 ? <p className="text-sm font-semibold text-text-light">{verificationFilter === 'PENDING' ? 'Nothing is waiting for review.' : 'No verification requests submitted yet.'}</p> : [...(verificationFilter === 'PENDING' ? verifications.filter((v) => v.status === 'PENDING') : verifications)].sort((a, b) => Number(b.status === 'PENDING') - Number(a.status === 'PENDING')).map((v) => {
                 const draft = verificationDrafts[v.id] || { reviewNote: '', internalNote: '' }
                 const name = v.user.employerProfile?.companyName || getDisplayName(v.user.jobSeekerProfile?.firstName || v.user.freelancerProfile?.firstName, v.user.jobSeekerProfile?.lastName || v.user.freelancerProfile?.lastName, v.user.email)
                 return (

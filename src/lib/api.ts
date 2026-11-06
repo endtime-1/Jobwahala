@@ -1169,3 +1169,7 @@ export const apiUnblockCompany = (employerId: string) => fetch(`${BASE_URL}/cv-d
 export const apiTrackJobView = (jobId: string) => {
   void fetch(`${BASE_URL}/jobs/${jobId}/view`, { method: 'POST', headers: headers(true) }).catch(() => undefined);
 };
+
+// Admin overview and system health
+export const apiGetAdminOverview = () => fetch(`${BASE_URL}/admin/overview`, { headers: headers(true) }).then(handleResponse);
+export const apiGetAdminHealth = () => fetch(`${BASE_URL}/admin/health`, { headers: headers(true) }).then(handleResponse);

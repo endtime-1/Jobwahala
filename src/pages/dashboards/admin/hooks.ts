@@ -1,12 +1,15 @@
 import { useQuery } from '@tanstack/react-query'
 import {
   apiGetAdminDisputes,
+  apiGetAdminHealth,
+  apiGetAdminOverview,
   apiGetAdminJobs,
   apiGetAdminReports,
   apiGetAdminServices,
   apiGetAdminUsers,
   apiGetAdminVerifications,
 } from '../../../lib/api'
+import type { AdminHealth, AdminOverview } from '../../../lib/adminOverview'
 
 export type AdminReport = {
   id: string; reason: string; status: string; createdAt: string
@@ -93,4 +96,12 @@ export function useAdminDashboard() {
       }
     },
   })
+}
+
+export function useAdminOverview() {
+  return useQuery({ queryKey: ['admin', 'overview'], queryFn: async () => (await apiGetAdminOverview()) as AdminOverview })
+}
+
+export function useAdminHealth() {
+  return useQuery({ queryKey: ['admin', 'health'], queryFn: async () => (await apiGetAdminHealth()) as AdminHealth, staleTime: 30_000 })
 }
