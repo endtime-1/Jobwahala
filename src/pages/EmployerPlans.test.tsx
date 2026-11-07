@@ -133,15 +133,41 @@ describe('the plan comparison page', () => {
   it('compares Free, Starter and Business, and switches to the yearly prices', async () => {
     renderAt('/plans', <Plans />)
 
-    expect(await screen.findByRole('heading', { name: 'Starter (monthly)' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Business (monthly)' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Starter' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Business' })).toBeInTheDocument()
+    expect(screen.getByRole('listitem', { name: 'Starter (monthly)' })).toBeInTheDocument()
     expect(screen.getByText('Up to 10 team members')).toBeInTheDocument()
+    expect(screen.getByText('Recommended')).toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Yearly' }))
+    fireEvent.click(screen.getByRole('button', { name: /^Yearly/ }))
 
-    expect(screen.getByRole('heading', { name: 'Starter (yearly)' })).toBeInTheDocument()
+    expect(screen.getByRole('listitem', { name: 'Starter (yearly)' })).toBeInTheDocument()
     expect(screen.getAllByText('Save 17% against paying monthly')).toHaveLength(2)
-    expect(screen.queryByRole('heading', { name: 'Starter (monthly)' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('listitem', { name: 'Starter (monthly)' })).not.toBeInTheDocument()
+    // A yearly plan also says what it comes to each month.
+    expect(screen.getAllByText(/That is GHS .* a month, paid once a year/)).toHaveLength(2)
+  })
+
+  it('offers the yearly saving on the switch, and shows a side-by-side comparison of what each plan includes', async () => {
+    renderAt('/plans', <Plans />)
+
+    expect(await screen.findByRole('button', { name: /^Yearly.*Save up to 17%/ })).toBeInTheDocument()
+    const table = screen.getByRole('table')
+    expect(within(table).getByRole('columnheader', { name: 'Business' })).toBeInTheDocument()
+    const row = (label: string) => within(table).getByRole('row', { name: new RegExp(label) })
+    expect(within(row('Team members')).getByText('Up to 10')).toBeInTheDocument()
+    expect(within(row('Team members')).getByText('1 (you)')).toBeInTheDocument()
+    expect(within(row('CV database')).getAllByLabelText('Not included')).toHaveLength(2)
+    expect(within(row('CV database')).getAllByLabelText('Included')).toHaveLength(1)
+    expect(within(row('Featured-job credits')).getByText('6 / month')).toBeInTheDocument()
+  })
+
+  it('explains in plain words what a plan does and does not do', async () => {
+    renderAt('/plans', <Plans />)
+
+    const notes = await screen.findByRole('region', { name: 'Good to know' })
+    expect(within(notes).getByText('Trust is not for sale')).toBeInTheDocument()
+    expect(within(notes).getByText(/You get 7 days to fix it/)).toBeInTheDocument()
   })
 
   it('says it never touches verification', async () => {

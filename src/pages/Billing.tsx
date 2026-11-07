@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { CreditCard, Download, Rocket, Zap } from 'lucide-react'
+import { ArrowRight, Check, CreditCard, Download, GraduationCap, Package, Receipt, Rocket, Star, Zap } from 'lucide-react'
+import PageHero from '../components/PageHero'
 import SEO from '../components/SEO'
 import {
   apiCancelSubscription,
@@ -26,7 +27,24 @@ type MyBilling = {
 const POLL_MS = 2000
 const POLL_TRIES = 8
 
-/** Plans, credits, buying, and payment history with receipts, for employers and training providers. */
+const KIND_ICON: Record<Product['kind'], typeof Star> = {
+  FEATURED_JOB: Star,
+  JOB_BOOST: Zap,
+  JOB_PACK: Package,
+  FEATURED_COURSE: GraduationCap,
+  SUBSCRIPTION: CreditCard,
+  PROFILE_BOOST: Rocket,
+}
+
+const STATUS_PILL: Record<string, string> = {
+  PAID: 'bg-success/10 text-success',
+  FAILED: 'bg-error/10 text-error',
+  REFUNDED: 'bg-gold/20 text-gold-deep',
+  PARTIALLY_REFUNDED: 'bg-gold/20 text-gold-deep',
+  PENDING: 'bg-surface-alt text-text-muted',
+}
+
+/** Credits, your plan, one-off promotions, and payment history with receipts. */
 export default function Billing() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [products, setProducts] = useState<Product[]>([])
@@ -140,75 +158,104 @@ export default function Billing() {
   const hasCredit = (product: Product) =>
     (product.kind === 'FEATURED_JOB' && (mine?.credits.featuredCredits ?? 0) > 0) || (product.kind === 'JOB_BOOST' && (mine?.credits.boostCredits ?? 0) > 0)
 
-  return (
-    <div className="container max-w-5xl pb-24 pt-28">
-      <SEO title="Billing" noindex />
-      <header className="mb-8">
-        <h1 className="text-3xl font-black tracking-tight text-text-main">Billing</h1>
-        <p className="mt-2 text-base font-medium text-text-muted">Promote your jobs, buy credits or a plan, and download your receipts. Pay by card or mobile money.</p>
-        <p className="mt-2 text-sm font-bold">
-          <Link to="/plans" className="text-primary hover:underline">Compare employer plans</Link>
-        </p>
-      </header>
+  // Plans (and the Free plan) are chosen on the Plans page. This page sells one-off promotions.
+  const shopProducts = products.filter((product) => product.kind !== 'SUBSCRIPTION')
+  const offersPlans = products.some((product) => product.kind === 'SUBSCRIPTION')
+  const livePlans = mine?.subscriptions ?? []
 
-      {mode === 'test' ? (
-        <p role="status" className="mb-4 rounded-2xl border border-gold/40 bg-gold/10 px-4 py-3 text-sm font-semibold text-text-main">
-          Test mode: payments here are practice payments and no real money moves.
-        </p>
-      ) : null}
-      {mode === 'off' && products.length > 0 ? (
-        <p role="alert" className="mb-4 rounded-2xl border border-error/10 bg-error/5 px-4 py-3 text-sm font-semibold text-error">
-          Payments are not switched on yet. You can look around, but you cannot buy anything right now.
-        </p>
-      ) : null}
-      {error ? (
-        <p role="alert" className="mb-4 rounded-2xl border border-error/10 bg-error/5 px-4 py-3 text-sm font-semibold text-error">
-          {error}
-        </p>
-      ) : null}
-      {notice ? (
-        <p role="status" className="mb-4 rounded-2xl border border-success/20 bg-success/5 px-4 py-3 text-sm font-semibold text-text-main">
-          {notice}
-        </p>
-      ) : null}
+  return (
+    <div className="container max-w-5xl pb-24 pt-24 xl:pt-28">
+      <SEO title="Billing" noindex />
+
+      <PageHero eyebrow="Billing" title="Your credits," accent="plan and receipts.">
+        <p className="mt-5 max-w-2xl text-base font-medium text-white/75 sm:text-lg">Promote your jobs, buy credits, and download your receipts. Pay by card or mobile money.</p>
+        <Link to="/plans" className="btn btn-gold btn-lg mt-6 inline-flex px-7">
+          Compare employer plans <ArrowRight className="h-5 w-5" aria-hidden />
+        </Link>
+      </PageHero>
+
+      <div className="mt-8 space-y-3">
+        {mode === 'test' ? (
+          <p role="status" className="rounded-2xl border border-gold/40 bg-gold/10 px-4 py-3 text-sm font-semibold text-text-main">
+            Test mode: payments here are practice payments and no real money moves.
+          </p>
+        ) : null}
+        {mode === 'off' && products.length > 0 ? (
+          <p role="alert" className="rounded-2xl border border-error/10 bg-error/5 px-4 py-3 text-sm font-semibold text-error">
+            Payments are not switched on yet. You can look around, but you cannot buy anything right now.
+          </p>
+        ) : null}
+        {error ? (
+          <p role="alert" className="rounded-2xl border border-error/10 bg-error/5 px-4 py-3 text-sm font-semibold text-error">
+            {error}
+          </p>
+        ) : null}
+        {notice ? (
+          <p role="status" className="rounded-2xl border border-success/20 bg-success/5 px-4 py-3 text-sm font-semibold text-text-main">
+            {notice}
+          </p>
+        ) : null}
+      </div>
 
       {mine ? (
-        <section aria-label="Your credits and plan" className="mb-10 grid gap-4 sm:grid-cols-2">
-          <div className="rounded-2xl border border-surface-border bg-white p-6">
-            <h2 className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-text-main">
-              <Rocket className="h-4 w-4 text-secondary" aria-hidden /> Your credits
+        <section aria-label="Your credits and plan" className="mt-8 grid gap-5 md:grid-cols-2">
+          <div className="rounded-3xl border border-surface-border bg-white p-7 shadow-premium-sm">
+            <h2 className="flex items-center gap-2.5 text-sm font-black uppercase tracking-widest text-text-main">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-secondary/10 text-secondary">
+                <Rocket className="h-4 w-4" aria-hidden />
+              </span>
+              Your credits
             </h2>
-            <dl className="mt-4 grid grid-cols-2 gap-3">
-              <div className="rounded-xl bg-surface-alt/60 p-3">
+            <dl className="mt-5 grid grid-cols-2 gap-3">
+              <div className="rounded-2xl bg-gradient-to-br from-secondary/10 to-transparent p-4">
                 <dt className="text-xs font-bold uppercase tracking-wider text-text-light">Featured job</dt>
-                <dd className="mt-1 text-3xl font-black text-text-main">{mine.credits.featuredCredits}</dd>
+                <dd className="mt-1 text-4xl font-black text-text-main">{mine.credits.featuredCredits}</dd>
               </div>
-              <div className="rounded-xl bg-surface-alt/60 p-3">
+              <div className="rounded-2xl bg-gradient-to-br from-gold/20 to-transparent p-4">
                 <dt className="text-xs font-bold uppercase tracking-wider text-text-light">Urgently hiring</dt>
-                <dd className="mt-1 text-3xl font-black text-text-main">{mine.credits.boostCredits}</dd>
+                <dd className="mt-1 text-4xl font-black text-text-main">{mine.credits.boostCredits}</dd>
               </div>
             </dl>
+            <p className="mt-4 text-xs font-medium text-text-muted">Use a credit on any open job from the promotions below. Credits you buy never expire.</p>
           </div>
 
-          <div className="rounded-2xl border border-surface-border bg-white p-6">
-            <h2 className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-text-main">
-              <CreditCard className="h-4 w-4 text-secondary" aria-hidden /> Your plan
+          <div className="rounded-3xl border border-surface-border bg-white p-7 shadow-premium-sm">
+            <h2 className="flex items-center gap-2.5 text-sm font-black uppercase tracking-widest text-text-main">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-secondary/10 text-secondary">
+                <CreditCard className="h-4 w-4" aria-hidden />
+              </span>
+              Your plan
             </h2>
-            {mine.subscriptions.length === 0 ? <p className="mt-4 text-sm font-semibold text-text-muted">You are not on a plan. Pick one below to get credits every {`month or year`}.</p> : null}
-            <ul className="mt-4 space-y-3">
-              {mine.subscriptions.map((plan) => (
-                <li key={plan.id}>
-                  <p className="text-base font-extrabold text-text-main">
-                    {plan.name} {plan.status === 'PAST_DUE' ? <span className="ml-2 rounded-full bg-error/10 px-2 py-0.5 text-xs font-extrabold text-error">Payment problem</span> : null}
+            {livePlans.length === 0 ? (
+              <div className="mt-5">
+                <p className="text-sm font-semibold text-text-muted">You are not on a plan.</p>
+                {offersPlans ? (
+                  <Link to="/plans" className="mt-3 inline-flex items-center gap-1.5 text-sm font-black text-primary hover:underline">
+                    See what a plan adds <ArrowRight className="h-4 w-4" aria-hidden />
+                  </Link>
+                ) : null}
+              </div>
+            ) : null}
+            <ul className="mt-5 space-y-4">
+              {livePlans.map((plan) => (
+                <li key={plan.id} className="rounded-2xl bg-surface-alt/60 p-4">
+                  <p className="flex flex-wrap items-center gap-2 text-lg font-black text-text-main">
+                    {plan.name}
+                    {plan.status === 'PAST_DUE' ? <span className="rounded-full bg-error/10 px-2.5 py-0.5 text-xs font-extrabold text-error">Payment problem</span> : null}
                   </p>
-                  <p className="text-sm font-semibold text-text-muted">
+                  <p className="mt-1 text-sm font-semibold text-text-muted">
                     {plan.cancelAtPeriodEnd ? 'Ends' : 'Renews'} on {formatShortDate(plan.currentPeriodEnd)}
                   </p>
-                  {plan.cancelAtPeriodEnd ? null : (
-                    <button type="button" disabled={busy === `cancel-${plan.id}`} onClick={() => cancel(plan.id)} className="mt-2 text-xs font-black uppercase tracking-widest text-error hover:underline disabled:opacity-60">
-                      Cancel plan
-                    </button>
-                  )}
+                  <div className="mt-3 flex flex-wrap items-center gap-4">
+                    <Link to="/plans" className="text-xs font-black uppercase tracking-widest text-primary hover:underline">
+                      Change plan
+                    </Link>
+                    {plan.cancelAtPeriodEnd ? null : (
+                      <button type="button" disabled={busy === `cancel-${plan.id}`} onClick={() => cancel(plan.id)} className="text-xs font-black uppercase tracking-widest text-error hover:underline disabled:opacity-60">
+                        Cancel plan
+                      </button>
+                    )}
+                  </div>
                 </li>
               ))}
             </ul>
@@ -216,33 +263,48 @@ export default function Billing() {
         </section>
       ) : null}
 
-      <section aria-label="Buy" className="mb-12">
-        <h2 className="mb-4 text-xl font-black tracking-tight text-text-main">Buy</h2>
-        {products.length === 0 && mine ? <p className="text-sm font-semibold text-text-muted">Nothing is on sale right now.</p> : null}
-        <ul className="grid gap-4 md:grid-cols-2">
-          {products.map((product) => {
+      <section aria-label="Buy" className="mt-14">
+        <h2 className="text-2xl font-black tracking-tight text-text-main">Promote and buy</h2>
+        <p className="mt-1 text-sm font-medium text-text-muted">One-off promotions. Each is paid once, with no subscription.</p>
+        {shopProducts.length === 0 && mine ? <p className="mt-5 text-sm font-semibold text-text-muted">Nothing is on sale right now.</p> : null}
+        <ul className="mt-6 grid gap-5 md:grid-cols-2">
+          {shopProducts.map((product) => {
             const options = targetOptions(product)
             const needsTarget = needsJob(product) || needsCourse(product)
             const chosen = targets[product.id]
+            const Icon = KIND_ICON[product.kind] ?? Package
             return (
-              <li key={product.id} className="flex flex-col rounded-2xl border border-surface-border bg-white p-6">
-                <h3 className="text-lg font-extrabold text-text-main">{product.name}</h3>
-                <p className="mt-1 text-sm font-medium text-text-muted">{product.description}</p>
-                <p className="mt-4 text-3xl font-black text-text-main">
-                  {product.totalLabel}
-                  {product.interval ? <span className="text-base font-bold text-text-muted"> / {product.interval === 'YEARLY' ? 'year' : 'month'}</span> : null}
-                </p>
-                <p className="text-xs font-semibold text-text-light">{product.vatRatePercent > 0 ? `Includes VAT of ${ghs(product.vatPesewas)}` : 'No VAT'}</p>
+              <li key={product.id} className="flex flex-col rounded-3xl border border-surface-border bg-white p-7 shadow-premium-sm transition-shadow hover:shadow-premium">
+                <div className="flex items-start gap-4">
+                  <span className="flex h-12 w-12 flex-none items-center justify-center rounded-2xl bg-secondary/10 text-secondary">
+                    <Icon className="h-6 w-6" aria-hidden />
+                  </span>
+                  <div className="min-w-0">
+                    <h3 className="text-lg font-black tracking-tight text-text-main">{product.name}</h3>
+                    <p className="mt-1 text-sm font-medium text-text-muted">{product.description}</p>
+                  </div>
+                </div>
+
+                <div className="mt-5">
+                  <p className="flex items-baseline gap-1.5">
+                    <span className="text-3xl font-black tracking-tight text-text-main">{product.totalLabel}</span>
+                    {product.interval ? <span className="text-sm font-bold text-text-muted">/ {product.interval === 'YEARLY' ? 'year' : 'month'}</span> : null}
+                  </p>
+                  <p className="mt-1 text-xs font-semibold text-text-light">{product.vatRatePercent > 0 ? `Includes VAT of ${ghs(product.vatPesewas)}` : 'No VAT'}</p>
+                </div>
+
                 {product.includes.length > 0 ? (
-                  <ul className="mt-3 space-y-1 text-sm font-semibold text-text-main">
+                  <ul className="mt-4 space-y-2 text-sm font-semibold text-text-main">
                     {product.includes.map((line) => (
-                      <li key={line}>• {line}</li>
+                      <li key={line} className="flex gap-2.5">
+                        <Check className="mt-0.5 h-4 w-4 flex-none text-success" aria-hidden /> {line}
+                      </li>
                     ))}
                   </ul>
                 ) : null}
 
                 {needsTarget ? (
-                  <label className="mt-4 block text-sm font-bold text-text-main">
+                  <label className="mt-5 block text-sm font-bold text-text-main">
                     {needsCourse(product) ? 'Which course?' : 'Which job?'}
                     <select value={chosen ?? ''} onChange={(e) => setTargets((current) => ({ ...current, [product.id]: e.target.value }))} className="mt-1 h-11 w-full text-sm font-semibold" aria-label={`${product.name}: choose ${needsCourse(product) ? 'a course' : 'a job'}`}>
                       <option value="">{options.length ? 'Choose one' : needsCourse(product) ? 'You have no live courses' : 'You have no open jobs'}</option>
@@ -256,19 +318,19 @@ export default function Billing() {
                   </label>
                 ) : null}
 
-                <div className="mt-auto flex flex-wrap gap-2 pt-5">
+                <div className="mt-auto flex flex-wrap gap-2 pt-6">
                   <button
                     type="button"
                     disabled={mode === 'off' || busy === product.id || (needsTarget && !chosen)}
                     onClick={() => void buy(product)}
-                    className="btn btn-primary btn-sm px-5 disabled:opacity-60"
+                    className="btn btn-primary btn-md px-6 disabled:opacity-60"
                     aria-label={`Buy ${product.name}`}
                   >
                     {busy === product.id ? 'Opening Paystack...' : 'Buy now'}
                   </button>
                   {hasCredit(product) ? (
-                    <button type="button" disabled={!chosen || busy === `credit-${product.id}`} onClick={() => void spendJobCredit(product)} className="btn btn-outline btn-sm bg-white disabled:opacity-60" aria-label={`Use a credit for ${product.name}`}>
-                      <Zap className="h-3.5 w-3.5" aria-hidden /> Use a credit
+                    <button type="button" disabled={!chosen || busy === `credit-${product.id}`} onClick={() => void spendJobCredit(product)} className="btn btn-outline btn-md bg-white disabled:opacity-60" aria-label={`Use a credit for ${product.name}`}>
+                      <Zap className="h-4 w-4" aria-hidden /> Use a credit
                     </button>
                   ) : null}
                 </div>
@@ -278,31 +340,41 @@ export default function Billing() {
         </ul>
       </section>
 
-      <section aria-label="Payment history">
-        <h2 className="mb-4 text-xl font-black tracking-tight text-text-main">Payment history</h2>
-        {mine && mine.payments.length === 0 ? <p className="rounded-2xl border border-dashed border-surface-border bg-white p-8 text-center text-sm font-semibold text-text-muted">No payments yet.</p> : null}
+      <section aria-label="Payment history" className="mt-14">
+        <h2 className="text-2xl font-black tracking-tight text-text-main">Payment history</h2>
+        {mine && mine.payments.length === 0 ? (
+          <div className="mt-5 flex flex-col items-center rounded-3xl border border-dashed border-surface-border bg-white p-10 text-center">
+            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-surface-alt text-text-light">
+              <Receipt className="h-6 w-6" aria-hidden />
+            </span>
+            <p className="mt-4 text-sm font-semibold text-text-muted">No payments yet.</p>
+            <p className="mt-1 text-xs font-medium text-text-light">Your receipts will appear here after your first purchase.</p>
+          </div>
+        ) : null}
         {mine && mine.payments.length > 0 ? (
-          <div className="overflow-x-auto rounded-2xl border border-surface-border bg-white">
-            <table className="w-full text-left text-sm">
+          <div className="mt-5 overflow-x-auto rounded-3xl border border-surface-border bg-white shadow-premium-sm">
+            <table className="w-full min-w-[40rem] text-left text-sm">
               <thead>
                 <tr className="border-b border-surface-border text-xs font-bold uppercase tracking-wider text-text-light">
-                  <th className="px-4 py-3">Date</th>
-                  <th className="px-4 py-3">Item</th>
-                  <th className="px-4 py-3">Total</th>
-                  <th className="px-4 py-3">VAT</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3">Receipt</th>
+                  <th className="px-5 py-4">Date</th>
+                  <th className="px-5 py-4">Item</th>
+                  <th className="px-5 py-4">Total</th>
+                  <th className="px-5 py-4">VAT</th>
+                  <th className="px-5 py-4">Status</th>
+                  <th className="px-5 py-4">Receipt</th>
                 </tr>
               </thead>
               <tbody>
                 {mine.payments.map((payment) => (
-                  <tr key={payment.id} className="border-b border-surface-border/60 last:border-0">
-                    <td className="px-4 py-3 font-semibold text-text-muted">{formatShortDate(payment.paidAt ?? payment.createdAt)}</td>
-                    <td className="px-4 py-3 font-bold text-text-main">{payment.productName}</td>
-                    <td className="px-4 py-3 font-bold text-text-main">{ghs(payment.totalPesewas)}</td>
-                    <td className="px-4 py-3 font-semibold text-text-muted">{ghs(payment.vatPesewas)}</td>
-                    <td className="px-4 py-3 font-bold text-text-main">{STATUS_LABEL[payment.status] ?? payment.status}</td>
-                    <td className="px-4 py-3">
+                  <tr key={payment.id} className="border-b border-surface-border/60 last:border-0 hover:bg-surface-alt/30">
+                    <td className="px-5 py-4 font-semibold text-text-muted">{formatShortDate(payment.paidAt ?? payment.createdAt)}</td>
+                    <td className="px-5 py-4 font-bold text-text-main">{payment.productName}</td>
+                    <td className="px-5 py-4 font-bold text-text-main">{ghs(payment.totalPesewas)}</td>
+                    <td className="px-5 py-4 font-semibold text-text-muted">{ghs(payment.vatPesewas)}</td>
+                    <td className="px-5 py-4">
+                      <span className={`inline-block rounded-full px-3 py-1 text-xs font-extrabold ${STATUS_PILL[payment.status] ?? 'bg-surface-alt text-text-muted'}`}>{STATUS_LABEL[payment.status] ?? payment.status}</span>
+                    </td>
+                    <td className="px-5 py-4">
                       {payment.receiptNumber ? (
                         <button type="button" disabled={busy === `receipt-${payment.id}`} onClick={() => void download(payment.id)} aria-label={`Download receipt ${payment.receiptNumber}`} className="inline-flex items-center gap-1.5 font-bold text-primary hover:underline disabled:opacity-60">
                           <Download className="h-3.5 w-3.5" aria-hidden /> {payment.receiptNumber}
@@ -317,8 +389,12 @@ export default function Billing() {
             </table>
           </div>
         ) : null}
-        <p className="mt-4 text-xs font-medium text-text-light">
-          Questions about a payment? <Link to="/support" className="font-bold text-primary hover:underline">Contact support</Link>.
+        <p className="mt-5 text-xs font-medium text-text-light">
+          Questions about a payment?{' '}
+          <Link to="/support" className="font-bold text-primary hover:underline">
+            Contact support
+          </Link>
+          .
         </p>
       </section>
     </div>

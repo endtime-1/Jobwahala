@@ -135,13 +135,24 @@ describe('the billing page', () => {
     expect(screen.getByText(/Labelled "Featured"/)).toBeInTheDocument()
   })
 
-  it('a plan shows its repeat period; a plan with no VAT says so', async () => {
-    api.catalogue.mockResolvedValue({ mode: 'live', products: [product({ id: 'sub', kind: 'SUBSCRIPTION', name: 'Employer plan (monthly)', interval: 'MONTHLY', vatRatePercent: 0, vatPesewas: 0 })] })
+  it('says No VAT when there is none, and links to the Plans page for plans instead of selling them here', async () => {
+    api.catalogue.mockResolvedValue({
+      mode: 'live',
+      products: [
+        product({ id: 'pack', kind: 'JOB_PACK', name: 'Job pack', vatRatePercent: 0, vatPesewas: 0 }),
+        product({ id: 'free', kind: 'SUBSCRIPTION', name: 'Free', interval: null }),
+        product({ id: 'sub', kind: 'SUBSCRIPTION', name: 'Starter (monthly)', interval: 'MONTHLY' }),
+      ],
+    })
 
     renderAt()
 
-    expect(await screen.findByText('/ month')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Job pack' })).toBeInTheDocument()
     expect(screen.getByText('No VAT')).toBeInTheDocument()
+    // Plans, including Free, are chosen on the Plans page, not bought from this list.
+    expect(screen.queryByRole('heading', { name: 'Free' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Buy Starter/ })).not.toBeInTheDocument()
+    expect(screen.getAllByRole('link', { name: /compare employer plans|see what a plan adds/i }).length).toBeGreaterThan(0)
   })
 
   it('says "Test mode" while the keys are test keys, and offers nothing to buy with no keys', async () => {
