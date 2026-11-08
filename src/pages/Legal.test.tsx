@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react'
 import { HelmetProvider } from 'react-helmet-async'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
+import { LEGAL, OPEN_POINTS, unfilledDetails, updatedLabel } from '../content/legal'
 import Privacy from './Privacy'
 import Terms from './Terms'
 
@@ -48,8 +49,9 @@ describe('drafts waiting for legal review', () => {
   it('leaves the facts that only the company knows as visible placeholders', () => {
     renderAt('/privacy')
 
-    expect(screen.getAllByText(/\[LEGAL NAME OF THE COMPANY\]/).length).toBeGreaterThan(0)
-    expect(screen.getAllByText(/\[PRIVACY EMAIL ADDRESS\]/).length).toBeGreaterThan(0)
+    // The business details come from one place (src/content/legal.ts). Until they are filled in, the brackets show.
+    expect(screen.getAllByText(new RegExp(LEGAL.operatorName.replace(/[[\]]/g, '\\$&'))).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(new RegExp(LEGAL.contactEmail.replace('.', '\\.'))).length).toBeGreaterThan(0)
   })
 })
 
@@ -85,7 +87,7 @@ describe('Ghana Data Protection Act, 2012 (Act 843)', () => {
     const { container } = renderAt('/terms')
 
     expect(container.textContent).toMatch(/Act 843/)
-    expect(screen.getByRole('link', { name: 'Privacy Policy' })).toHaveAttribute('href', '/privacy')
+    for (const link of screen.getAllByRole('link', { name: 'Privacy Policy' })) expect(link).toHaveAttribute('href', '/privacy')
     expect(screen.getByRole('link', { name: 'Account settings' })).toHaveAttribute('href', '/settings')
   })
 
@@ -94,5 +96,95 @@ describe('Ghana Data Protection Act, 2012 (Act 843)', () => {
 
     expect(container.textContent).toMatch(/not available yet/i)
     expect(container.textContent).not.toMatch(/held until the milestone is approved/i)
+  })
+})
+
+describe('the terms now cover the paid services', () => {
+  it('lists what is free and what is paid, and links to the plans', () => {
+    const { container } = renderAt('/terms')
+
+    expect(screen.getByRole('heading', { level: 2, name: /What is free and what is paid/ })).toBeInTheDocument()
+    expect(container.textContent).toMatch(/free for employers to post jobs/i)
+    expect(container.textContent).toMatch(/You are never asked to pay to apply/i)
+    expect(screen.getByRole('link', { name: 'Plans page' })).toHaveAttribute('href', '/plans')
+    // Paying never buys trust.
+    expect(container.textContent).toMatch(/never ranks an unverified employer\s+above a verified one/i)
+  })
+
+  it('no longer says that no money changes hands', () => {
+    const { container } = renderAt('/terms')
+
+    expect(container.textContent).not.toMatch(/Nothing on JobWahala today involves us holding or\s+paying out money/i)
+    expect(container.textContent).toMatch(/We do not hold or pay out money between\s+members/i)
+  })
+
+  it('explains payment, renewals, the 7-day grace period and credits', () => {
+    const { container } = renderAt('/terms')
+    const text = container.textContent ?? ''
+
+    expect(screen.getByRole('heading', { level: 2, name: /Paying, plans and renewals/ })).toBeInTheDocument()
+    for (const topic of [/Paystack/, /renew by themselves/i, /cancel at any time/i, /7 days to fix it/, /moves to the Free plan/i, /never expire/i, /keep their price/i]) expect(text).toMatch(topic)
+  })
+
+  it('has a refund policy that uses the numbers set in one place, and says how to ask', () => {
+    const { container } = renderAt('/terms')
+    const text = container.textContent ?? ''
+
+    expect(screen.getByRole('heading', { level: 2, name: /Refunds and cancellations/ })).toBeInTheDocument()
+    expect(text).toContain(`within ${LEGAL.planRefundDays} days of your first`)
+    expect(text).toContain(`within ${LEGAL.promotionRefundHours} hours`)
+    expect(text).toMatch(/charged twice/)
+    expect(text).toContain(LEGAL.contactEmail)
+    expect(text).toMatch(/Ghanaian consumer law/)
+  })
+
+  it('sets the rules for using the CV database, for job seekers and employers', () => {
+    const { container } = renderAt('/terms')
+    const text = container.textContent ?? ''
+
+    expect(screen.getByRole('heading', { level: 2, name: /The CV database/ })).toBeInTheDocument()
+    for (const topic of [/off unless you switch it on/i, /only verified employers/i, /only to consider that person for a job/i, /bulk/i, /blocked you/i]) expect(text).toMatch(topic)
+  })
+})
+
+describe('the privacy policy now matches what the site does', () => {
+  it('names the real providers instead of placeholders, with no note left for a lawyer in the text', () => {
+    const { container } = renderAt('/privacy')
+    const text = container.textContent ?? ''
+
+    for (const provider of ['Railway', 'Brevo', 'OpenAI', 'Paystack', 'Arkesel', 'Turnstile']) expect(text).toContain(provider)
+    expect(text).not.toMatch(/\[Lawyer to/)
+    expect(text).not.toMatch(/\[(HOSTING|EMAIL|AI) PROVIDER/)
+  })
+
+  it('explains payments, plans, receipts, teams, messages and job views', () => {
+    const { container } = renderAt('/privacy')
+    const text = container.textContent ?? ''
+
+    expect(screen.getByRole('heading', { level: 2, name: /Payments, plans and receipts/ })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 2, name: /Teams, messages and job views/ })).toBeInTheDocument()
+    expect(text).toMatch(/do not see or store card numbers/i)
+    expect(text).toMatch(/not stored/i)
+    expect(text).toMatch(/counted once a day/i)
+  })
+
+  it('keeps payment records for the period set in one place', () => {
+    const { container } = renderAt('/privacy')
+
+    expect(container.textContent).toContain(`for ${LEGAL.paymentRecordYears} years`)
+  })
+})
+
+describe('the legal details, in one place', () => {
+  it('lists what is still to fill in and what a lawyer must confirm', () => {
+    renderAt('/terms')
+
+    expect(unfilledDetails()).toEqual(expect.arrayContaining(['operatorName', 'address', 'dpcRegistration']))
+    const notice = screen.getByRole('note', { name: /draft notice/i })
+    for (const point of OPEN_POINTS) expect(notice).toHaveTextContent(point)
+  })
+
+  it('marks the date as a draft until a lawyer has reviewed it', () => {
+    expect(updatedLabel()).toBe(`${LEGAL.lastUpdated} (draft)`)
   })
 })

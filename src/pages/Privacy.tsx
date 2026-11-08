@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom'
+import LegalDraftNotice from '../components/LegalDraftNotice'
 import LegalPage from '../components/LegalPage'
+import { LEGAL, updatedLabel } from '../content/legal'
 
 // DRAFT. Written to describe what the product actually does today, and to follow the structure of the
 // Data Protection Act, 2012 (Act 843). It has not been reviewed by a lawyer. Items in [square brackets]
@@ -10,13 +12,8 @@ export default function Privacy() {
     <LegalPage
       title="Privacy Policy"
       description="What personal data JobWahala collects, why, who sees it, and your rights under Ghana's Data Protection Act, 2012 (Act 843). Draft."
-      updated="5 November 2026 (draft)"
-      draftNotice={
-        <p>
-          This policy is a draft. It has not been reviewed by a lawyer and is not yet final. Text in [square brackets] must be completed or
-          confirmed before launch. It is not legal advice.
-        </p>
-      }
+      updated={updatedLabel()}
+      draftNotice={LEGAL.reviewedByLawyer ? undefined : <LegalDraftNotice />}
       intro="This policy explains what personal data we collect when you use JobWahala, why we collect it, who we share it with, how long we keep it, and the rights you have over it."
       sections={[
         {
@@ -24,12 +21,11 @@ export default function Privacy() {
           body: (
             <>
               <p>
-                JobWahala (&quot;we&quot;, &quot;us&quot;) is operated by [LEGAL NAME OF THE COMPANY], [REGISTERED ADDRESS], Ghana. We decide how and why your
+                JobWahala (&quot;we&quot;, &quot;us&quot;) is operated by {LEGAL.operatorName}, {LEGAL.address}, Ghana. We decide how and why your
                 personal data is used, which makes us the &quot;data controller&quot; under Ghana&apos;s Data Protection Act, 2012 (Act 843).
               </p>
               <p>
-                Registration with the Data Protection Commission: [REGISTRATION NUMBER, or state that registration is in progress]. Privacy contact:
-                [PRIVACY EMAIL ADDRESS].
+                Registration with the Data Protection Commission: {LEGAL.dpcRegistration}. Privacy contact: {LEGAL.contactEmail}.
               </p>
             </>
           ),
@@ -40,7 +36,7 @@ export default function Privacy() {
             <p>
               We handle your personal data in line with the Data Protection Act, 2012 (Act 843) and the Data Protection Commission&apos;s guidance. That
               means we collect only what we need for a clear purpose, tell you what that purpose is, keep it accurate and secure, and respect your
-              rights. [Lawyer to confirm any other laws that apply, for example on electronic communications and on employment records.]
+              rights.
             </p>
           ),
         },
@@ -56,7 +52,11 @@ export default function Privacy() {
                 contact details.
               </li>
               <li>Identity verification evidence, if you choose to submit it.</li>
-              <li>Payment and payout details, processed by our payment provider when payments are available. We do not store card numbers.</li>
+              <li>
+                Payments: what you bought, the amount, any VAT, the date, the payment reference and receipt number, and the name and email on the receipt. Card
+                and mobile money details are handled by Paystack; we do not see or store card numbers.
+              </li>
+              <li>Teams and searches: the email addresses of colleagues an employer invites, and the searches an employer saves in the CV database.</li>
               <li>
                 Technical data: your IP address and device information, used for security, to stop abuse and to limit how many codes can be requested.
                 Error reports, with personal details removed (see &quot;Service providers&quot;).
@@ -76,7 +76,6 @@ export default function Privacy() {
                 <li>To meet legal and accounting obligations. (Legal obligation.)</li>
                 <li>To improve and fix the service, using error reports. (Our legitimate interest.)</li>
               </ul>
-              <p>[Lawyer to confirm the lawful bases we rely on under Act 843 for each purpose, and where we rely on your consent.]</p>
             </>
           ),
         },
@@ -136,10 +135,44 @@ export default function Privacy() {
                 </li>
               </ul>
               <p>
-                An employer who unlocks your details becomes responsible for how they use them and must use them only for hiring. [Lawyer to confirm the employer
-                terms that say this.] Deleting your account removes your profile from the CV database, along with the records of who viewed and unlocked it.
+                An employer who unlocks your details becomes responsible for how they use them and must use them only for hiring, as our Terms of Service require. Deleting your account removes your profile from the CV database, along with the records of who viewed and unlocked it.
               </p>
             </>
+          ),
+        },
+        {
+          heading: 'Payments, plans and receipts',
+          body: (
+            <>
+              <p>
+                When you buy something, Paystack takes the payment and tells us the result. We keep a record of each payment (what, how much, when, the reference
+                and your receipt number) so we can give you receipts and refunds and meet accounting rules.
+              </p>
+              <p>
+                For a plan that renews, Paystack keeps a token for your card or mobile money account so it can take the next payment. We keep that token only to
+                run renewals and to schedule a plan change. Cancelling the plan stops further payments. We email you before a renewal, and if a payment fails,
+                and nothing else about it goes to anyone but you.
+              </p>
+            </>
+          ),
+        },
+        {
+          heading: 'Teams, messages and job views',
+          body: (
+            <ul className="list-disc space-y-1 pl-5">
+              <li>
+                <strong>Teams:</strong> an employer can invite colleagues by email. A team member can see and work on that company&apos;s jobs and applicants, and
+                cannot see its billing. The owner can remove a member at any time.
+              </li>
+              <li>
+                <strong>Messages:</strong> only the two people in a conversation (and administrators handling a report) can read it. The &quot;typing&quot; sign
+                shows live to the other person and is not stored.
+              </li>
+              <li>
+                <strong>Job views:</strong> we count how many people look at a job so employers can see how it is doing. A visitor is counted once a day using a
+                scrambled code, not their name, and the company&apos;s own team and search-engine robots are not counted.
+              </li>
+            </ul>
           ),
         },
         {
@@ -152,13 +185,13 @@ export default function Privacy() {
               </p>
               <p>These service providers process data for us under agreements that limit how they may use it:</p>
               <ul className="list-disc space-y-1 pl-5">
-                <li>Hosting and database: [HOSTING PROVIDER, currently Railway].</li>
-                <li>Email delivery: [EMAIL PROVIDER].</li>
+                <li>Hosting and database: Railway.</li>
+                <li>Email delivery (verification, password reset, receipts, alerts): Brevo.</li>
                 <li>Text messages (one-time codes): Arkesel.</li>
                 <li>Bot protection on sign-up, the waitlist and reporting: Cloudflare Turnstile.</li>
                 <li>Error monitoring: Sentry. We configure it to remove emails, phone numbers, tokens and message content before an error report leaves our servers.</li>
-                <li>Payments, when payments are available: Paystack.</li>
-                <li>AI drafting: [AI PROVIDER].</li>
+                <li>Payments: Paystack (card and mobile money). They tell us whether a payment went through; they do not give us your card number.</li>
+                <li>AI drafting: OpenAI.</li>
               </ul>
               <p>We may also share data where the law requires it, or to protect people from fraud or harm.</p>
             </>
@@ -169,8 +202,7 @@ export default function Privacy() {
           body: (
             <p>
               Some of our providers are based, or store data, outside Ghana. Where that happens we take steps so your data stays protected to the standard
-              Act 843 expects. [Lawyer to confirm the transfer basis and safeguards, and whether any notification to the Data Protection Commission is
-              needed.]
+              Act 843 expects.
             </p>
           ),
         },
@@ -184,10 +216,10 @@ export default function Privacy() {
                 are deleted, and the account is emptied. Your messages are blanked. Applications are withdrawn.
               </li>
               <li>
-                Records we must keep, such as payments and agreements, are kept without your name for [RETENTION PERIOD, for example 6 years] to meet
-                accounting and legal duties.
+                Records we must keep, such as payments and agreements, are kept without your name for {LEGAL.paymentRecordYears} years to meet accounting and legal
+                duties.
               </li>
-              <li>One-time codes: removed once used or expired. Security logs: [LOG RETENTION PERIOD].</li>
+              <li>One-time codes: removed once used or expired. Security logs: kept only as long as security needs them, then deleted.</li>
             </ul>
           ),
         },
@@ -209,9 +241,8 @@ export default function Privacy() {
                 <li>Ask that no important decision about you is made only by automated means.</li>
               </ul>
               <p>
-                To use a right we cannot offer in your settings, contact [PRIVACY EMAIL ADDRESS] or use the{' '}
-                <Link to="/support" className="font-bold text-primary hover:underline">Support centre</Link>. We aim to reply within [RESPONSE TIME, for example 30
-                days].
+                To use a right we cannot offer in your settings, contact {LEGAL.contactEmail} or use the{' '}
+                <Link to="/support" className="font-bold text-primary hover:underline">Support centre</Link>. We aim to reply within 30 days.
               </p>
             </>
           ),
@@ -231,8 +262,8 @@ export default function Privacy() {
           heading: 'Children',
           body: (
             <p>
-              JobWahala is for people aged [18] and over. We do not knowingly collect data from children. If you think a child has given us data, tell us
-              and we will delete it. [Lawyer to confirm the minimum age and any parental-consent rules.]
+              JobWahala is for people aged {LEGAL.minimumAge} and over. We do not knowingly collect data from children. If you think a child has given us data, tell us
+              and we will delete it.
             </p>
           ),
         },
@@ -250,7 +281,7 @@ export default function Privacy() {
           body: (
             <p>
               If you are unhappy with how we handle your data, please tell us first so we can put it right. You also have the right to complain to the
-              Data Protection Commission of Ghana. [Add the Commission&apos;s current contact details after checking them.]
+              Data Protection Commission of Ghana. You can find the Commission&apos;s current contact details on its website.
             </p>
           ),
         },
