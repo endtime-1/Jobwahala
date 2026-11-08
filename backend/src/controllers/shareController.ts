@@ -196,7 +196,9 @@ export const getJobSharePage = async (req: Request, res: Response) => {
     res.type('html');
 
     if (!job) {
-      return res.status(404).send(renderSharePageNotFound(siteUrl));
+      // A job that existed but is expired, closed or removed is "gone" (410), so search engines drop it; an id that never existed is a plain 404.
+      const existed = id ? await prisma.job.findUnique({ where: { id }, select: { id: true } }) : null;
+      return res.status(existed ? 410 : 404).send(renderSharePageNotFound(siteUrl));
     }
 
     res.set('Cache-Control', 'public, max-age=300');

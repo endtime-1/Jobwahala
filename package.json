@@ -12,6 +12,7 @@
     "test:smoke": "vitest run --config vitest.config.ts",
     "deploy:check:vps": "node scripts/checkVpsEnv.mjs",
     "deploy:verify": "node scripts/postDeployCheck.mjs",
+    "deploy:verify:bots": "node scripts/checkBotRoutes.mjs",
     "lint": "eslint .",
     "preview": "vite preview"
   },

@@ -37,9 +37,11 @@ ENV NGINX_ENTRYPOINT_LOCAL_RESOLVERS=1
 
 # Healthcheck to monitor web server health
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
-  CMD ["wget", "-q", "-O", "/dev/null", "http://127.0.0.1/"] || exit 1
+  CMD ["wget", "-q", "-O", "/dev/null", "http://127.0.0.1/_web_health"] || exit 1
 
 COPY docker/nginx.conf /etc/nginx/templates/default.conf.template
 COPY --from=build /app/dist /usr/share/nginx/html
+# The app shell again, served with a 404 status for addresses that are not pages (see docker/nginx.conf).
+RUN cp /usr/share/nginx/html/index.html /usr/share/nginx/html/404.html
 
 EXPOSE 80
