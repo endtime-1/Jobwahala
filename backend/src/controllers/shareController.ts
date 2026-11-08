@@ -49,6 +49,7 @@ const seoJobSelect = {
   schedule: true,
   durationMonths: true,
   unpaid: true,
+  postedByAdminId: true,
   employer: { select: { employerProfile: { select: { companyName: true, logoUrl: true, website: true } } } },
 } as const;
 
@@ -67,6 +68,7 @@ type SeoJobRow = {
   schedule: string | null;
   durationMonths: number | null;
   unpaid: boolean;
+  postedByAdminId: string | null;
   employer: { employerProfile: { companyName: string; logoUrl: string | null; website: string | null } | null };
 };
 
@@ -88,6 +90,7 @@ const toSeoJob = (row: SeoJobRow, siteUrl: string): SeoJob => {
     schedule: row.schedule,
     durationMonths: row.durationMonths,
     unpaid: row.unpaid,
+    postedOnBehalf: Boolean(row.postedByAdminId),
     employerName: row.employer.employerProfile?.companyName || 'A company on JobWahala',
     employerLogoUrl: logo ? (/^https?:\/\//i.test(logo) ? logo : `${siteUrl}${logo}`) : null,
     employerWebsite: row.employer.employerProfile?.website ?? null,
@@ -221,7 +224,7 @@ export const getCompanySharePage = async (req: Request, res: Response) => {
           where: { id, role: 'EMPLOYER', status: 'ACTIVE', employerProfile: { isNot: null } },
           select: {
             id: true,
-            employerProfile: { select: { companyName: true, industry: true, description: true, logoUrl: true } },
+            employerProfile: { select: { companyName: true, industry: true, description: true, logoUrl: true, isFoundingEmployer: true } },
             verificationRequests: approvedBusinessVerificationQuery,
             jobsPosted: { where: publicJobWhere(), orderBy: { createdAt: 'desc' }, take: 20, select: { id: true, title: true, location: true, type: true } },
           },
@@ -241,6 +244,7 @@ export const getCompanySharePage = async (req: Request, res: Response) => {
           description: employer.employerProfile.description,
           logoUrl: employer.employerProfile.logoUrl,
           isVerified: isVerifiedEmployer(employer.verificationRequests),
+          isFoundingEmployer: employer.employerProfile.isFoundingEmployer,
           jobs: employer.jobsPosted,
         },
         siteUrl,

@@ -1,6 +1,6 @@
 import ScrollToTop from './components/ScrollToTop'
 import { Suspense, lazy, type ReactElement } from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import ApiStatusBanner from './components/ApiStatusBanner'
 import Layout from './components/Layout'
 import Landing from './pages/Landing'
@@ -45,10 +45,22 @@ const BlogPost = lazy(() => import('./pages/BlogPost'))
 const Support = lazy(() => import('./pages/Support'))
 const IdentityVerification = lazy(() => import('./pages/IdentityVerification'))
 const About = lazy(() => import('./pages/About'))
+const ClaimCompany = lazy(() => import('./pages/ClaimCompany'))
+const EmployerFlyer = lazy(() => import('./pages/EmployerFlyer'))
 const Terms = lazy(() => import('./pages/Terms'))
 const Privacy = lazy(() => import('./pages/Privacy'))
 const CompanyProfile = lazy(() => import('./pages/CompanyProfile'))
 const NotFound = lazy(() => import('./pages/NotFound'))
+
+/**
+ * Links such as /onboarding?role=employer are meant for people who have no account yet: they go to sign up, with the account type and any
+ * referral code kept. A link with nothing to keep goes to log in, as before.
+ */
+function LoggedOutOnboarding() {
+  const { search } = useLocation()
+  const params = new URLSearchParams(search)
+  return <Navigate to={params.has('role') || params.has('ref') ? `/signup${search}` : '/login'} replace />
+}
 
 function RouteFallback() {
   return (
@@ -99,11 +111,12 @@ function App() {
         <Route path="/login" element={user ? <Navigate to={authRedirect} replace /> : <Login />} />
         <Route path="/signup" element={user ? <Navigate to={authRedirect} replace /> : <Signup />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route path="/employer-flyer" element={<EmployerFlyer />} />
         <Route path="/forgot-password" element={user ? <Navigate to={authRedirect} replace /> : <ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route
           path="/onboarding"
-          element={!user ? <Navigate to="/login" replace /> : isOnboarded ? <Navigate to="/dashboard" replace /> : <Onboarding />}
+          element={!user ? <LoggedOutOnboarding /> : isOnboarded ? <Navigate to="/dashboard" replace /> : <Onboarding />}
         />
 
         <Route element={<Layout />}>
@@ -140,6 +153,7 @@ function App() {
           <Route path="/blog/:id" element={<BlogPost />} />
           <Route path="/support" element={<Support />} />
           <Route path="/about" element={<About />} />
+          <Route path="/claim/:token" element={<ClaimCompany />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/verify-identity" element={renderProtected(<IdentityVerification />)} />

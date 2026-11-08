@@ -157,6 +157,7 @@ export const getAllJobs = async (req: AuthRequest, res: Response) => {
       include: {
         employer: {
           select: {
+            id: true,
             email: true,
             employerProfile: { select: { companyName: true } }
           }

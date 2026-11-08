@@ -8,6 +8,7 @@ import prisma from './config/prisma';
 import { initSocket } from './services/socketService';
 import { processPayout } from './controllers/agreementController';
 import { getErrorMessage } from './utils/errors';
+import { runWeeklyEmployerReportsSafely } from './services/acquisitionService';
 import { JOB_SWEEP_INTERVAL_MS, runJobLifecycleSweepSafely } from './services/jobLifecycleService';
 import { runApplicationRemindersSafely } from './services/applicationReminderService';
 import { backfillJobSalariesSafely } from './services/salaryBackfillService';
@@ -77,6 +78,8 @@ const runDailySweeps = async () => {
   await runBillingSweepSafely();
   // Email alerts for saved CV database searches that have new matches.
   await runCandidateAlertsSafely();
+  // The Monday email with last week's views and applicants (runs once a week; Monday and Tuesday only, so a missed Monday is caught up).
+  if ([1, 2].includes(new Date().getUTCDay())) await runWeeklyEmployerReportsSafely();
 };
 const jobSweepFirstRun = setTimeout(() => void runDailySweeps(), 60 * 1000);
 const jobSweepTask = setInterval(() => void runDailySweeps(), JOB_SWEEP_INTERVAL_MS);

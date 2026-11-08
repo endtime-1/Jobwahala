@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Mail, Lock, User, Eye, EyeOff, ArrowRight, Briefcase, Laptop, Users } from 'lucide-react'
 import { AuthAside, AuthMobileBanner } from '../components/AuthShell'
 import GoogleSignIn from '../components/GoogleSignIn'
@@ -11,6 +11,7 @@ import { useAuth, type UserRole } from '../context/AuthContext'
 import { isApiUnavailableMessage } from '../lib/apiStatus'
 import { getErrorMessage } from '../lib/errors'
 import SEO from '../components/SEO'
+import { rememberReferral } from '../lib/growth'
 
 const ROLES: { value: UserRole; label: string; description: string; icon: typeof Briefcase }[] = [
   { value: 'SEEKER', label: 'Job Seeker', description: 'I am looking for a job', icon: Users },
@@ -27,7 +28,10 @@ export default function Signup() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
-  const [role, setRole] = useState<UserRole>('SEEKER')
+  // Links like /signup?role=employer (the flyer, a referral) open on the right account type; a referral code is kept for later.
+  const [params] = useSearchParams()
+  const [role, setRole] = useState<UserRole>(() => (params.get('role')?.toLowerCase() === 'employer' ? 'EMPLOYER' : 'SEEKER'))
+  useEffect(() => rememberReferral(params.get('ref')), [params])
   const [findable, setFindable] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')

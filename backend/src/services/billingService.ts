@@ -23,6 +23,7 @@ import {
 } from '../utils/billing';
 import { paystackMode, realPaystack, type PaystackClient } from './paystackBilling';
 import { BillingError } from './billingErrors';
+import { grantCredits } from './creditService';
 import { expirePlanCredits, getCreditBalance, getEntitlements, grantMonthlyPlanCredits, reconcileTeam } from './planService';
 import { DEFAULT_PLANS, GRACE_DAYS, featuresOf, graceEndFrom, graceRemindersDue, isLive, planLevel } from '../utils/plans';
 import { notifyJobAlerts } from './jobAlertService';
@@ -242,20 +243,7 @@ export const createCheckout = async (input: { userId: string; role?: string; ema
 
 type Tx = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
 
-export const grantCredits = async (tx: Tx, input: { userId: string; featured?: number; boost?: number; reason: string; paymentId?: string; adminId?: string; note?: string }) => {
-  const featured = input.featured ?? 0;
-  const boost = input.boost ?? 0;
-  if (featured === 0 && boost === 0) return;
-
-  await tx.creditAccount.upsert({
-    where: { userId: input.userId },
-    create: { userId: input.userId, featuredCredits: Math.max(0, featured), boostCredits: Math.max(0, boost) },
-    update: { featuredCredits: { increment: featured }, boostCredits: { increment: boost } },
-  });
-  const common = { userId: input.userId, reason: input.reason, paymentId: input.paymentId ?? null, adminId: input.adminId ?? null, note: input.note ?? null };
-  if (featured !== 0) await tx.creditLedger.create({ data: { ...common, creditType: 'FEATURE', delta: featured } });
-  if (boost !== 0) await tx.creditLedger.create({ data: { ...common, creditType: 'BOOST', delta: boost } });
-};
+export { grantCredits };
 
 /** Spend one credit to feature or boost one of the employer's open jobs. One conditional update: no double spending. */
 export const spendCredit = async (input: { userId: string; type: 'FEATURE' | 'BOOST'; jobId: string }, now = new Date()) => {

@@ -9,5 +9,7 @@ Disallow: /onboarding
 Disallow: /verify-identity
 Disallow: /reset-password
 Disallow: /verify-email
+Disallow: /claim/
+Disallow: /employer-flyer
 
 Sitemap: https://www.jobwahala.com/sitemap.xml

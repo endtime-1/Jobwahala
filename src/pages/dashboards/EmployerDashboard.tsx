@@ -15,6 +15,8 @@ import EmployerStatsCards from './employer/EmployerStatsCards'
 import CompanyProfilePanel from './employer/CompanyProfilePanel'
 import PlanUsagePanel from '../../components/PlanUsagePanel'
 import ProviderLinkPanel from '../../components/ProviderLinkPanel'
+import ReferralPanel from '../../components/ReferralPanel'
+import WeeklyReportPanel from '../../components/WeeklyReportPanel'
 import WhatsAppChannels from '../../components/WhatsAppChannels'
 import EmployerJobsPanel from './employer/EmployerJobsPanel'
 import EmployerApplicantsPanel from './employer/EmployerApplicantsPanel'
@@ -161,10 +163,13 @@ export default function EmployerDashboard() {
 
       <CompanyProfilePanel />
       <PlanUsagePanel />
+      <WeeklyReportPanel />
 
       <div className="mb-8">
         <ProviderLinkPanel />
       </div>
+
+      <ReferralPanel />
 
       <div className="mb-8">
         <WhatsAppChannels only={['employers', 'jobs']} />

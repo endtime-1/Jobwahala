@@ -40,6 +40,8 @@ type JobDetail = {
   category?: string | null
   createdAt: string
   closesAt?: string | null
+  /** An admin posted this for the company (it sent the vacancy by WhatsApp). */
+  postedOnBehalf?: boolean
   employer: {
     id: string
     email: string
@@ -302,6 +304,9 @@ export default function JobDetails() {
                   />
                   {job.employer.isVerified ? null : <UnverifiedEmployerLabel className="bg-white/15 text-white" />}
                 </div>
+                {job.postedOnBehalf ? (
+                  <p className="mt-3 text-sm font-bold text-white/70">Posted by JobWahala on behalf of {companyName}</p>
+                ) : null}
                 <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 text-base font-semibold text-white/80">
                   <Link to={`/companies/${job.employer.id}`} className="inline-flex items-center gap-2 hover:text-gold hover:underline">
                     <Building2 className="h-4 w-4 text-gold" /> {companyName}

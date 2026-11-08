@@ -16,6 +16,8 @@ const publicProfileFields = {
   coverImageUrl: true,
   galleryJson: true,
   whyWorkWithUs: true,
+  isFoundingEmployer: true,
+  foundingNumber: true,
 } as const;
 
 const safeWebsite = (website?: string | null) => (website && /^https?:\/\//i.test(website) ? website : null);

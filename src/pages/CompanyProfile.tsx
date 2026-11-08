@@ -5,6 +5,7 @@ import { ArrowRight, BadgeCheck, Briefcase, Calendar, Clock, Globe, MapPin } fro
 import CompanyLogo from '../components/CompanyLogo'
 import { heroBackground } from '../components/PageHero'
 import SEO from '../components/SEO'
+import FoundingEmployerBadge from '../components/FoundingEmployerBadge'
 import { apiGetCompany } from '../lib/api'
 import { formatRelativeTime } from '../lib/display'
 import { getErrorMessage } from '../lib/errors'
@@ -27,6 +28,8 @@ type Company = {
   website?: string | null
   description?: string | null
   isVerified: boolean
+  isFoundingEmployer?: boolean
+  foundingNumber?: number | null
   isBranded?: boolean
   coverImageUrl?: string | null
   gallery?: string[]
@@ -129,6 +132,7 @@ export default function CompanyProfile() {
                   <BadgeCheck className="h-4 w-4" /> Verified business
                 </span>
               )}
+              {company.isFoundingEmployer && <FoundingEmployerBadge number={company.foundingNumber} />}
               {company.industry && (
                 <span className="inline-flex items-center gap-1.5">
                   <Briefcase className="h-4 w-4" /> {company.industry}

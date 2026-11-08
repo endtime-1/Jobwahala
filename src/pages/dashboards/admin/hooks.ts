@@ -28,7 +28,7 @@ export type AdminJob = {
   id: string; title: string; status: string; salary?: string | null
   postedByAdminAt?: string | null; createdAt: string
   _count: { applications: number }
-  employer: { email: string; employerProfile?: { companyName?: string | null } | null }
+  employer: { id?: string; email: string; employerProfile?: { companyName?: string | null } | null }
   postedByAdmin?: { id: string; email: string } | null
 }
 

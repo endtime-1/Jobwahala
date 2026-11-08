@@ -400,3 +400,70 @@ export const sendTeamInviteEmail = (email: string, data: { company: string; url:
 
   return transporter.sendMail({ from: env.smtpFrom, to: email, subject: `${data.company} invited you to their ${APP_NAME} team`, html });
 };
+
+/** The private link that lets the owner of a company JobWahala set up take it over. */
+export const sendCompanyClaimEmail = (email: string, data: { company: string; url: string }) => {
+  const e = escapeHtml;
+  const html = wrapHtml(`
+    <div class="header">
+      <h1>${APP_NAME}</h1>
+      <p>Your company is on ${APP_NAME}</p>
+    </div>
+    <div class="body">
+      <p>We have put <strong>${e(data.company)}</strong> on ${APP_NAME} so people can find and apply for your vacancies.</p>
+      <p>Use the button below to take over the page. You will choose your own email and password, see everyone who applied, and post more jobs for free.</p>
+      <p style="text-align: center; margin: 32px 0;">
+        <a href="${data.url}" class="btn">Take over ${e(data.company)}</a>
+      </p>
+      <p class="muted">This link is for you only and works for 14 days. If you were not expecting this, you can ignore it.</p>
+    </div>
+    <div class="footer">
+      &copy; ${new Date().getFullYear()} ${APP_NAME}. All rights reserved.
+    </div>
+  `);
+
+  return transporter.sendMail({ from: env.smtpFrom, to: email, subject: `Take over ${data.company} on ${APP_NAME}`, html });
+};
+
+type WeeklyReportMail = {
+  company: string;
+  report: import('../utils/acquisition').WeeklyReport;
+  dashboardUrl: string;
+  whatsappUrl: string;
+};
+
+/** The Monday email: last week's views, new applicants and who is still waiting for an answer, for each active job. */
+export const sendWeeklyReportEmail = (email: string, data: WeeklyReportMail) => {
+  const e = escapeHtml;
+  const { report } = data;
+  const rows = report.jobs
+    .map(
+      (job) =>
+        `<tr><td style="padding:8px 6px;border-bottom:1px solid #2a2a2a;">${e(job.title)}</td><td style="padding:8px 6px;border-bottom:1px solid #2a2a2a;text-align:center;">${job.views}</td><td style="padding:8px 6px;border-bottom:1px solid #2a2a2a;text-align:center;">${job.newApplicants}</td><td style="padding:8px 6px;border-bottom:1px solid #2a2a2a;text-align:center;">${job.awaitingReview}</td></tr>`,
+    )
+    .join('');
+  const html = wrapHtml(`
+    <div class="header">
+      <h1>${APP_NAME}</h1>
+      <p>Your hiring week</p>
+    </div>
+    <div class="body">
+      <p>Here is how ${e(data.company)}'s jobs did last week.</p>
+      <p><strong>${report.totals.views}</strong> views, <strong>${report.totals.newApplicants}</strong> new applicants, <strong>${report.totals.awaitingReview}</strong> waiting for your answer.</p>
+      <table style="width:100%;border-collapse:collapse;font-size:14px;color:#e0e0e0;">
+        <tr style="color:#888;font-size:12px;text-transform:uppercase;"><th align="left" style="padding:6px;">Job</th><th style="padding:6px;">Views</th><th style="padding:6px;">New applicants</th><th style="padding:6px;">To review</th></tr>
+        ${rows}
+      </table>
+      <p style="text-align: center; margin: 32px 0 12px;">
+        <a href="${data.dashboardUrl}" class="btn">Review applicants</a>
+      </p>
+      <p style="text-align: center;"><a href="${data.whatsappUrl}" style="color:#7aa2ff;">Share this week on WhatsApp</a></p>
+      <p class="muted">Applicants who hear back quickly are far more likely to accept an interview.</p>
+    </div>
+    <div class="footer">
+      &copy; ${new Date().getFullYear()} ${APP_NAME}. All rights reserved.
+    </div>
+  `);
+
+  return transporter.sendMail({ from: env.smtpFrom, to: email, subject: `${data.company}: ${report.totals.newApplicants} new applicants last week`, html });
+};

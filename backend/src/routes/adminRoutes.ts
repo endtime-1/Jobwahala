@@ -18,6 +18,11 @@ import {
   updateServicesStatusBulk, 
   deleteUser 
 } from '../controllers/adminController';
+import {
+  adminCreateCompany, adminCreateOutreach, adminDeleteOutreach, adminGetFounding, adminIssueClaimLink, adminListCompanies, adminListOutreach,
+  adminRevokeClaimLink, adminRunWeeklyReports, adminSaveFoundingSettings, adminSetFounding, adminUpdateOutreach,
+} from '../controllers/acquisitionController';
+import { claimIdSchema, claimLinkSchema, createCompanySchema, createOutreachSchema, foundingSettingsSchema, foundingToggleSchema, outreachIdSchema, updateOutreachSchema } from '../validation/acquisitionSchemas';
 import { getVerificationRequests, updateVerificationRequestStatus } from '../controllers/verificationController';
 import { getAdminAuditLog } from '../controllers/adminAuditController';
 import { getCourseQueue, reviewCourse, reviewProvider, setFeatured } from '../controllers/adminCourseController';
@@ -70,6 +75,20 @@ router.patch('/services/:id/status', validate(updateAdminServiceStatusSchema), u
 router.patch('/verifications/:id/status', validate(updateVerificationRequestStatusSchema), updateVerificationRequestStatus);
 router.patch('/disputes/:id/status', validate(updateAgreementDisputeStatusSchema), updateAgreementDisputeStatus);
 router.delete('/users/:id', validate(deleteAdminUserSchema), deleteUser);
+
+// Employer acquisition: companies set up for employers, claim links, Founding Employers, outreach
+router.get('/acquisition/companies', adminListCompanies);
+router.post('/acquisition/companies', validate(createCompanySchema), adminCreateCompany);
+router.post('/acquisition/companies/:id/claim-link', validate(claimLinkSchema), adminIssueClaimLink);
+router.post('/acquisition/claims/:id/revoke', validate(claimIdSchema), adminRevokeClaimLink);
+router.get('/acquisition/founding', adminGetFounding);
+router.put('/acquisition/founding/settings', validate(foundingSettingsSchema), adminSaveFoundingSettings);
+router.post('/acquisition/companies/:id/founding', validate(foundingToggleSchema), adminSetFounding);
+router.get('/acquisition/outreach', adminListOutreach);
+router.post('/acquisition/outreach', validate(createOutreachSchema), adminCreateOutreach);
+router.patch('/acquisition/outreach/:id', validate(updateOutreachSchema), adminUpdateOutreach);
+router.delete('/acquisition/outreach/:id', validate(outreachIdSchema), adminDeleteOutreach);
+router.post('/acquisition/weekly-reports/run', adminRunWeeklyReports);
 
 router.get('/courses/queue', getCourseQueue);
 router.post('/providers/:userId/review', validate(providerReviewSchema), reviewProvider);

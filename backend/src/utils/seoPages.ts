@@ -28,6 +28,8 @@ export type SeoJob = {
   employerName: string;
   employerLogoUrl?: string | null;
   employerWebsite?: string | null;
+  /** An admin posted this for the company (it sent the vacancy by WhatsApp). Shown to people and crawlers. */
+  postedOnBehalf?: boolean;
 };
 
 const e = escapeHtml;
@@ -216,7 +218,8 @@ export const renderJobPage = (job: SeoJob, siteUrl: string) => {
     jsonLd: buildJobPostingJsonLd(job, siteUrl),
     body: `<h1>${e(job.title)}</h1>
 <p>${e(job.employerName)}${facts ? ` · ${e(facts)}` : ''}</p>
-${paragraphs(job.description)}
+${job.postedOnBehalf ? `<p>Posted by JobWahala on behalf of ${e(job.employerName)}.</p>
+` : ''}${paragraphs(job.description)}
 <p><a href="${e(url)}">Apply for this job on JobWahala</a></p>`,
   });
 };
@@ -228,6 +231,7 @@ export type SeoCompany = {
   description?: string | null;
   logoUrl?: string | null;
   isVerified: boolean;
+  isFoundingEmployer?: boolean;
   jobs: { id: string; title: string; location?: string | null; type?: string | null }[];
 };
 
@@ -252,7 +256,7 @@ export const renderCompanyPage = (company: SeoCompany, siteUrl: string) => {
     image: logo,
     jsonLd: { '@context': 'https://schema.org', '@type': 'Organization', name: company.name, url, ...(company.description ? { description: clip(company.description, 300) } : {}) },
     body: `<h1>${e(company.name)}</h1>
-<p>${company.isVerified ? 'Verified business' : 'Unverified employer'}${company.industry ? ` · ${e(company.industry)}` : ''}</p>
+<p>${company.isVerified ? 'Verified business' : 'Unverified employer'}${company.isFoundingEmployer ? ' · Founding Employer' : ''}${company.industry ? ` · ${e(company.industry)}` : ''}</p>
 ${company.description ? paragraphs(company.description) : ''}
 <h2>Open roles (${open})</h2>
 ${open ? `<ul>\n${items}\n</ul>` : '<p>No open roles right now.</p>'}`,

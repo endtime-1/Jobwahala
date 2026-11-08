@@ -15,6 +15,7 @@ import { useAdminDashboard } from './admin/hooks'
 import AdminCoursesPanel from '../../components/AdminCoursesPanel'
 import AdminBillingPanel from '../../components/AdminBillingPanel'
 import AdminHealthPanel from '../../components/AdminHealthPanel'
+import AdminGrowthPanel from '../../components/AdminGrowthPanel'
 import AdminOverviewPanel, { type AdminTab } from '../../components/AdminOverviewPanel'
 import { getErrorMessage } from '../../lib/errors'
 
@@ -72,16 +73,16 @@ export default function AdminDashboard({ initialTab = 'overview' }: { initialTab
     activeDisputes: disputes.filter((d) => ['OPEN', 'UNDER_REVIEW'].includes(d.status)).length,
   }), [disputes, jobs, services, users, verifications])
 
-  const employerCompanies = useMemo(() => users.filter((u) => u.role === 'EMPLOYER' && u.status === 'ACTIVE' && Boolean(u.employerProfile?.companyName)).sort((a, b) => (a.employerProfile?.companyName || a.email).localeCompare(b.employerProfile?.companyName || b.email)), [users])
-  const filteredEmployerCompanies = useMemo(() => { const q = companySearch.trim().toLowerCase(); if (!q) return employerCompanies; return employerCompanies.filter((u) => (u.employerProfile?.companyName || '').toLowerCase().includes(q) || u.email.toLowerCase().includes(q)) }, [companySearch, employerCompanies])
-  const jobCompanyOptions = useMemo(() => Array.from(new Map(jobs.map((j) => [j.employer.email, { value: j.employer.email, label: j.employer.employerProfile?.companyName || emailHandle(j.employer.email) }])).values()).sort((a, b) => a.label.localeCompare(b.label)), [jobs])
+  const employerCompanies = useMemo(() => users.filter((u) => u.role === 'EMPLOYER' && u.status === 'ACTIVE' && Boolean(u.employerProfile?.companyName)).sort((a, b) => (a.employerProfile?.companyName || a.email || '').localeCompare(b.employerProfile?.companyName || b.email || '')), [users])
+  const filteredEmployerCompanies = useMemo(() => { const q = companySearch.trim().toLowerCase(); if (!q) return employerCompanies; return employerCompanies.filter((u) => (u.employerProfile?.companyName || '').toLowerCase().includes(q) || (u.email || '').toLowerCase().includes(q)) }, [companySearch, employerCompanies])
+  const jobCompanyOptions = useMemo(() => Array.from(new Map(jobs.map((j) => [j.employer.id ?? j.employer.email, { value: j.employer.id ?? j.employer.email, label: j.employer.employerProfile?.companyName || emailHandle(j.employer.email) }])).values()).sort((a, b) => a.label.localeCompare(b.label)), [jobs])
 
   const filteredJobs = useMemo(() => {
     const q = jobSearch.trim().toLowerCase()
     return jobs.filter((job) => {
-      const company = job.employer.employerProfile?.companyName || job.employer.email
+      const company = job.employer.employerProfile?.companyName || job.employer.email || ''
       const matchesQuery = !q || job.title.toLowerCase().includes(q) || company.toLowerCase().includes(q) || (job.postedByAdmin?.email || '').toLowerCase().includes(q)
-      const matchesCompany = jobCompanyFilter === 'ALL' || job.employer.email === jobCompanyFilter
+      const matchesCompany = jobCompanyFilter === 'ALL' || (job.employer.id ?? job.employer.email) === jobCompanyFilter
       const matchesOrigin = jobOriginFilter === 'ALL' || (jobOriginFilter === 'ADMIN' ? Boolean(job.postedByAdmin) : !job.postedByAdmin)
       return matchesQuery && matchesCompany && matchesOrigin
     })
@@ -166,7 +167,7 @@ export default function AdminDashboard({ initialTab = 'overview' }: { initialTab
       </div>
 
       <div className="dashboard-actions mb-8">
-        {(['overview', 'reports', 'users', 'jobs', 'services', 'verifications', 'disputes', 'courses', 'billing', 'system'] as const).map((tab) => (
+        {(['overview', 'reports', 'users', 'jobs', 'services', 'verifications', 'disputes', 'courses', 'billing', 'growth', 'system'] as const).map((tab) => (
           <button key={tab} type="button" onClick={() => setActiveTab(tab)} className={`dashboard-action-chip ${activeTab === tab ? 'border-primary/30 bg-primary/10 text-primary' : ''}`}>{tab.charAt(0).toUpperCase() + tab.slice(1)}</button>
         ))}
       </div>
@@ -411,6 +412,16 @@ export default function AdminDashboard({ initialTab = 'overview' }: { initialTab
           {activeTab === 'courses' ? <AdminCoursesPanel /> : null}
 
           {activeTab === 'billing' ? <AdminBillingPanel /> : null}
+
+          {activeTab === 'growth' ? (
+            <AdminGrowthPanel
+              companies={employerCompanies.map((u) => ({ id: u.id, name: u.employerProfile?.companyName || '' }))}
+              onPostJob={(companyId) => {
+                setAdminJobForm((form) => ({ ...form, employerId: companyId }))
+                setActiveTab('jobs')
+              }}
+            />
+          ) : null}
 
           {activeTab === 'disputes' ? (
             <div className="space-y-6">

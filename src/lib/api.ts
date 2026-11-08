@@ -1177,3 +1177,32 @@ export const apiTrackJobView = (jobId: string) => {
 // Admin overview and system health
 export const apiGetAdminOverview = () => fetch(`${BASE_URL}/admin/overview`, { headers: headers(true) }).then(handleResponse);
 export const apiGetAdminHealth = () => fetch(`${BASE_URL}/admin/health`, { headers: headers(true) }).then(handleResponse);
+
+// ---------------------------------------------------------------- Employer acquisition
+
+const sendJson = (url: string, method: string, body?: unknown) =>
+  fetch(`${BASE_URL}${url}`, { method, headers: headers(true), ...(body === undefined ? {} : { body: JSON.stringify(body) }) }).then(handleResponse);
+
+// Admin
+export const apiAdminManagedCompanies = () => sendJson('/admin/acquisition/companies', 'GET');
+export const apiAdminCreateManagedCompany = (data: Record<string, unknown>) => sendJson('/admin/acquisition/companies', 'POST', data);
+export const apiAdminClaimLink = (companyId: string, data: { channel: 'EMAIL' | 'WHATSAPP' | 'LINK'; email?: string; phone?: string }) =>
+  sendJson(`/admin/acquisition/companies/${companyId}/claim-link`, 'POST', data);
+export const apiAdminRevokeClaim = (claimId: string) => sendJson(`/admin/acquisition/claims/${claimId}/revoke`, 'POST');
+export const apiAdminFounding = () => sendJson('/admin/acquisition/founding', 'GET');
+export const apiAdminSaveFoundingSettings = (data: { limit: number; featuredCredits: number }) => sendJson('/admin/acquisition/founding/settings', 'PUT', data);
+export const apiAdminSetFounding = (companyId: string, founding: boolean) => sendJson(`/admin/acquisition/companies/${companyId}/founding`, 'POST', { founding });
+export const apiAdminOutreach = (params: Record<string, string> = {}) => sendJson(`/admin/acquisition/outreach?${new URLSearchParams(params).toString()}`, 'GET');
+export const apiAdminSaveOutreach = (data: Record<string, unknown>, id?: string) => sendJson(`/admin/acquisition/outreach${id ? `/${id}` : ''}`, id ? 'PATCH' : 'POST', data);
+export const apiAdminDeleteOutreach = (id: string) => sendJson(`/admin/acquisition/outreach/${id}`, 'DELETE');
+export const apiAdminRunWeeklyReports = () => sendJson('/admin/acquisition/weekly-reports/run', 'POST');
+
+// The person opening a claim link (not signed in)
+export const apiGetClaim = (token: string) => fetch(`${BASE_URL}/claims/${encodeURIComponent(token)}`, { headers: headers() }).then(handleResponse);
+export const apiAcceptClaim = (token: string, data: { email: string; password: string }) =>
+  fetch(`${BASE_URL}/claims/${encodeURIComponent(token)}/accept`, { method: 'POST', headers: headers(), body: JSON.stringify(data) }).then(handleResponse);
+
+// Employers
+export const apiGetMyReferral = () => sendJson('/growth/referral', 'GET');
+export const apiAttachReferral = (code: string) => sendJson('/growth/referral', 'POST', { code });
+export const apiGetWeeklyReport = () => sendJson('/growth/weekly-report', 'GET');

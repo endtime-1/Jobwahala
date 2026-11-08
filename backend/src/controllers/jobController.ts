@@ -27,6 +27,7 @@ import { EARLY_CAREER_TYPES, EarlyCareerError, UNPAID_PAY, canonicalEarlyCareerT
 import logger from '../config/logger';
 import { createNotification } from '../utils/notifications';
 import { sendApplicationStatusEmail } from '../services/emailService';
+import { rewardReferralForFirstJob } from '../services/acquisitionService';
 import { describeStatusChange, isFirstResponse, nextResponseStats, responseHours } from '../utils/applicationStatus';
 
 const mapRankedApplications = <
@@ -109,7 +110,11 @@ export const createJob = async (req: AuthRequest, res: Response) => {
       }
     });
     // Drafts are private; alerts go out when the job is published.
-    if (status === 'ACTIVE') void notifyJobAlerts(job);
+    if (status === 'ACTIVE') {
+      void notifyJobAlerts(job);
+      // A referred company's first job earns the company that referred it a free featured credit.
+      void rewardReferralForFirstJob(req.user!.id);
+    }
     res.status(201).json({ success: true, job });
   } catch (error) {
     res.status(500).json({ success: false, message: getErrorMessage(error) });
@@ -399,6 +404,8 @@ export const getJobById = async (req: AuthRequest, res: Response) => {
       job: {
         ...job,
         promotion: promotionOf(job),
+        // Shown as "posted by JobWahala on behalf of [company]" (the admin's own details are never sent).
+        postedOnBehalf: Boolean(job.postedByAdminId),
         employer: {
           id: job.employer.id,
           email: job.employer.email,

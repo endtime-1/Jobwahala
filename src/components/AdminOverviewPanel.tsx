@@ -4,7 +4,7 @@ import { QUEUE_ROWS, changePercent, totalWaiting, type AdminOverview, type Point
 import { formatRelativeTime } from '../lib/display'
 import { useAdminOverview } from '../pages/dashboards/admin/hooks'
 
-export type AdminTab = 'overview' | 'system' | 'reports' | 'users' | 'jobs' | 'services' | 'verifications' | 'disputes' | 'courses' | 'billing'
+export type AdminTab = 'overview' | 'system' | 'reports' | 'users' | 'jobs' | 'services' | 'verifications' | 'disputes' | 'courses' | 'billing' | 'growth'
 
 /** A tiny bar chart with no library: one bar per day, the tallest fills the box. */
 function Bars({ points, label }: { points: Point[]; label: string }) {

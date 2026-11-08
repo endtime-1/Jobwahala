@@ -140,7 +140,25 @@ model EmployerProfile {
   coverImageUrl String?
   galleryJson   String @default("[]")
   whyWorkWithUs String?
+
+  // Employer acquisition. A company JobWahala set up for an employer who sent vacancies by WhatsApp is UNCLAIMED
+  // until the owner takes it over with a claim link (see CompanyClaim); every normal sign-up is CLAIMED.
+  claimStatus        String   @default("CLAIMED") // CLAIMED, UNCLAIMED
+  createdByAdminId   String?
+  contactPhone       String?  // only for companies an admin set up: where the claim link goes
+  // Founding Employers: the first companies (the limit is in BillingSettings), with a badge and free featured credits.
+  isFoundingEmployer Boolean  @default(false)
+  foundingNumber     Int?     @unique
+  foundingAt         DateTime?
+  // Referral: this company's own code, who referred it, and when the referrer was rewarded (once).
+  referralCode       String?  @unique
+  referredById       String?
+  referralRewardedAt DateTime?
+
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([referredById])
+  @@index([claimStatus])
 }
 
 model FreelancerProfile {
@@ -1090,6 +1108,9 @@ model BillingSettings {
   companyPhone String  @default("")
   receiptFooter String @default("Thank you for using JobWahala.")
   receiptSeq   Int     @default(0)
+  // Founding Employer programme: how many companies can be Founding Employers, and the free featured credits each gets.
+  foundingLimit   Int @default(50)
+  foundingFeaturedCredits Int @default(3)
   updatedAt    DateTime @updatedAt
 }
 
@@ -1228,4 +1249,59 @@ model CandidateInvite {
 
   @@unique([employerId, seekerId, jobId])
   @@index([seekerId, createdAt])
+}
+
+// ---------------------------------------------------------------- Employer acquisition
+
+// A secure link that lets the owner of a company JobWahala set up take it over. Only a hash of the link is kept.
+model CompanyClaim {
+  id          String   @id @default(uuid())
+  companyId   String   // the User (employer) the link is for
+  tokenHash   String   @unique
+  channel     String   @default("LINK") // EMAIL, WHATSAPP, LINK (how the admin sent it)
+  sentTo      String?  // the email address or phone number it was sent to
+  status      String   @default("ACTIVE") // ACTIVE, CLAIMED, REVOKED
+  expiresAt   DateTime
+  sendCount   Int      @default(1)
+  lastSentAt  DateTime @default(now())
+  createdById String?
+  revokedAt   DateTime?
+  claimedAt   DateTime?
+  createdAt   DateTime @default(now())
+
+  @@index([companyId, status])
+}
+
+// What one company's week looked like, kept so the dashboard can show it and the email is sent once.
+model EmployerWeeklyReport {
+  id        String   @id @default(uuid())
+  employerId String
+  weekStart DateTime // Monday 00:00 UTC of the week that was reported
+  dataJson  String
+  emailSentAt DateTime?
+  createdAt DateTime @default(now())
+
+  @@unique([employerId, weekStart])
+  @@index([employerId, weekStart])
+}
+
+// The admin's list of employers JobWahala has contacted.
+model OutreachContact {
+  id           String   @id @default(uuid())
+  businessName String
+  contactName  String?
+  contactPhone String?
+  contactEmail String?
+  sector       String?
+  location     String?
+  status       String   @default("CONTACTED") // CONTACTED, INTERESTED, POSTED, NOT_INTERESTED
+  notes        String?
+  followUpAt   DateTime?
+  companyId    String?  // the company on JobWahala, once there is one
+  createdById  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([status, followUpAt])
+  @@index([createdAt])
 }

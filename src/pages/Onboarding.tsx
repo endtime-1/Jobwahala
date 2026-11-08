@@ -4,7 +4,8 @@ import { Briefcase, ChevronRight, Rocket, Shield, User } from 'lucide-react'
 import Logo from '../components/Logo'
 import PageHero from '../components/PageHero'
 import { useAuth, type AuthUser, type UserRole } from '../context/AuthContext'
-import { apiUpdateProfile } from '../lib/api'
+import { apiAttachReferral, apiUpdateProfile } from '../lib/api'
+import { takeReferral } from '../lib/growth'
 import { getErrorMessage } from '../lib/errors'
 
 type ProfileFormState = {
@@ -113,6 +114,13 @@ export default function Onboarding() {
       skills: form.secondary.trim(),
     }
   }, [activeRole, form.primary, form.secondary])
+
+  // A new employer who came from a referral link: tell the server who referred them (once; a wrong or late code is simply ignored).
+  useEffect(() => {
+    if (activeRole !== 'EMPLOYER') return
+    const code = takeReferral()
+    if (code) void apiAttachReferral(code).catch(() => undefined)
+  }, [activeRole])
 
   const handleSubmit = async () => {
     setError('')
