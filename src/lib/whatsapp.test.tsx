@@ -3,6 +3,8 @@ import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import ShareOnWhatsApp from '../components/ShareOnWhatsApp'
 import WhatsAppChannels from '../components/WhatsAppChannels'
+import { DEFAULT_WHATSAPP_CHANNEL_URL } from '../content/social'
+import WhatsAppFollowButton from '../components/WhatsAppFollowButton'
 import { getWhatsAppChannels, isUsableChannelUrl, jobShareLink, jobShareMessage, whatsappShareUrl } from './whatsapp'
 
 const job = { id: 'job-1', title: 'Bank Teller', companyName: 'Achiba Bank', location: 'Accra, Ghana', salary: 'GHS 1,800 a month' }
@@ -97,12 +99,11 @@ describe('WhatsApp channels', () => {
     expect(isUsableChannelUrl('javascript:alert(1)')).toBe(false)
   })
 
-  it('shows nothing until a channel has been set up', () => {
+  it('falls back to the built-in JobWahala channel when the settings hold a placeholder, and offers no other channel', () => {
     vi.stubEnv('VITE_WHATSAPP_CHANNEL_JOBS', 'https://whatsapp.com/channel/REPLACE_ME_JOBS')
-    const { container } = render(<WhatsAppChannels />)
+    vi.stubEnv('VITE_WHATSAPP_CHANNEL_URL', '')
 
-    expect(getWhatsAppChannels()).toEqual([])
-    expect(container).toBeEmptyDOMElement()
+    expect(getWhatsAppChannels().map((channel) => [channel.key, channel.url])).toEqual([['jobs', DEFAULT_WHATSAPP_CHANNEL_URL]])
   })
 
   it('lists the channels that are set, in a panel', () => {
@@ -141,5 +142,32 @@ describe('WhatsApp channels', () => {
     const link = screen.getByRole('link', { name: /whatsapp: jobwahala jobs/i })
     expect(link).toHaveAttribute('target', '_blank')
     expect(link.getAttribute('rel')).toContain('noopener')
+  })
+})
+
+describe('Follow on WhatsApp', () => {
+  it('links to our channel, in a new tab, in every variant', () => {
+    vi.stubEnv('VITE_WHATSAPP_CHANNEL_URL', '')
+    for (const variant of ['button', 'footer', 'banner'] as const) {
+      const { unmount } = render(<WhatsAppFollowButton variant={variant} />)
+      const link = screen.getByRole('link')
+      expect(link).toHaveAttribute('href', 'https://whatsapp.com/channel/0029VbEH50105MUaVCzgge2Z')
+      expect(link).toHaveAttribute('target', '_blank')
+      expect(link).toHaveAttribute('rel', expect.stringContaining('noopener'))
+      unmount()
+    }
+    render(<WhatsAppFollowButton variant="footer" />)
+    expect(screen.getByRole('link', { name: 'Follow on WhatsApp' })).toBeInTheDocument()
+  })
+
+  it('uses the address from the settings when one is set, and ignores an invalid one', () => {
+    vi.stubEnv('VITE_WHATSAPP_CHANNEL_URL', 'https://whatsapp.com/channel/other999')
+    const { unmount } = render(<WhatsAppFollowButton />)
+    expect(screen.getByRole('link')).toHaveAttribute('href', 'https://whatsapp.com/channel/other999')
+    unmount()
+
+    vi.stubEnv('VITE_WHATSAPP_CHANNEL_URL', 'https://evil.example.com/x')
+    render(<WhatsAppFollowButton />)
+    expect(screen.getByRole('link')).toHaveAttribute('href', DEFAULT_WHATSAPP_CHANNEL_URL)
   })
 })

@@ -1,3 +1,5 @@
+import { DEFAULT_WHATSAPP_CHANNEL_URL } from '../content/social'
+
 /** What we need to know about a job to share it. */
 export type ShareableJob = {
   id: string
@@ -28,6 +30,12 @@ export type WhatsAppChannel = { key: 'jobs' | 'internships' | 'employers'; label
 
 const read = (value: unknown) => (typeof value === 'string' ? value.trim() : '')
 
+/** The main JobWahala channel: VITE_WHATSAPP_CHANNEL_URL if set, otherwise the one in src/content/social.ts. */
+export const whatsappChannelUrl = () => {
+  const configured = read(import.meta.env.VITE_WHATSAPP_CHANNEL_URL)
+  return isUsableChannelUrl(configured) ? configured : DEFAULT_WHATSAPP_CHANNEL_URL
+}
+
 /** A real channel link: https, on whatsapp.com, and not the placeholder from the example settings file. */
 export const isUsableChannelUrl = (value: string) => {
   try {
@@ -43,7 +51,7 @@ export const isUsableChannelUrl = (value: string) => {
 export const getWhatsAppChannels = (): WhatsAppChannel[] => {
   const env = import.meta.env
   const all: WhatsAppChannel[] = [
-    { key: 'jobs', label: 'JobWahala Jobs', description: 'New jobs every day', url: read(env.VITE_WHATSAPP_CHANNEL_JOBS) },
+    { key: 'jobs', label: 'JobWahala Jobs', description: 'New jobs every day', url: isUsableChannelUrl(read(env.VITE_WHATSAPP_CHANNEL_JOBS)) ? read(env.VITE_WHATSAPP_CHANNEL_JOBS) : whatsappChannelUrl() },
     { key: 'internships', label: 'Internships & NSS', description: 'Internships, National Service and graduate jobs', url: read(env.VITE_WHATSAPP_CHANNEL_INTERNSHIPS) },
     { key: 'employers', label: 'JobWahala for Employers', description: 'Hiring tips and platform news', url: read(env.VITE_WHATSAPP_CHANNEL_EMPLOYERS) },
   ]

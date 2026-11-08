@@ -2,6 +2,7 @@ import { ArrowRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import Logo from './Logo'
 import WhatsAppChannels from './WhatsAppChannels'
+import WhatsAppFollowButton from './WhatsAppFollowButton'
 import { isFreelancePath, useFeatures } from '../lib/features'
 
 const footerColumns = [
@@ -99,7 +100,8 @@ export default function Footer() {
               Real jobs from employers you can check, across Africa. Free to apply and free to post.
             </p>
             <div className="mt-5 flex flex-col gap-2">
-              <WhatsAppChannels variant="footer" />
+              <WhatsAppFollowButton variant="footer" />
+              <WhatsAppChannels variant="footer" only={['internships', 'employers']} />
             </div>
           </div>
 

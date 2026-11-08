@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import { siteCopy } from './src/content/siteCopy.ts'
+import { DEFAULT_WHATSAPP_CHANNEL_URL, organizationJsonLd } from './src/content/social.ts'
 
 const escapeHtml = (value: string) => value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')
 
@@ -15,7 +16,8 @@ const siteCopyPlugin = () => ({
       .replaceAll('%SITE_TITLE%', escapeHtml(siteCopy.title))
       .replaceAll('%SITE_DESCRIPTION%', escapeHtml(siteCopy.description))
       .replaceAll('%SITE_SHORT_DESCRIPTION%', escapeHtml(siteCopy.shortDescription))
-      .replaceAll('%SITE_HERO_TEXT%', escapeHtml(siteCopy.heroText)),
+      .replaceAll('%SITE_HERO_TEXT%', escapeHtml(siteCopy.heroText))
+      .replaceAll('%ORGANIZATION_JSON_LD%', JSON.stringify(organizationJsonLd([process.env.VITE_WHATSAPP_CHANNEL_URL || DEFAULT_WHATSAPP_CHANNEL_URL])).replace(/</g, '\\u003c')),
 })
 
 // https://vite.dev/config/

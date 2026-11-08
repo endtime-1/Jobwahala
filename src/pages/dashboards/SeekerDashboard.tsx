@@ -7,6 +7,7 @@ import CvManager from '../../components/CvManager'
 import EarlyCareerProfile from '../../components/EarlyCareerProfile'
 import CvVisibilityToggle from '../../components/CvVisibilityToggle'
 import WhatsAppChannels from '../../components/WhatsAppChannels'
+import WhatsAppFollowButton from '../../components/WhatsAppFollowButton'
 import MyLearningPanel from '../../components/MyLearningPanel'
 import CompanyLogo from '../../components/CompanyLogo'
 import VerificationPanel from '../../components/VerificationPanel'
@@ -378,7 +379,11 @@ export default function SeekerDashboard() {
               paymentActionItems={data?.paymentActionItems ?? []}
             />
 
-            <WhatsAppChannels only={['jobs', 'internships']} />
+            <section aria-label="WhatsApp" className="dashboard-panel flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+              <p className="text-sm font-semibold text-text-main">Get new jobs on WhatsApp, as they are posted.</p>
+              <WhatsAppFollowButton />
+            </section>
+            <WhatsAppChannels only={['internships']} />
 
             <EarlyCareerProfile />
 

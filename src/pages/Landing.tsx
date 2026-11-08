@@ -19,6 +19,7 @@ import Reveal from '../components/landing/Reveal'
 import TrustGrid from '../components/landing/TrustGrid'
 import type { HiringCompany, LandingCounts, LandingJob } from '../components/landing/types'
 import { siteCopy } from '../content/siteCopy'
+import WhatsAppFollowButton from '../components/WhatsAppFollowButton'
 import { apiGetHiringCompanies, apiGetJobs, apiGetPlatformStats } from '../lib/api'
 
 function Section({ eyebrow, title, intro, children }: { eyebrow: string; title: string; intro?: string; children: ReactNode }) {
@@ -161,6 +162,17 @@ export default function Landing() {
           <MatchLab jobs={jobs} isLoading={jobsLoading} />
         </div>
       </Section>
+
+      <section aria-label="Get new jobs on WhatsApp" className="py-4 sm:py-6">
+        <div className="container">
+          <div className="flex flex-col items-center justify-between gap-4 rounded-2xl border border-[#25d366]/30 bg-[#25d366]/10 px-5 py-4 text-center sm:flex-row sm:text-left">
+            <p className="text-base font-extrabold text-text-main">
+              Get new jobs on WhatsApp <span className="font-medium text-text-muted">- Follow our channel</span>
+            </p>
+            <WhatsAppFollowButton variant="banner" />
+          </div>
+        </div>
+      </section>
 
       <section className="py-6 sm:py-10">
         <div className="container">

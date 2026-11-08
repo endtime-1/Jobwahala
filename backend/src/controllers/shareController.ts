@@ -17,6 +17,7 @@ import { renderCourseDetailPage, renderCourseHubPage, renderCourseLandingPage } 
 import { courseInclude, toPublicCourse } from '../services/courseCatalog';
 import { publicCourseWhere } from '../utils/courses';
 import { siteCopy } from '../content/siteCopy';
+import { organizationJsonLd } from '../content/organization';
 import {
   buildSitemapXml,
   countryEntries,
@@ -316,7 +317,7 @@ export const getJobListSharePage = async (req: Request, res: Response) => {
 
     res.type('html');
     res.set('Cache-Control', 'public, max-age=300');
-    return res.send(renderJobListPage({ ...page, jobs, siteUrl }));
+    return res.send(renderJobListPage({ ...page, jobs, siteUrl, extraJsonLd: kind === 'home' ? [organizationJsonLd(siteUrl)] : [] }));
   } catch (error) {
     logger.error('job_list_share_page_error', { error: getErrorMessage(error) });
     return res.status(500).type('html').send(renderSharePageNotFound(siteUrl));

@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { apiCreateSavedSearch, apiDeleteSavedSearch, apiGetSavedSearches, apiUpdateSavedSearch } from '../lib/api'
 import { describeAlert, hasAlertCriteria, type AlertCriteria, type SavedSearch } from '../lib/jobAlerts'
 import { getErrorMessage } from '../lib/errors'
+import WhatsAppFollowButton from './WhatsAppFollowButton'
 
 type JobAlertsProps = {
   criteria: AlertCriteria
@@ -78,9 +79,12 @@ export default function JobAlerts({ criteria, isSignedIn, isSeeker }: JobAlertsP
         <p className="flex items-center gap-2 text-sm font-semibold text-text-main">
           <Bell className="h-4 w-4 text-secondary" /> Never miss a role: get an alert when a job matches your search.
         </p>
-        <Link to="/login" className="btn btn-outline btn-sm justify-center">
-          Log in to set alerts
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <WhatsAppFollowButton />
+          <Link to="/login" className="btn btn-outline btn-sm justify-center">
+            Log in to set alerts
+          </Link>
+        </div>
       </section>
     )
   }
@@ -103,6 +107,8 @@ export default function JobAlerts({ criteria, isSignedIn, isSeeker }: JobAlertsP
               : 'Type a keyword or pick a job type above, then save it as an alert.'}
           </p>
         </div>
+        <div className="flex flex-wrap items-center gap-2">
+        <WhatsAppFollowButton />
         <button
           type="button"
           onClick={() => void save()}
@@ -111,6 +117,7 @@ export default function JobAlerts({ criteria, isSignedIn, isSeeker }: JobAlertsP
         >
           {isSaving ? 'Saving…' : 'Alert me'}
         </button>
+        </div>
       </div>
 
       {atLimit && <p className="text-xs font-semibold text-text-muted">You have {limit} alerts, the maximum. Remove one to add another.</p>}

@@ -266,9 +266,11 @@ export type JobListPageInput = {
   path: string;
   jobs: SeoJob[];
   siteUrl: string;
+  /** Extra structured data for this page, for example the Organization on the home page. */
+  extraJsonLd?: unknown[];
 };
 
-export const renderJobListPage = ({ heading, description, intro, path, jobs, siteUrl }: JobListPageInput) => {
+export const renderJobListPage = ({ heading, description, intro, path, jobs, siteUrl, extraJsonLd = [] }: JobListPageInput) => {
   const items = jobs
     .map((job) => {
       const facts = [job.type, job.location, job.category].filter(Boolean).join(' · ');
@@ -292,7 +294,7 @@ export const renderJobListPage = ({ heading, description, intro, path, jobs, sit
     description,
     url: `${siteUrl}${path}`,
     siteUrl,
-    jsonLd: jobs.length ? itemList : undefined,
+    jsonLd: extraJsonLd.length ? [...extraJsonLd, ...(jobs.length ? [itemList] : [])] : jobs.length ? itemList : undefined,
     body: `<h1>${e(heading)}</h1>
 <p>${e(intro)}</p>
 ${jobs.length ? `<ul>\n${items}\n</ul>` : '<p>No open jobs right now. Check back soon.</p>'}
