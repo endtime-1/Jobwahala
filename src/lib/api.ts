@@ -1206,3 +1206,45 @@ export const apiAcceptClaim = (token: string, data: { email: string; password: s
 export const apiGetMyReferral = () => sendJson('/growth/referral', 'GET');
 export const apiAttachReferral = (code: string) => sendJson('/growth/referral', 'POST', { code });
 export const apiGetWeeklyReport = () => sendJson('/growth/weekly-report', 'GET');
+
+// ---------------------------------------------------------------- Hiring Service
+
+export const apiHiringInfo = () => fetch(`${BASE_URL}/hiring/info`, { headers: headers() }).then(handleResponse);
+export const apiCreateHiringRequest = (data: Record<string, unknown>) => sendJson('/hiring/requests', 'POST', data);
+export const apiMyHiringRequests = () => sendJson('/hiring/requests', 'GET');
+export const apiHiringRequest = (id: string) => sendJson(`/hiring/requests/${id}`, 'GET');
+export const apiCancelHiringRequest = (id: string) => sendJson(`/hiring/requests/${id}/cancel`, 'POST');
+export const apiHiringDecision = (id: string, candidateId: string, data: { decision: 'INTERVIEW' | 'NOT_SUITABLE' | 'HIRED'; note?: string; startDate?: string }) =>
+  sendJson(`/hiring/requests/${id}/candidates/${candidateId}/decision`, 'POST', data);
+export const apiHiringReplacement = (id: string, reason: string) => sendJson(`/hiring/requests/${id}/replacement`, 'POST', { reason });
+export const apiOpportunities = () => sendJson('/hiring/opportunities', 'GET');
+export const apiRespondToOpportunity = (candidateId: string, data: { accept: boolean; reason?: string }) => sendJson(`/hiring/opportunities/${candidateId}/respond`, 'POST', data);
+
+// Staff (recruiters and admins)
+export const apiStaffRequests = (params: Record<string, string> = {}) => sendJson(`/recruiter/requests?${new URLSearchParams(params).toString()}`, 'GET');
+export const apiStaffRequest = (id: string) => sendJson(`/recruiter/requests/${id}`, 'GET');
+export const apiStaffSearch = (id: string, params: Record<string, string> = {}) => sendJson(`/recruiter/requests/${id}/search?${new URLSearchParams(params).toString()}`, 'GET');
+export const apiStaffSetStatus = (id: string, status: string, reason?: string) => sendJson(`/recruiter/requests/${id}/status`, 'POST', { status, ...(reason ? { reason } : {}) });
+export const apiStaffCreateJob = (id: string, publish: boolean) => sendJson(`/recruiter/requests/${id}/job`, 'POST', { publish });
+export const apiStaffAddCandidate = (id: string, data: { profileId?: string; email?: string }) => sendJson(`/recruiter/requests/${id}/candidates`, 'POST', data);
+export const apiStaffImportApplicants = (id: string) => sendJson(`/recruiter/requests/${id}/import-applicants`, 'POST');
+export const apiStaffOpenCandidate = (id: string, candidateId: string) => sendJson(`/recruiter/requests/${id}/candidates/${candidateId}`, 'GET');
+export const apiStaffAskConsent = (id: string, candidateId: string) => sendJson(`/recruiter/requests/${id}/candidates/${candidateId}/ask-consent`, 'POST');
+export const apiStaffUpdateCandidate = (id: string, candidateId: string, data: Record<string, unknown>) => sendJson(`/recruiter/requests/${id}/candidates/${candidateId}`, 'PATCH', data);
+export const apiStaffDropCandidate = (id: string, candidateId: string, reason: string) => sendJson(`/recruiter/requests/${id}/candidates/${candidateId}/drop`, 'POST', { reason });
+export const apiStaffShortlist = (id: string, candidateId: string) => sendJson(`/recruiter/requests/${id}/candidates/${candidateId}/shortlist`, 'POST');
+export const apiStaffHireStart = (id: string, candidateId: string, startDate: string) => sendJson(`/recruiter/requests/${id}/candidates/${candidateId}/start-date`, 'POST', { startDate });
+export const apiStaffSend = (id: string) => sendJson(`/recruiter/requests/${id}/send`, 'POST');
+export const apiStaffNote = (id: string, body: string, visibility: 'STAFF' | 'CLIENT') => sendJson(`/recruiter/requests/${id}/notes`, 'POST', { body, visibility });
+
+// Admin
+export const apiAdminHiringRequests = (params: Record<string, string> = {}) => sendJson(`/admin/hiring/requests?${new URLSearchParams(params).toString()}`, 'GET');
+export const apiAdminAssignRecruiter = (id: string, recruiterId: string) => sendJson(`/admin/hiring/requests/${id}/assign`, 'POST', { recruiterId });
+export const apiAdminSaveTerms = (id: string, data: { feeGhs?: number | null; depositGhs?: number | null; guaranteeDays?: number }) => sendJson(`/admin/hiring/requests/${id}/terms`, 'PUT', data);
+export const apiAdminRecordPayment = (id: string, data: { kind: 'DEPOSIT' | 'BALANCE' | 'OTHER'; amountGhs: number; paidAt: string; method?: string; reference?: string; note?: string }) =>
+  sendJson(`/admin/hiring/requests/${id}/payments`, 'POST', data);
+export const apiAdminRemovePayment = (id: string, paymentId: string, reason: string) => sendJson(`/admin/hiring/requests/${id}/payments/${paymentId}/remove`, 'POST', { reason });
+export const apiAdminHiringSettings = (data: { fromPriceGhs: number | null; guaranteeDays: number }) => sendJson('/admin/hiring/settings', 'PUT', data);
+export const apiAdminStaff = () => sendJson('/admin/hiring/staff', 'GET');
+export const apiAdminCreateRecruiter = (data: { email: string; displayName: string; title?: string; phone?: string }) => sendJson('/admin/hiring/staff', 'POST', data);
+export const apiAdminSetRecruiterActive = (userId: string, active: boolean) => sendJson(`/admin/hiring/staff/${userId}`, 'PATCH', { active });

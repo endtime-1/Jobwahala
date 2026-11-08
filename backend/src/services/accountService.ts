@@ -283,7 +283,7 @@ export const getDeletionPreview = async (userId: string): Promise<DeletionPrevie
   ]);
 
   const blockers: string[] = [];
-  if (user.role === 'ADMIN') blockers.push('Administrator accounts cannot be deleted from here. Ask another administrator.');
+  if (user.role === 'ADMIN' || user.role === 'RECRUITER') blockers.push('Staff accounts cannot be deleted from here. Ask an administrator.');
   if (activeAgreements > 0) blockers.push('You have active work agreements. Finish or cancel them first.');
   if (pendingPayouts > 0) blockers.push('You have a payout that has not been paid out yet. Wait for it to arrive first.');
   if (openDisputes > 0) blockers.push('You have a dispute that is still open. Wait for it to be resolved first.');

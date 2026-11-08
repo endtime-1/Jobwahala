@@ -780,6 +780,8 @@ model AdminActionLog {
   targetId   String
   reason     String?
   metadata   String?  // JSON
+  // ADMIN or RECRUITER: staff other than admins also leave a trail.
+  actorRole  String   @default("ADMIN")
   createdAt  DateTime @default(now())
 
   @@index([targetType, targetId, createdAt])
@@ -1111,6 +1113,9 @@ model BillingSettings {
   // Founding Employer programme: how many companies can be Founding Employers, and the free featured credits each gets.
   foundingLimit   Int @default(50)
   foundingFeaturedCredits Int @default(3)
+  // Hiring Service: the "from GHS X" price shown to the public (empty = "ask us for a quote"), and the default replacement guarantee.
+  hiringFromPriceGhs Int?
+  hiringGuaranteeDays Int @default(90)
   updatedAt    DateTime @updatedAt
 }
 
@@ -1304,4 +1309,125 @@ model OutreachContact {
 
   @@index([status, followUpAt])
   @@index([createdAt])
+}
+
+// ---------------------------------------------------------------- Hiring Service (JobWahala staff recruit for an employer)
+
+// A member of staff who works on hiring requests (User.role = RECRUITER). Created by an admin; never by sign-up.
+model StaffProfile {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  displayName String
+  title       String?
+  phone       String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// One request: an employer asks JobWahala to recruit for one role.
+model HiringRequest {
+  id           String   @id @default(uuid())
+  reference    String   @unique // HS-2026-0001
+  clientId     String
+  status       String   @default("NEW") // NEW, AGREED, SOURCING, SHORTLIST_SENT, INTERVIEWING, FILLED, CANCELLED
+
+  // What the employer asked for
+  roleTitle    String
+  headcount    Int      @default(1)
+  salaryMin    Int?
+  salaryMax    Int?
+  location     String
+  startDate    DateTime? // when they want the person to start
+  deadline     DateTime? // when they need the shortlist or the hire by
+  requirements String
+  contactName  String
+  contactPhone String
+  mustHavesJson String  @default("[]") // optional: if set, each candidate can be rated 1 to 5 on each
+
+  jobId        String?  // the job post made from this request
+  assignedRecruiterId String?
+  assignedAt   DateTime?
+
+  // The deal, entered by an admin. Money is whole pesewas.
+  feePesewas     Int?
+  depositPesewas Int?
+  guaranteeDays  Int     @default(90)
+
+  sentAt       DateTime? // the first shortlist went to the employer
+  filledAt     DateTime?
+  guaranteeEndsAt DateTime?
+  guaranteeReminderSentAt DateTime?
+  replacementCount Int  @default(0)
+  cancelledAt  DateTime?
+  closeReason  String?
+  createdById  String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([clientId, createdAt])
+  @@index([status, createdAt])
+  @@index([assignedRecruiterId, status])
+  @@index([status, guaranteeEndsAt])
+}
+
+// Payments an admin has recorded by hand (Paystack comes later).
+model HiringPayment {
+  id          String   @id @default(uuid())
+  requestId   String
+  kind        String   // DEPOSIT, BALANCE or OTHER
+  amountPesewas Int
+  paidAt      DateTime
+  method      String?  // cash, mobile money, bank transfer...
+  reference   String?
+  note        String?
+  recordedById String
+  createdAt   DateTime @default(now())
+
+  @@index([requestId, paidAt])
+}
+
+// One person in one request. Staff notes and ratings are kept apart from what the employer is shown.
+model HiringCandidate {
+  id          String   @id @default(uuid())
+  requestId   String
+  seekerId    String
+  source      String   // CV_DATABASE, APPLICANT (applied to the linked job) or DIRECT (by email)
+  stage       String   @default("SOURCED") // SOURCED, CONSENT_ASKED, CONSENTED, SHORTLISTED, INTERVIEW, HIRED, DECLINED, DROPPED, NOT_SUITABLE
+  consentAskedAt DateTime?
+  consentAt   DateTime? // the person agreed to be put forward, and to share their profile, CV and contact details with the employer
+  consentVersion String?
+  declinedAt  DateTime?
+  declineReason String?
+  ratingsJson String   @default("{}")
+  fitScore    Int?
+  clientSummary String? // our short note on this person, which the employer reads
+  staffNotes  String?   // never shown to the employer or the candidate
+  shortlistedAt DateTime?
+  clientDecision String? // INTERVIEW, NOT_SUITABLE or HIRED
+  clientDecisionNote String?
+  clientDecidedAt DateTime?
+  startDate   DateTime? // when the hired person starts
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([requestId, seekerId])
+  @@index([seekerId, stage])
+  @@index([requestId, stage])
+}
+
+// The history of a request: every change. CLIENT lines are shown to the employer; STAFF lines are internal.
+model HiringEvent {
+  id          String   @id @default(uuid())
+  requestId   String
+  candidateId String?
+  actorId     String?
+  actorRole   String
+  kind        String   // NOTE, STATUS, CANDIDATE, DELIVERY, CLIENT_DECISION, TERMS, PAYMENT, ASSIGNMENT, JOB
+  body        String
+  visibility  String   @default("STAFF") // STAFF or CLIENT
+  createdAt   DateTime @default(now())
+
+  @@index([requestId, createdAt])
 }

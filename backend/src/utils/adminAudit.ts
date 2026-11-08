@@ -4,6 +4,8 @@ type AuditClient = Pick<PrismaClient, 'adminActionLog'>;
 
 type AuditEntry = {
   admin: { id: string; email: string };
+  /** ADMIN by default; recruiters and other staff say so. */
+  actorRole?: string;
   action: string;
   targetType: string;
   targetId: string;
@@ -21,6 +23,7 @@ export const recordAdminAction = (client: AuditClient, entry: AuditEntry) =>
     data: {
       adminId: entry.admin.id,
       adminEmail: entry.admin.email,
+      actorRole: entry.actorRole ?? 'ADMIN',
       action: entry.action,
       targetType: entry.targetType,
       targetId: entry.targetId,

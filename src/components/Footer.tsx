@@ -39,6 +39,7 @@ const footerColumns = [
     title: 'For employers',
     links: [
       ['Post a job', '/onboarding?role=employer'],
+      ['Hiring Service: we recruit for you', '/hiring-service'],
       ['Printable employer flyer', '/employer-flyer'],
       ['Proposals', '/proposals'],
       ['Agreements', '/agreements'],

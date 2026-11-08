@@ -467,3 +467,96 @@ export const sendWeeklyReportEmail = (email: string, data: WeeklyReportMail) => 
 
   return transporter.sendMail({ from: env.smtpFrom, to: email, subject: `${data.company}: ${report.totals.newApplicants} new applicants last week`, html });
 };
+
+/** The shortlist is ready: tells the client how many candidates are waiting. */
+export const sendHiringShortlistEmail = (email: string, data: { company: string; role: string; count: number; url: string }) => {
+  const e = escapeHtml;
+  const html = wrapHtml(`
+    <div class="header">
+      <h1>${APP_NAME}</h1>
+      <p>Your shortlist is ready</p>
+    </div>
+    <div class="body">
+      <p>Good news for ${e(data.company)}. Your recruiter has shortlisted <strong>${data.count}</strong> ${data.count === 1 ? 'candidate' : 'candidates'} for <strong>${e(data.role)}</strong>.</p>
+      <p>Every one of them agreed to be put forward. Read their summaries and CVs, then tell us who you want to interview.</p>
+      <p style="text-align: center; margin: 32px 0;">
+        <a href="${data.url}" class="btn">See your shortlist</a>
+      </p>
+    </div>
+    <div class="footer">
+      &copy; ${new Date().getFullYear()} ${APP_NAME}. All rights reserved.
+    </div>
+  `);
+
+  return transporter.sendMail({ from: env.smtpFrom, to: email, subject: `Your shortlist for ${data.role} is ready`, html });
+};
+
+/** A recruiter asks a job seeker whether they agree to be put forward for a role. Nothing is shared before they answer. */
+export const sendOpportunityEmail = (email: string, data: { role: string; recruiter: string; url: string }) => {
+  const e = escapeHtml;
+  const html = wrapHtml(`
+    <div class="header">
+      <h1>${APP_NAME}</h1>
+      <p>A recruiter has a role for you</p>
+    </div>
+    <div class="body">
+      <p>${e(data.recruiter)} at ${APP_NAME} thinks you could be a good fit for <strong>${e(data.role)}</strong>.</p>
+      <p>Read the role and tell us if you are interested. Your profile, CV and contact details are only shared if you say yes.</p>
+      <p style="text-align: center; margin: 32px 0;">
+        <a href="${data.url}" class="btn">Read the role</a>
+      </p>
+      <p class="muted">If this is not for you, just say no, or ignore this email.</p>
+    </div>
+    <div class="footer">
+      &copy; ${new Date().getFullYear()} ${APP_NAME}. All rights reserved.
+    </div>
+  `);
+
+  return transporter.sendMail({ from: env.smtpFrom, to: email, subject: `A recruiter has a role for you: ${data.role}`, html });
+};
+
+/** Something changed on an employer's hiring request. */
+export const sendHiringStatusEmail = (email: string, data: { role: string; title: string; message: string; url: string }) => {
+  const e = escapeHtml;
+  const html = wrapHtml(`
+    <div class="header">
+      <h1>${APP_NAME}</h1>
+      <p>Hiring Service</p>
+    </div>
+    <div class="body">
+      <p><strong>${e(data.title)}</strong></p>
+      <p>${e(data.message)}</p>
+      <p style="text-align: center; margin: 32px 0;">
+        <a href="${data.url}" class="btn">See your request</a>
+      </p>
+    </div>
+    <div class="footer">
+      &copy; ${new Date().getFullYear()} ${APP_NAME}. All rights reserved.
+    </div>
+  `);
+
+  return transporter.sendMail({ from: env.smtpFrom, to: email, subject: data.title, html });
+};
+
+/** A week before a replacement guarantee ends: tells our staff. */
+export const sendGuaranteeReminderEmail = (email: string, data: { reference: string; role: string; company: string; endsOn: string; url: string }) => {
+  const e = escapeHtml;
+  const html = wrapHtml(`
+    <div class="header">
+      <h1>${APP_NAME}</h1>
+      <p>Replacement guarantee ending</p>
+    </div>
+    <div class="body">
+      <p>The replacement guarantee for <strong>${e(data.role)}</strong> at ${e(data.company)} (${e(data.reference)}) ends on <strong>${e(data.endsOn)}</strong>, a week from now.</p>
+      <p>Check in with the employer and the person who was hired, in case a replacement is needed.</p>
+      <p style="text-align: center; margin: 32px 0;">
+        <a href="${data.url}" class="btn">Open the request</a>
+      </p>
+    </div>
+    <div class="footer">
+      &copy; ${new Date().getFullYear()} ${APP_NAME}. All rights reserved.
+    </div>
+  `);
+
+  return transporter.sendMail({ from: env.smtpFrom, to: email, subject: `${data.reference}: replacement guarantee ends on ${data.endsOn}`, html });
+};

@@ -45,6 +45,11 @@ const BlogPost = lazy(() => import('./pages/BlogPost'))
 const Support = lazy(() => import('./pages/Support'))
 const IdentityVerification = lazy(() => import('./pages/IdentityVerification'))
 const About = lazy(() => import('./pages/About'))
+const HiringService = lazy(() => import('./pages/HiringService'))
+const HiringRequestPage = lazy(() => import('./pages/HiringRequest'))
+const HiringRequestForm = lazy(() => import('./pages/HiringRequestForm'))
+const Opportunities = lazy(() => import('./pages/Opportunities'))
+const RecruiterRequest = lazy(() => import('./pages/RecruiterRequest'))
 const ClaimCompany = lazy(() => import('./pages/ClaimCompany'))
 const EmployerFlyer = lazy(() => import('./pages/EmployerFlyer'))
 const Terms = lazy(() => import('./pages/Terms'))
@@ -153,6 +158,11 @@ function App() {
           <Route path="/blog/:id" element={<BlogPost />} />
           <Route path="/support" element={<Support />} />
           <Route path="/about" element={<About />} />
+          <Route path="/hiring-service" element={<HiringService />} />
+          <Route path="/hiring-service/new" element={renderProtected(<HiringRequestForm />)} />
+          <Route path="/hiring-service/:id" element={renderProtected(<HiringRequestPage />)} />
+          <Route path="/opportunities" element={renderProtected(<Opportunities />)} />
+          <Route path="/recruiter/requests/:id" element={renderProtected(<RecruiterRequest />)} />
           <Route path="/claim/:token" element={<ClaimCompany />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />

@@ -99,6 +99,24 @@ export const canViewUpload = async (viewer: Viewer, ref: UploadRef): Promise<boo
         });
         if (unlocked) return true;
       }
+
+      // The Hiring Service. A recruiter opens a CV only for a person in a search assigned to them, once the person agreed or made their
+      // profile visible. A client opens a CV only for a person who agreed and was shortlisted for one of THEIR requests, once we have sent the shortlist.
+      if (viewer.role === 'RECRUITER' || viewer.role === 'EMPLOYER') {
+        const owner = await prisma.seekerCv.findFirst({ where: { OR: [{ uploadedUrl: { endsWith: tail } }, { builderUrl: { endsWith: tail } }] }, select: { userId: true } });
+        if (owner) {
+          const entries = await prisma.hiringCandidate.findMany({ where: { seekerId: owner.userId, stage: { notIn: ['DECLINED', 'DROPPED'] } }, select: { requestId: true, consentAt: true, shortlistedAt: true } });
+          if (entries.length > 0) {
+            const requests = await prisma.hiringRequest.findMany({ where: { id: { in: entries.map((entry) => entry.requestId) }, ...(viewer.role === 'RECRUITER' ? { assignedRecruiterId: viewer.id } : { clientId: companyId, sentAt: { not: null } }) }, select: { id: true } });
+            const mine = entries.filter((entry) => requests.some((request) => request.id === entry.requestId));
+            if (viewer.role === 'EMPLOYER' && mine.some((entry) => entry.consentAt && entry.shortlistedAt)) return true;
+            if (viewer.role === 'RECRUITER' && mine.length > 0) {
+              const visible = await prisma.jobSeekerProfile.findFirst({ where: { userId: owner.userId, cvVisibility: 'VERIFIED_EMPLOYERS' }, select: { id: true } });
+              if (visible || mine.some((entry) => entry.consentAt)) return true;
+            }
+          }
+        }
+      }
       return false;
     }
 

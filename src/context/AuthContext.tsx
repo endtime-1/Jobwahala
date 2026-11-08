@@ -3,7 +3,7 @@ import { apiGetMe, apiGoogleAuth, apiLogin, apiLoginWithPhone, apiRegister, apiS
 import { emailHandle, getDisplayName } from '../lib/display';
 import { queryClient } from '../lib/queryClient';
 
-export type UserRole = 'SEEKER' | 'EMPLOYER' | 'FREELANCER' | 'ADMIN';
+export type UserRole = 'SEEKER' | 'EMPLOYER' | 'FREELANCER' | 'ADMIN' | 'RECRUITER';
 
 interface JobSeekerProfile {
   careerStage?: string | null;
@@ -82,7 +82,8 @@ const getStoredToken = () => localStorage.getItem('jobwahala_token');
 const hasCompletedOnboarding = (user: AuthUser | null) => {
   if (!user) return false;
 
-  if (user.role === 'ADMIN') return true;
+  // Staff accounts are set up by an admin: there is no profile to fill in.
+  if (user.role === 'ADMIN' || user.role === 'RECRUITER') return true;
 
   if (user.role === 'SEEKER') {
     return Boolean(

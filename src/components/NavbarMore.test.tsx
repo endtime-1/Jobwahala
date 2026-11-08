@@ -73,13 +73,15 @@ describe('the desktop menu for a job seeker', () => {
 })
 
 describe('the other roles', () => {
-  it('an employer keeps its five workspace links on the bar, and has nothing to put under More while freelance is off', () => {
+  it('an employer keeps its five workspace links on the bar, and finds the Hiring Service under More', () => {
     signedInAs('EMPLOYER')
     renderBar()
 
     const names = within(desktopBar()).getAllByRole('link').map((link) => link.textContent?.trim())
     expect(names).toEqual(['Dashboard', 'CV database', 'Plans & billing', 'Team', 'Messages'])
-    expect(screen.queryByRole('button', { name: /more/i })).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /more/i }))
+    const more = within(screen.getByLabelText('More pages')).getAllByRole('link').map((link) => link.textContent?.trim())
+    expect(more).toEqual(['Hiring service'])
   })
 
   it('a menu that already fits has no More button', () => {
@@ -89,7 +91,7 @@ describe('the other roles', () => {
     expect(screen.queryByRole('button', { name: /more/i })).not.toBeInTheDocument()
   })
 
-  it('when freelance is on, an employer finds Find Talent, Proposals and Agreements under More', () => {
+  it('when freelance is on, an employer finds the Hiring Service, Find Talent, Proposals and Agreements under More', () => {
     setFeaturesForTests({ freelanceEnabled: true })
     signedInAs('EMPLOYER')
     renderBar()
@@ -97,7 +99,16 @@ describe('the other roles', () => {
     fireEvent.click(screen.getByRole('button', { name: /more/i }))
 
     const names = within(screen.getByLabelText('More pages')).getAllByRole('link').map((link) => link.textContent?.trim())
-    expect(names).toEqual(['Find Talent', 'Proposals', 'Agreements'])
+    expect(names).toEqual(['Hiring service', 'Find Talent', 'Proposals', 'Agreements'])
+  })
+
+  it('a recruiter has a one-link menu: their dashboard', () => {
+    signedInAs('RECRUITER')
+    renderBar()
+
+    const names = within(desktopBar()).getAllByRole('link').map((link) => link.textContent?.trim())
+    expect(names).toEqual(['Dashboard'])
+    expect(screen.queryByRole('button', { name: /more/i })).not.toBeInTheDocument()
   })
 
   it('the phone menu is not affected: it still has every link', () => {

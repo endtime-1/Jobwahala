@@ -9,6 +9,7 @@ import { initSocket } from './services/socketService';
 import { processPayout } from './controllers/agreementController';
 import { getErrorMessage } from './utils/errors';
 import { runWeeklyEmployerReportsSafely } from './services/acquisitionService';
+import { runGuaranteeRemindersSafely } from './services/hiringService';
 import { JOB_SWEEP_INTERVAL_MS, runJobLifecycleSweepSafely } from './services/jobLifecycleService';
 import { runApplicationRemindersSafely } from './services/applicationReminderService';
 import { backfillJobSalariesSafely } from './services/salaryBackfillService';
@@ -78,6 +79,8 @@ const runDailySweeps = async () => {
   await runBillingSweepSafely();
   // Email alerts for saved CV database searches that have new matches.
   await runCandidateAlertsSafely();
+  // Hiring Service: remind staff a week before a replacement guarantee ends.
+  await runGuaranteeRemindersSafely();
   // The Monday email with last week's views and applicants (runs once a week; Monday and Tuesday only, so a missed Monday is caught up).
   if ([1, 2].includes(new Date().getUTCDay())) await runWeeklyEmployerReportsSafely();
 };

@@ -157,6 +157,35 @@ export default function Privacy() {
           ),
         },
         {
+          heading: 'The Hiring Service: recruiters and candidates',
+          body: (
+            <>
+              <p>
+                When a company buys the Hiring Service, our recruiters search the profiles of people who chose to be visible, and may contact some of them. A recruiter
+                sees only a limited profile at first. A person&apos;s name, contact details and CV open to the recruiter once the person agrees, or if they made their
+                profile visible.
+              </p>
+              <ul className="list-disc space-y-1 pl-5">
+                <li>
+                  <strong>Your yes comes first.</strong> We do not share your profile, CV or contact details with the hiring company until you agree, in the app. We
+                  record when you agreed and the wording you agreed to. You can say no, and you can change your mind before the company contacts you.
+                </li>
+                <li>
+                  <strong>What the company sees.</strong> After you agree and are shortlisted: your name, a summary written by the recruiter, your ratings against the
+                  role, your profile details, your CV and your contact details. The recruiter&apos;s private notes about you are not shared.
+                </li>
+                <li>
+                  <strong>Who at JobWahala can see it.</strong> Only the recruiter assigned to that search, and administrators. Recruiters cannot open searches that are not
+                  assigned to them. Every time a recruiter opens your profile it is recorded in our audit log.
+                </li>
+                <li>
+                  <strong>Companies you blocked</strong> never receive your details through this service.
+                </li>
+              </ul>
+            </>
+          ),
+        },
+        {
           heading: 'Teams, messages and job views',
           body: (
             <ul className="list-disc space-y-1 pl-5">

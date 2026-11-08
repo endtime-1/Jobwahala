@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Sparkles } from 'lucide-react'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { apiCreateJob, apiGenerateJobDraft } from '../../../lib/api'
 import { latestClosingDate, toDateInputValue } from '../../../lib/jobLifecycle'
 import EmployerJobCard from './EmployerJobCard'
@@ -114,7 +114,10 @@ export default function EmployerJobsPanel({
               <h2 className="text-2xl font-black tracking-tight text-text-main">Create Job Posting</h2>
               <p className="mt-1 text-sm font-medium text-text-muted">Fill in the basics. Your job goes live as soon as you publish, or save it as a draft first.</p>
             </div>
-            <span className="rounded-full bg-success/15 px-3 py-1 text-sm font-extrabold text-success">Goes live instantly</span>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded-full bg-success/15 px-3 py-1 text-sm font-extrabold text-success">Goes live instantly</span>
+              <Link to="/hiring-service/new" className="btn btn-outline btn-sm">Let JobWahala hire for you</Link>
+            </div>
           </div>
 
           <div className="flex flex-col gap-4 rounded-xl bg-secondary/5 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">

@@ -164,6 +164,49 @@ export default function Terms() {
           ),
         },
         {
+          heading: 'The Hiring Service',
+          body: (
+            <>
+              <p>
+                The Hiring Service is a paid service in which JobWahala staff (recruiters) look for candidates for one role and send you a shortlist. You send a request
+                on the{' '}
+                <Link to="/hiring-service" className={link}>
+                  Hiring Service page
+                </Link>
+                . We then contact you to agree the fee and any deposit. Work starts only once the fee is agreed, and we show the agreed fee and what has been paid on
+                your request page.
+              </p>
+              <ul className="list-disc space-y-1 pl-5">
+                <li>
+                  <strong>Candidates agree first.</strong> We ask each person from our database if they agree to be put forward. We do not give you their profile, CV or
+                  contact details until they say yes. People who applied to your own job post have already applied to you.
+                </li>
+                <li>
+                  <strong>Only you and our team see the shortlist.</strong> The shortlist and the candidates&apos; details are visible only to your company, the
+                  recruiter assigned to your request and our administrators.
+                </li>
+                <li>
+                  <strong>Cancelling.</strong> You can cancel a request before work starts. After that, please contact us; any deposit already paid is dealt with as set
+                  out in the agreement we make with you.
+                </li>
+                <li>
+                  <strong>Replacement guarantee.</strong> If a person you hire through the service leaves, we search again at no extra charge. The guarantee runs for the
+                  number of days shown on your request (90 unless we agree otherwise), counted from the day your hire starts. It does not apply if the person was
+                  dismissed for a reason unrelated to their fit, or if you did not hire them through the service.
+                </li>
+                <li>
+                  <strong>No guarantee of a hire.</strong> We provide a shortlist of screened candidates who have agreed to be put forward. The decision to hire, and the
+                  terms of employment, are yours and the candidate&apos;s. We are not the employer.
+                </li>
+                <li>
+                  <strong>Using candidate details.</strong> You may use what we give you only to consider that person for the role you asked us to fill, and you must
+                  keep it private. The same limits as the CV database apply.
+                </li>
+              </ul>
+            </>
+          ),
+        },
+        {
           heading: 'Jobs and applications',
           body: (
             <>

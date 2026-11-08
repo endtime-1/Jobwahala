@@ -227,7 +227,7 @@ describe('what deleting would do', () => {
     const { blockers } = (await getDeletionPreview('u1'))!;
 
     expect(blockers).toHaveLength(4);
-    expect(blockers.join(' ')).toMatch(/Administrator/);
+    expect(blockers.join(' ')).toMatch(/Staff accounts/);
     expect(blockers.join(' ')).toMatch(/agreements/);
     expect(blockers.join(' ')).toMatch(/payout/);
     expect(blockers.join(' ')).toMatch(/dispute/);

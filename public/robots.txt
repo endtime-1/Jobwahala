@@ -10,6 +10,9 @@ Disallow: /verify-identity
 Disallow: /reset-password
 Disallow: /verify-email
 Disallow: /claim/
+Disallow: /recruiter
+Disallow: /opportunities
+Disallow: /hiring-service/
 Disallow: /employer-flyer
 
 Sitemap: https://www.jobwahala.com/sitemap.xml

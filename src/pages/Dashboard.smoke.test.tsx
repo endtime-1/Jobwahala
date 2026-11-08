@@ -29,6 +29,10 @@ vi.mock('./dashboards/AdminDashboard', () => ({
   default: () => <div>Admin Dashboard</div>,
 }))
 
+vi.mock('./dashboards/RecruiterDashboard', () => ({
+  default: () => <div>Recruiter Dashboard</div>,
+}))
+
 describe('Dashboard smoke role switching', () => {
   beforeEach(() => {
     useAuthMock.mockReset()
@@ -39,6 +43,7 @@ describe('Dashboard smoke role switching', () => {
     ['EMPLOYER', 'Employer Dashboard'],
     ['FREELANCER', 'Freelancer Dashboard'],
     ['ADMIN', 'Admin Dashboard'],
+    ['RECRUITER', 'Recruiter Dashboard'],
   ])('renders %s users into the correct dashboard', async (role, label) => {
     useAuthMock.mockReturnValue({ role })
 

@@ -56,8 +56,8 @@ export const deleteMyAccount = async (req: AuthRequest, res: Response) => {
     const user = await prisma.user.findUnique({ where: { id: userId }, select: { email: true, phone: true, password: true, role: true } });
     if (!user) return res.status(404).json({ success: false, message: 'Account not found' });
 
-    if (user.role === 'ADMIN') {
-      return res.status(403).json({ success: false, message: 'Administrator accounts cannot be deleted from here.' });
+    if (user.role === 'ADMIN' || user.role === 'RECRUITER') {
+      return res.status(403).json({ success: false, message: 'Staff accounts cannot be deleted from here. Ask an administrator.' });
     }
 
     // Prove it is really them: a password, or for phone-only accounts a code texted to their number.

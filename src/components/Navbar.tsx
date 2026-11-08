@@ -52,6 +52,7 @@ const seekerLinks: NavLinkItem[] = [
 const employerLinks: NavLinkItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: <Rocket className="h-4 w-4" /> },
   { name: 'CV database', href: '/cv-database', icon: <Users className="h-4 w-4" /> },
+  { name: 'Hiring service', href: '/hiring-service', icon: <Handshake className="h-4 w-4" /> },
   { name: 'Plans & billing', href: '/billing', icon: <CreditCard className="h-4 w-4" /> },
   { name: 'Team', href: '/team', icon: <UserCircle2 className="h-4 w-4" /> },
   { name: 'Find Talent', href: '/freelancers', icon: <Users className="h-4 w-4" /> },
@@ -80,6 +81,10 @@ const adminLinks: NavLinkItem[] = [
   { name: 'Freelancers', href: '/freelancers', icon: <Users className="h-4 w-4" /> },
 ]
 
+const recruiterLinks: NavLinkItem[] = [
+  { name: 'Dashboard', href: '/dashboard', icon: <Rocket className="h-4 w-4" /> },
+]
+
 const guestLinks: NavLinkItem[] = [
   { name: 'Browse Jobs', href: '/jobs', icon: <Briefcase className="h-4 w-4" /> },
   { name: 'Internships & NSS', href: '/internships', icon: <GraduationCap className="h-4 w-4" /> },
@@ -91,7 +96,7 @@ const guestLinks: NavLinkItem[] = [
 // (The phone menu still lists every link.)
 const MORE_LINKS: Record<string, readonly string[]> = {
   SEEKER: ['Courses', 'Saved jobs', 'CV Generator', 'Resources', 'Proposals', 'Agreements', 'Freelance gigs'],
-  EMPLOYER: ['Find Talent', 'Proposals', 'Agreements'],
+  EMPLOYER: ['Hiring service', 'Find Talent', 'Proposals', 'Agreements'],
   FREELANCER: ['Internships & NSS', 'Courses', 'Agreements', 'Resources'],
 }
 
@@ -146,7 +151,7 @@ export default function Navbar() {
   }, [location.pathname])
 
   const loadWorkspaceSignals = async () => {
-    if (!user || !isOnboarded || role === 'ADMIN') {
+    if (!user || !isOnboarded || role === 'ADMIN' || role === 'RECRUITER') {
       setWorkspaceSignals(initialWorkspaceSignals)
       return
     }
@@ -169,7 +174,7 @@ export default function Navbar() {
   }, [user?.id, isOnboarded, role])
 
   useEffect(() => {
-    if (!user || !isOnboarded || role === 'ADMIN') return
+    if (!user || !isOnboarded || role === 'ADMIN' || role === 'RECRUITER') return
 
     return subscribeToRealtimeEvents({
       onMessagesRefresh: () => {
@@ -207,6 +212,7 @@ export default function Navbar() {
     if (role === 'EMPLOYER') return employerLinks
     if (role === 'FREELANCER') return freelancerLinks
     if (role === 'ADMIN') return adminLinks
+    if (role === 'RECRUITER') return recruiterLinks
     return guestLinks
   }, [isOnboarded, role, user])
 
@@ -268,6 +274,10 @@ export default function Navbar() {
         { name: 'Deals', href: '/proposals', icon: <Handshake className="h-4 w-4" /> },
         { name: 'Work', href: '/agreements', icon: <FileCheck className="h-4 w-4" /> },
       ]
+    }
+
+    if (role === 'RECRUITER') {
+      return [{ name: 'Hub', href: '/dashboard', icon: <Rocket className="h-4 w-4" /> }]
     }
 
     if (role === 'ADMIN') {

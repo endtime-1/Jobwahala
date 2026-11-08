@@ -14,7 +14,7 @@ type ProfileFormState = {
 }
 
 const roleCopy: Record<
-  Exclude<UserRole, 'ADMIN'>,
+  Exclude<UserRole, 'ADMIN' | 'RECRUITER'>,
   {
     icon: typeof User
     badge: string
@@ -58,7 +58,7 @@ const roleCopy: Record<
   },
 }
 
-const getInitialState = (role: Exclude<UserRole, 'ADMIN'>, user: AuthUser | null): ProfileFormState => {
+const getInitialState = (role: Exclude<UserRole, 'ADMIN' | 'RECRUITER'>, user: AuthUser | null): ProfileFormState => {
   if (role === 'SEEKER') {
     return {
       primary: user?.jobSeekerProfile?.experience || '',
@@ -86,7 +86,7 @@ export default function Onboarding() {
   const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const activeRole = (role || user?.role || 'SEEKER') as Exclude<UserRole, 'ADMIN'>
+  const activeRole = (role || user?.role || 'SEEKER') as Exclude<UserRole, 'ADMIN' | 'RECRUITER'>
   const content = roleCopy[activeRole]
 
   useEffect(() => {

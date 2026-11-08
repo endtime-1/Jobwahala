@@ -77,7 +77,7 @@ const contains = (haystack: string | null | undefined, needle: string) => (hayst
  * Everyone who matches, boosted first and then the most recently active. Hidden profiles, inactive accounts and people who
  * blocked this company never appear. `since` keeps only people who became visible after that time (used for alerts).
  */
-const findMatching = async (ownerId: string, filters: CandidateFilters, now: Date, since?: Date) => {
+export const findMatching = async (ownerId: string, filters: CandidateFilters, now: Date, since?: Date) => {
   const rows = (await prisma.jobSeekerProfile.findMany({
     where: {
       cvVisibility: 'VERIFIED_EMPLOYERS',

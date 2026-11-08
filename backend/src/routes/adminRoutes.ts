@@ -23,6 +23,8 @@ import {
   adminRevokeClaimLink, adminRunWeeklyReports, adminSaveFoundingSettings, adminSetFounding, adminUpdateOutreach,
 } from '../controllers/acquisitionController';
 import { claimIdSchema, claimLinkSchema, createCompanySchema, createOutreachSchema, foundingSettingsSchema, foundingToggleSchema, outreachIdSchema, updateOutreachSchema } from '../validation/acquisitionSchemas';
+import { deletePayment, getStaff, getStaffRequests, patchRecruiter, postAssign, postPayment, postRecruiter, putSettings, putTerms } from '../controllers/hiringController';
+import { assignSchema, createRecruiterSchema, hiringSettingsSchema, paymentSchema, removePaymentSchema, staffActiveSchema, termsSchema } from '../validation/hiringSchemas';
 import { getVerificationRequests, updateVerificationRequestStatus } from '../controllers/verificationController';
 import { getAdminAuditLog } from '../controllers/adminAuditController';
 import { getCourseQueue, reviewCourse, reviewProvider, setFeatured } from '../controllers/adminCourseController';
@@ -89,6 +91,17 @@ router.post('/acquisition/outreach', validate(createOutreachSchema), adminCreate
 router.patch('/acquisition/outreach/:id', validate(updateOutreachSchema), adminUpdateOutreach);
 router.delete('/acquisition/outreach/:id', validate(outreachIdSchema), adminDeleteOutreach);
 router.post('/acquisition/weekly-reports/run', adminRunWeeklyReports);
+
+// Hiring Service: every search, who is on it, and the recruiters
+router.get('/hiring/requests', getStaffRequests);
+router.post('/hiring/requests/:id/assign', validate(assignSchema), postAssign);
+router.put('/hiring/requests/:id/terms', validate(termsSchema), putTerms);
+router.post('/hiring/requests/:id/payments', validate(paymentSchema), postPayment);
+router.post('/hiring/requests/:id/payments/:paymentId/remove', validate(removePaymentSchema), deletePayment);
+router.put('/hiring/settings', validate(hiringSettingsSchema), putSettings);
+router.get('/hiring/staff', getStaff);
+router.post('/hiring/staff', validate(createRecruiterSchema), postRecruiter);
+router.patch('/hiring/staff/:userId', validate(staffActiveSchema), patchRecruiter);
 
 router.get('/courses/queue', getCourseQueue);
 router.post('/providers/:userId/review', validate(providerReviewSchema), reviewProvider);

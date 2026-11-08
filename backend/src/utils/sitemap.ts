@@ -20,6 +20,7 @@ export const staticSitemapPaths: SitemapEntry[] = [
   { path: '/internships', changeFrequency: 'daily', priority: 0.9 },
   { path: '/blog', changeFrequency: 'weekly', priority: 0.5 },
   { path: '/about', changeFrequency: 'monthly', priority: 0.4 },
+  { path: '/hiring-service', changeFrequency: 'monthly', priority: 0.7 },
   { path: '/support', changeFrequency: 'monthly', priority: 0.4 },
   { path: '/terms', changeFrequency: 'monthly', priority: 0.2 },
   { path: '/privacy', changeFrequency: 'monthly', priority: 0.2 },

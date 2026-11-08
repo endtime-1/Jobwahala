@@ -7,6 +7,7 @@ const SeekerDashboard = lazy(() => import('./dashboards/SeekerDashboard'))
 const EmployerDashboard = lazy(() => import('./dashboards/EmployerDashboard'))
 const FreelancerDashboard = lazy(() => import('./dashboards/FreelancerDashboard'))
 const AdminDashboard = lazy(() => import('./dashboards/AdminDashboard'))
+const RecruiterDashboard = lazy(() => import('./dashboards/RecruiterDashboard'))
 
 function DashboardFallback() {
   return (
@@ -36,6 +37,7 @@ export default function Dashboard() {
           </div>
         )}
         {role === 'ADMIN' && <AdminDashboard />}
+        {role === 'RECRUITER' && <RecruiterDashboard />}
       </Suspense>
     </div>
   )
