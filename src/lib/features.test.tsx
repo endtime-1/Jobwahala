@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it, vi } from 'vitest'
 import Footer from '../components/Footer'
@@ -78,6 +78,8 @@ describe('navigation with FREELANCE_ENABLED off', () => {
         <Navbar />
       </MemoryRouter>,
     )
+    // On the desktop bar it sits under "More", so open that first.
+    fireEvent.click(screen.getByRole('button', { name: /more/i }))
     expect(hrefs().filter((href) => href === '/saved-jobs').length).toBeGreaterThanOrEqual(2)
     seeker.unmount()
 

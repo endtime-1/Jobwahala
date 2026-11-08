@@ -87,6 +87,14 @@ const guestLinks: NavLinkItem[] = [
   { name: 'Resources', href: '/blog', icon: <BookOpen className="h-4 w-4" /> },
 ]
 
+// The desktop bar keeps the five links people use most. The rest go under "More" so nothing is cut off at the edge.
+// (The phone menu still lists every link.)
+const MORE_LINKS: Record<string, readonly string[]> = {
+  SEEKER: ['Courses', 'Saved jobs', 'CV Generator', 'Resources', 'Proposals', 'Agreements', 'Freelance gigs'],
+  EMPLOYER: ['Find Talent', 'Proposals', 'Agreements'],
+  FREELANCER: ['Internships & NSS', 'Courses', 'Agreements', 'Resources'],
+}
+
 const pendingSetupLinks: NavLinkItem[] = [
   { name: 'Complete Setup', href: '/onboarding', icon: <UserCircle2 className="h-4 w-4" /> },
 ]
@@ -207,6 +215,29 @@ export default function Navbar() {
     [freelanceEnabled, roleLinks],
   )
 
+  const moreNames = useMemo(() => new Set(MORE_LINKS[role ?? ''] ?? []), [role])
+  const mainLinks = useMemo(() => currentLinks.filter((link) => !moreNames.has(link.name)), [currentLinks, moreNames])
+  const moreLinks = useMemo(() => currentLinks.filter((link) => moreNames.has(link.name)), [currentLinks, moreNames])
+  const [moreOpen, setMoreOpen] = useState(false)
+  const moreRef = useRef<HTMLDivElement>(null)
+
+  // The "More" menu closes when you click elsewhere or press Escape.
+  useEffect(() => {
+    if (!moreOpen) return
+    const closeOnOutsideClick = (event: MouseEvent) => {
+      if (!moreRef.current?.contains(event.target as Node)) setMoreOpen(false)
+    }
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMoreOpen(false)
+    }
+    document.addEventListener('mousedown', closeOnOutsideClick)
+    document.addEventListener('keydown', closeOnEscape)
+    return () => {
+      document.removeEventListener('mousedown', closeOnOutsideClick)
+      document.removeEventListener('keydown', closeOnEscape)
+    }
+  }, [moreOpen])
+
   const dockLinks = useMemo(() => {
     if (!user) return guestDockLinks
     if (!isOnboarded) return pendingSetupLinks
@@ -314,7 +345,7 @@ export default function Navbar() {
 
               <div className="hidden xl:flex xl:min-w-0 xl:flex-1 xl:items-center xl:justify-end xl:gap-2">
                 <div className="nav-links-rail mr-2 flex min-w-0 max-w-full items-center gap-1 overflow-x-auto rounded-2xl bg-white/55 p-1">
-                  {currentLinks.map((link) => (
+                  {mainLinks.map((link) => (
                     <Link
                       key={link.name}
                       to={link.href}
@@ -326,6 +357,38 @@ export default function Navbar() {
                     </Link>
                   ))}
                 </div>
+
+                {moreLinks.length > 0 ? (
+                  <div ref={moreRef} className="relative mr-2 shrink-0">
+                    <button
+                      type="button"
+                      aria-haspopup="true"
+                      aria-expanded={moreOpen}
+                      onClick={() => setMoreOpen((open) => !open)}
+                      className={`nav-link ${moreLinks.some((link) => link.href === location.pathname) ? 'active shadow-premium-sm' : ''}`}
+                    >
+                      <span>More</span>
+                      <ChevronDown className={`h-4 w-4 transition-transform ${moreOpen ? 'rotate-180' : ''}`} aria-hidden />
+                      {moreLinks.some((link) => getLinkBadgeCount(link.href) > 0) ? <span className="h-2 w-2 rounded-full bg-error" aria-label="Something new" /> : null}
+                    </button>
+                    {moreOpen ? (
+                      <div aria-label="More pages" className="absolute right-0 top-full z-50 mt-2 min-w-56 rounded-2xl border border-surface-border bg-white p-2 shadow-premium">
+                        {moreLinks.map((link) => (
+                          <Link
+                            key={link.name}
+                            to={link.href}
+                            onClick={() => setMoreOpen(false)}
+                            className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-bold transition-colors hover:bg-surface-alt ${location.pathname === link.href ? 'bg-secondary/10 text-secondary' : 'text-text-main'}`}
+                          >
+                            {link.icon}
+                            <span className="flex-1">{link.name}</span>
+                            {renderLinkBadge(link.href)}
+                          </Link>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
 
                 {!user ? (
                   <div className="flex items-center gap-2">

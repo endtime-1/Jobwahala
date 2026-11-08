@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import Navbar from './Navbar'
@@ -74,6 +74,8 @@ describe('Navbar live workspace badges', () => {
     })
 
     expect(screen.getAllByTestId('nav-badge-messaging')[0]).toHaveTextContent('2')
+    // Agreements sit under "More" on the desktop bar. The More button shows a dot, and the badge is inside the menu.
+    fireEvent.click(screen.getByRole('button', { name: /more/i }))
     expect(screen.getAllByTestId('nav-badge-agreements')[0]).toHaveTextContent('4')
 
     realtimeHandlers.onAgreementsRefresh?.({ agreementId: 'agreement-1' })
