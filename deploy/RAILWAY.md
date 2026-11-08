@@ -84,6 +84,9 @@ WhatsApp channel links (footer and dashboards) are also baked into the website a
 
 ```env
 VITE_WHATSAPP_CHANNEL_URL=https://whatsapp.com/channel/...   # optional: the main channel (a default is built in)
+VITE_LINKEDIN_URL=https://www.linkedin.com/company/...     # optional: change when the short name is ready
+VITE_FACEBOOK_URL=https://www.facebook.com/...             # optional: same
+VITE_INSTAGRAM_URL=  VITE_TIKTOK_URL=  VITE_X_URL=         # optional: hidden until set
 VITE_WHATSAPP_CHANNEL_JOBS=https://whatsapp.com/channel/...
 VITE_WHATSAPP_CHANNEL_INTERNSHIPS=https://whatsapp.com/channel/...
 VITE_WHATSAPP_CHANNEL_EMPLOYERS=https://whatsapp.com/channel/...

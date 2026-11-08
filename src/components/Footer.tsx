@@ -1,6 +1,7 @@
 import { ArrowRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import Logo from './Logo'
+import SocialLinks from './SocialLinks'
 import WhatsAppChannels from './WhatsAppChannels'
 import WhatsAppFollowButton from './WhatsAppFollowButton'
 import { isFreelancePath, useFeatures } from '../lib/features'
@@ -46,6 +47,7 @@ const footerColumns = [
     title: 'Learn and get help',
     links: [
       ['Guides and articles', '/blog'],
+      ['About JobWahala', '/about'],
       ['Help centre', '/support'],
       ['Terms of service', '/terms'],
       ['Privacy policy', '/privacy'],
@@ -102,6 +104,7 @@ export default function Footer() {
             <div className="mt-5 flex flex-col gap-2">
               <WhatsAppFollowButton variant="footer" />
               <WhatsAppChannels variant="footer" only={['internships', 'employers']} />
+              <SocialLinks className="mt-3" />
             </div>
           </div>
 
