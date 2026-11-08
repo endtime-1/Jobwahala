@@ -1,4 +1,4 @@
-import { Search, Send, MoreVertical, PlusCircle, Smile, ChevronLeft, Check, CheckCheck, Paperclip, Mic, LoaderCircle, X, MessageSquare } from 'lucide-react'
+import { ArrowDown, Check, CheckCheck, ChevronLeft, LoaderCircle, MessageSquare, Paperclip, Search, Send, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import EvidenceLink, { ProtectedImage } from '../components/EvidenceLink'
@@ -12,6 +12,9 @@ import { getErrorMessage } from '../lib/errors'
 type ContactRecord = {
   id: string
   email: string
+  /** A name people recognise: the company for an employer, otherwise the person's own name. */
+  name?: string | null
+  role?: string | null
 }
 
 type ConversationRecord = {
@@ -69,6 +72,43 @@ const getMessagePreview = (
   if (message.content?.trim()) return message.content
   if (message.attachmentName) return `Attachment: ${message.attachmentName}`
   return 'Sent an attachment'
+}
+
+const nameOf = (person: { email: string; name?: string | null }) => person.name?.trim() || emailHandle(person.email)
+
+const ROLE_LABEL: Record<string, string> = { EMPLOYER: 'Employer', SEEKER: 'Job seeker', FREELANCER: 'Freelancer', ADMIN: 'JobWahala team' }
+
+// A steady colour per person, so the same person always looks the same in the list and in the chat.
+const AVATAR_TONES = ['bg-secondary text-white', 'bg-primary text-white', 'bg-success text-white', 'bg-accent text-white', 'bg-gold text-primary']
+const toneFor = (id: string) => AVATAR_TONES[[...id].reduce((sum, char) => sum + char.charCodeAt(0), 0) % AVATAR_TONES.length]
+
+const isSameDay = (a: string, b: string) => new Date(a).toDateString() === new Date(b).toDateString()
+
+const dayLabel = (iso: string, now = new Date()) => {
+  const date = new Date(iso)
+  const days = Math.round((new Date(now.toDateString()).getTime() - new Date(date.toDateString()).getTime()) / 86_400_000)
+  if (days === 0) return 'Today'
+  if (days === 1) return 'Yesterday'
+  if (days > 1 && days < 7) return date.toLocaleDateString('en-GB', { weekday: 'long' })
+  return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
+type FeedItem = { kind: 'day'; key: string; label: string } | { kind: 'message'; message: MessageRecord; first: boolean; last: boolean }
+
+const GROUP_GAP_MS = 5 * 60 * 1000
+
+/** The thread as it is drawn: a date label when the day changes, and runs of messages from one person grouped together. */
+const buildFeed = (messages: MessageRecord[]): FeedItem[] => {
+  const items: FeedItem[] = []
+  const joins = (a: MessageRecord, b: MessageRecord) => isSameDay(a.createdAt, b.createdAt) && a.senderId === b.senderId && Math.abs(new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()) < GROUP_GAP_MS
+
+  messages.forEach((message, index) => {
+    const previous = messages[index - 1]
+    const next = messages[index + 1]
+    if (!previous || !isSameDay(previous.createdAt, message.createdAt)) items.push({ kind: 'day', key: `day-${message.id}`, label: dayLabel(message.createdAt) })
+    items.push({ kind: 'message', message, first: !previous || !joins(previous, message), last: !next || !joins(message, next) })
+  })
+  return items
 }
 
 const getDraftKeyForConversation = (conversationId: string) => `conversation:${conversationId}`
@@ -215,7 +255,11 @@ export default function Messaging() {
   const [pendingAttachment, setPendingAttachment] = useState<PendingAttachment | null>(null)
   const [pendingRecipient, setPendingRecipient] = useState<ContactRecord | null>(null)
   const [error, setError] = useState('')
-  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const listRef = useRef<HTMLDivElement>(null)
+  const composerRef = useRef<HTMLTextAreaElement>(null)
+  const stickToBottomRef = useRef(true)
+  const [scrolledUp, setScrolledUp] = useState(false)
+  const [onlyUnread, setOnlyUnread] = useState(false)
   const attachmentInputRef = useRef<HTMLInputElement>(null)
   const messagesRef = useRef<MessageRecord[]>([])
   const selectedIdRef = useRef<string | null>(null)
@@ -419,9 +463,45 @@ export default function Messaging() {
     })
   }, [user?.id, selectedId, targetUserId, targetEmail])
 
+  // The message list scrolls inside its own box. (Scrolling the whole page here is what threw people down to the footer.)
+  const scrollListToBottom = () => {
+    const list = listRef.current
+    if (list) list.scrollTop = list.scrollHeight
+  }
+
+  const handleListScroll = () => {
+    const list = listRef.current
+    if (!list) return
+    const distance = list.scrollHeight - list.scrollTop - list.clientHeight
+    stickToBottomRef.current = distance < 80
+    setScrolledUp(distance > 240)
+  }
+
+  const jumpToLatest = () => {
+    stickToBottomRef.current = true
+    scrollListToBottom()
+  }
+
+  // A different conversation starts at its newest message.
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, selectedId, pendingRecipient])
+    stickToBottomRef.current = true
+    scrollListToBottom()
+  }, [selectedId, pendingRecipient])
+
+  // New messages: follow them if the reader is at the bottom or wrote the last one; otherwise leave the reader where they are.
+  useEffect(() => {
+    const last = messages[messages.length - 1]
+    if (!last) return
+    if (stickToBottomRef.current || last.senderId === user?.id) scrollListToBottom()
+  }, [messages, isLoadingMessages, user?.id])
+
+  // The message box grows with what is typed, up to a few lines.
+  useEffect(() => {
+    const box = composerRef.current
+    if (!box) return
+    box.style.height = 'auto'
+    box.style.height = `${Math.min(box.scrollHeight, 144)}px`
+  }, [draft])
 
   const selectedConversation = useMemo(() => {
     return conversations.find((conversation) => conversation.id === selectedId) || null
@@ -433,7 +513,7 @@ export default function Messaging() {
     return conversations.filter((conversation) => {
       const participant = conversation.participant
       const q = contactSearch.toLowerCase()
-      return !contactSearch || participant.email.toLowerCase().includes(q) || emailHandle(participant.email).toLowerCase().includes(q)
+      return !contactSearch || participant.email.toLowerCase().includes(q) || emailHandle(participant.email).toLowerCase().includes(q) || (participant.name ?? '').toLowerCase().includes(q)
     })
   }, [contactSearch, conversations])
 
@@ -651,318 +731,287 @@ export default function Messaging() {
     }
   }
 
+  const unreadTotal = conversations.reduce((sum, conversation) => sum + conversation.unreadCount, 0)
+  const listedContacts = onlyUnread ? filteredContacts.filter((conversation) => conversation.unreadCount > 0) : filteredContacts
+  const participantName = activeParticipant ? nameOf(activeParticipant) : ''
+  const feed = useMemo(() => buildFeed(messages), [messages])
+
+  const renderAvatar = (id: string, name: string, size: 'md' | 'lg' = 'md') => (
+    <span className={`flex flex-none items-center justify-center rounded-full font-black ${toneFor(id)} ${size === 'lg' ? 'h-12 w-12 text-base' : 'h-12 w-12 text-sm'}`} aria-hidden>
+      {getInitials(name)}
+    </span>
+  )
+
   const renderSidebar = () => (
-    <div className="relative z-20 flex h-full w-full flex-col border-r border-surface-border bg-surface-alt/5 md:w-[360px] xl:w-[400px]">
-      <header className="shrink-0 bg-white/50 p-5 pb-5 backdrop-blur-3xl sm:p-8 sm:pb-6">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <p className="mb-2 text-[10px] font-black uppercase tracking-[0.2em] text-text-light">Messaging</p>
-            <h2 className="text-3xl font-black tracking-tighter text-text-main italic sm:text-4xl">Workspace</h2>
-          </div>
-          <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center border border-primary/20">
-            <PlusCircle className="h-5 w-5" />
-          </div>
+    <aside aria-label="Conversations" className="flex h-full w-full flex-col border-r border-surface-border bg-white md:w-[360px] xl:w-[400px]">
+      <header className="shrink-0 border-b border-surface-border/60 p-4 sm:p-5">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-black tracking-tight text-text-main">Messages</h1>
+          {unreadTotal > 0 ? (
+            <span className="rounded-full bg-secondary px-2.5 py-1 text-xs font-black text-white" aria-label={`${unreadTotal} unread`}>
+              {unreadTotal}
+            </span>
+          ) : null}
         </div>
-        <div className="relative group">
-          <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-text-light group-focus-within:text-primary transition-colors" />
+        <div className="relative mt-4">
+          <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-text-light" aria-hidden />
           <input
-            type="text"
-            placeholder="Search active sessions..."
+            type="search"
+            aria-label="Search conversations"
+            placeholder="Search conversations"
             value={contactSearch}
             onChange={(event) => setContactSearch(event.target.value)}
-            className="w-full h-14 rounded-2xl border-none bg-white py-3 pl-14 pr-4 text-sm font-bold focus:ring-2 focus:ring-primary/10 shadow-premium-sm placeholder:text-text-light/50"
+            className="h-11 w-full rounded-xl border border-surface-border bg-surface-alt/50 pl-11 pr-4 text-sm font-semibold placeholder:text-text-light/70 focus:bg-white"
           />
+        </div>
+        <div role="group" aria-label="Filter conversations" className="mt-3 flex gap-2">
+          {[
+            { label: 'All', value: false },
+            { label: 'Unread', value: true },
+          ].map((chip) => (
+            <button
+              key={chip.label}
+              type="button"
+              aria-pressed={onlyUnread === chip.value}
+              onClick={() => setOnlyUnread(chip.value)}
+              className={`rounded-full px-4 py-1.5 text-xs font-black transition-colors ${onlyUnread === chip.value ? 'bg-primary text-white' : 'bg-surface-alt text-text-muted hover:text-text-main'}`}
+            >
+              {chip.label}
+            </button>
+          ))}
         </div>
       </header>
 
-      <div className="flex-grow overflow-y-auto px-4 pb-8 space-y-2 custom-scrollbar">
-        <p className="px-4 text-[10px] font-black uppercase tracking-[0.3em] text-text-light/60 mb-4 mt-2">Active Channels</p>
-
-        {showPendingRecipient ? (
-          <div
-            className={`p-6 flex gap-5 cursor-pointer transition-all rounded-3xl group relative ${
-              !selectedId && pendingRecipient ? 'bg-white shadow-premium-md' : 'hover:bg-white/40'
-            }`}
-            onClick={() => {
-              setSelectedId(null)
-              if (isMobile) setShowChat(true)
-            }}
-          >
-            {!selectedId && pendingRecipient ? (
-              <div className="absolute left-2 top-6 bottom-6 w-1 bg-primary rounded-full shadow-lg shadow-primary/50"></div>
-            ) : null}
-            <div className="h-14 w-14 rounded-2xl bg-secondary text-white flex items-center justify-center font-black text-lg shadow-premium-sm">
-              {getInitials(emailHandle(pendingRecipient?.email || 'N'))}
-            </div>
-            <div className="flex-grow overflow-hidden">
-              <div className="flex justify-between items-baseline mb-1">
-                <h3 className={`font-black text-sm tracking-tight truncate ${!selectedId && pendingRecipient ? 'text-primary' : 'text-text-main'}`}>
-                  {emailHandle(pendingRecipient?.email || targetEmail)}
-                </h3>
-                <span className="text-[9px] font-black text-text-light/50 whitespace-nowrap uppercase tracking-widest">New</span>
-              </div>
-              <p className="text-xs italic text-text-muted font-medium">
-                {pendingRecipient && drafts[getDraftKeyForRecipient(pendingRecipient.id)]?.trim()
-                  ? `Draft: ${drafts[getDraftKeyForRecipient(pendingRecipient.id)]?.trim()}`
-                  : 'Start a new conversation'}
-              </p>
-            </div>
-          </div>
+      <ul className="min-h-0 flex-1 space-y-1 overflow-y-auto p-2">
+        {showPendingRecipient && pendingRecipient ? (
+          <li>
+            <button
+              type="button"
+              aria-current={!selectedId ? 'true' : undefined}
+              onClick={() => {
+                setSelectedId(null)
+                if (isMobile) setShowChat(true)
+              }}
+              className={`flex w-full gap-3 rounded-2xl p-3 text-left transition-colors ${!selectedId ? 'bg-secondary/10' : 'hover:bg-surface-alt/60'}`}
+            >
+              {renderAvatar(pendingRecipient.id, nameOf(pendingRecipient))}
+              <span className="min-w-0 flex-1">
+                <span className="flex items-baseline justify-between gap-2">
+                  <span className="truncate text-sm font-extrabold text-text-main">{nameOf(pendingRecipient)}</span>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-secondary">New</span>
+                </span>
+                <span className="mt-0.5 block truncate text-xs font-medium text-text-muted">
+                  {drafts[getDraftKeyForRecipient(pendingRecipient.id)]?.trim() ? `Draft: ${drafts[getDraftKeyForRecipient(pendingRecipient.id)]?.trim()}` : 'Start a new conversation'}
+                </span>
+              </span>
+            </button>
+          </li>
         ) : null}
 
         {isLoadingConversations ? (
-          <div className="px-4 py-6 text-sm font-semibold text-text-light">Loading conversations...</div>
-        ) : filteredContacts.length === 0 && !showPendingRecipient ? (
-          <div className="px-4 py-8 text-center">
+          <li className="px-4 py-6 text-sm font-semibold text-text-light">Loading conversations...</li>
+        ) : listedContacts.length === 0 && !showPendingRecipient ? (
+          <li className="px-4 py-10 text-center">
             <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary/10 text-secondary">
-              <MessageSquare className="h-7 w-7" />
+              <MessageSquare className="h-7 w-7" aria-hidden />
             </span>
-            <p className="mt-4 text-lg font-extrabold text-text-main">No conversations yet</p>
-            <p className="mt-1 text-sm font-medium text-text-muted">
-              Chats start when you apply to a job, send a proposal or contact a freelancer.
-            </p>
-            <div className="mt-5 flex flex-col gap-2">
-              <Link to="/jobs" className="btn btn-primary btn-sm justify-center">Browse jobs</Link>
-              <Link to="/freelancers" className="btn btn-outline btn-sm justify-center">Find freelancers</Link>
-            </div>
-          </div>
+            {onlyUnread || contactSearch ? (
+              <>
+                <p className="mt-4 text-lg font-extrabold text-text-main">Nothing here</p>
+                <p className="mt-1 text-sm font-medium text-text-muted">{onlyUnread ? 'You have no unread conversations.' : 'No conversation matches your search.'}</p>
+              </>
+            ) : (
+              <>
+                <p className="mt-4 text-lg font-extrabold text-text-main">No conversations yet</p>
+                <p className="mt-1 text-sm font-medium text-text-muted">Chats start when you apply to a job, send a proposal or contact a freelancer.</p>
+                <div className="mt-5 flex flex-col gap-2">
+                  <Link to="/jobs" className="btn btn-primary btn-sm justify-center">Browse jobs</Link>
+                  <Link to="/freelancers" className="btn btn-outline btn-sm justify-center">Find freelancers</Link>
+                </div>
+              </>
+            )}
+          </li>
         ) : (
-          filteredContacts.map((conversation) => {
+          listedContacts.map((conversation) => {
             const participant = conversation.participant
             const preview = conversation.lastMessage
+            const selected = selectedId === conversation.id
+            const unread = conversation.unreadCount > 0
 
             return (
-              <div
-                key={conversation.id}
-                className={`p-6 flex gap-5 cursor-pointer transition-all rounded-3xl group relative ${
-                  selectedId === conversation.id ? 'bg-white shadow-premium-md' : 'hover:bg-white/40'
-                }`}
-                onClick={() => handleSelectConversation(conversation.id)}
-              >
-                {selectedId === conversation.id ? (
-                  <div className="absolute left-2 top-6 bottom-6 w-1 bg-primary rounded-full shadow-lg shadow-primary/50"></div>
-                ) : null}
-
-                <div className="relative flex-shrink-0">
-                  <div className="h-14 w-14 rounded-2xl bg-primary text-white flex items-center justify-center font-black text-lg shadow-premium-sm group-hover:scale-105 transition-transform">
-                    {getInitials(emailHandle(participant.email))}
-                  </div>
-                </div>
-
-                <div className="flex-grow overflow-hidden">
-                  <div className="flex justify-between items-baseline mb-1">
-                    <h3 className={`font-black text-sm tracking-tight truncate ${selectedId === conversation.id ? 'text-primary' : 'text-text-main'}`}>
-                      {emailHandle(participant.email)}
-                    </h3>
-                    <span className="text-[9px] font-black text-text-light/50 whitespace-nowrap uppercase tracking-widest">
-                      {preview ? formatRelativeTime(preview.createdAt) : 'New'}
+              <li key={conversation.id}>
+                <button
+                  type="button"
+                  aria-current={selected ? 'true' : undefined}
+                  onClick={() => handleSelectConversation(conversation.id)}
+                  className={`flex w-full gap-3 rounded-2xl p-3 text-left transition-colors ${selected ? 'bg-secondary/10' : 'hover:bg-surface-alt/60'}`}
+                >
+                  {renderAvatar(participant.id, nameOf(participant))}
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-baseline justify-between gap-2">
+                      <span className={`truncate text-sm text-text-main ${unread ? 'font-black' : 'font-bold'}`}>{nameOf(participant)}</span>
+                      <span className="flex-none text-[11px] font-semibold text-text-light">{preview ? formatRelativeTime(preview.createdAt) : 'New'}</span>
                     </span>
-                  </div>
-                  <p className={`text-xs truncate italic ${conversation.unreadCount > 0 ? 'text-text-main font-black' : 'text-text-muted font-medium'}`}>
-                    {getSidebarPreviewLabel(conversation)}
-                  </p>
-                  {conversation.unreadCount > 0 ? (
-                    <div className="mt-2 flex">
-                      <span className="bg-primary text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow-lg shadow-primary/20">
-                        {conversation.unreadCount} NEW
-                      </span>
-                    </div>
-                  ) : null}
-                </div>
-              </div>
+                    <span className="mt-0.5 flex items-center justify-between gap-2">
+                      <span className={`truncate text-xs ${unread ? 'font-extrabold text-text-main' : 'font-medium text-text-muted'}`}>{getSidebarPreviewLabel(conversation)}</span>
+                      {unread ? (
+                        <span className="flex h-5 min-w-5 flex-none items-center justify-center rounded-full bg-secondary px-1.5 text-[11px] font-black text-white" aria-label={`${conversation.unreadCount} unread`}>
+                          {conversation.unreadCount}
+                        </span>
+                      ) : null}
+                    </span>
+                  </span>
+                </button>
+              </li>
             )
           })
         )}
+      </ul>
+    </aside>
+  )
+
+  const renderBubble = (message: MessageRecord, isMine: boolean, first: boolean, last: boolean) => (
+    <div className={`flex ${isMine ? 'justify-end' : 'justify-start'} ${first ? 'mt-3' : 'mt-1'}`}>
+      <div className={`flex max-w-[85%] flex-col md:max-w-[70%] ${isMine ? 'items-end' : 'items-start'}`}>
+        <div
+          className={`flex flex-col gap-1 px-4 py-2.5 text-sm leading-relaxed ${
+            isMine ? 'bg-secondary text-white' : 'border border-surface-border bg-white text-text-main'
+          } ${message.deliveryState === 'failed' ? 'ring-2 ring-error/60' : ''} ${
+            isMine ? `rounded-2xl ${last ? 'rounded-br-md' : ''}` : `rounded-2xl ${last ? 'rounded-bl-md' : ''}`
+          } ${message.deliveryState === 'sending' ? 'opacity-70' : ''}`}
+        >
+          {message.attachmentUrl ? (
+            message.attachmentContentType?.startsWith('image/') ? (
+              <EvidenceLink href={message.attachmentUrl} className="block">
+                <ProtectedImage src={message.attachmentUrl} alt={message.attachmentName || 'Attachment'} className="mb-1 max-h-64 w-full rounded-xl object-cover" />
+              </EvidenceLink>
+            ) : (
+              <EvidenceLink
+                href={message.attachmentUrl}
+                className={`mb-1 flex items-center gap-3 rounded-xl px-3 py-2.5 transition ${isMine ? 'bg-white/15 hover:bg-white/20' : 'bg-surface-alt hover:bg-surface-alt/70'}`}
+              >
+                <span className={`flex h-9 w-9 flex-none items-center justify-center rounded-lg ${isMine ? 'bg-white/15' : 'bg-white'}`}>
+                  <Paperclip className="h-4 w-4" aria-hidden />
+                </span>
+                <span className="min-w-0">
+                  <span className="block truncate text-xs font-extrabold">{message.attachmentName || 'Attachment'}</span>
+                  <span className={`block text-[11px] font-semibold ${isMine ? 'text-white/75' : 'text-text-light'}`}>
+                    {message.attachmentSizeBytes ? `${formatFileSize(message.attachmentSizeBytes)} · ` : ''}Open
+                  </span>
+                </span>
+              </EvidenceLink>
+            )
+          ) : null}
+          {message.content ? <p className="whitespace-pre-wrap break-words font-medium">{message.content}</p> : null}
+        </div>
+        {last ? (
+          <div className="mt-1 flex items-center gap-2 px-1">
+            <span className="text-[11px] font-semibold text-text-light">{new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+            {isMine && message.deliveryState === 'failed' ? (
+              <button type="button" onClick={() => void handleRetry(message)} className="text-[11px] font-black uppercase tracking-wider text-error hover:underline">
+                Retry
+              </button>
+            ) : null}
+            {isMine ? (
+              <span className="text-secondary" title={message.deliveryState === 'sending' ? 'Sending' : message.deliveryState === 'failed' ? 'Not sent' : message.read ? 'Seen' : 'Sent'}>
+                {renderDeliveryState(message)}
+              </span>
+            ) : null}
+          </div>
+        ) : null}
       </div>
     </div>
   )
 
-  const renderChat = () => (
-    <div className="flex-grow flex flex-col bg-white relative h-full overflow-hidden">
-      <header className="z-10 flex h-[92px] shrink-0 items-center justify-between border-b border-surface-border/50 bg-white/80 px-5 backdrop-blur-3xl shadow-premium-sm sm:h-[100px] sm:px-8">
-        <div className="flex items-center gap-6">
+  const renderChat = () => {
+    if (!activeParticipant) {
+      return (
+        <section aria-label="Conversation" className="flex h-full flex-1 flex-col items-center justify-center bg-surface-alt/30 px-8 text-center">
+          <span className="flex h-16 w-16 items-center justify-center rounded-3xl bg-secondary/10 text-secondary">
+            <MessageSquare className="h-8 w-8" aria-hidden />
+          </span>
+          <h2 className="mt-5 text-xl font-black text-text-main">Select a conversation</h2>
+          <p className="mt-2 max-w-sm text-sm font-medium text-text-muted">Pick someone from the list to read your messages and reply.</p>
+        </section>
+      )
+    }
+
+    return (
+      <section aria-label="Conversation" className="flex h-full min-w-0 flex-1 flex-col bg-white">
+        <header className="flex shrink-0 items-center gap-3 border-b border-surface-border/60 px-4 py-3 sm:px-6">
           {isMobile ? (
-            <button onClick={() => setShowChat(false)} className="p-3 bg-surface-alt rounded-2xl text-text-main hover:bg-white transition-all shadow-sm">
+            <button type="button" aria-label="Back to conversations" onClick={() => setShowChat(false)} className="-ml-1 flex h-10 w-10 items-center justify-center rounded-xl text-text-main hover:bg-surface-alt">
               <ChevronLeft className="h-6 w-6" />
             </button>
           ) : null}
-
-          <div className="relative">
-            <div className="h-14 w-14 rounded-2xl bg-primary text-white flex items-center justify-center font-black text-xl shadow-premium-md">
-              {getInitials(activeParticipant ? emailHandle(activeParticipant.email) : 'U')}
-            </div>
-          </div>
-
-          <div>
-            <h3 className="font-black text-xl text-text-main leading-none mb-1 tracking-tighter uppercase">
-              {activeParticipant ? emailHandle(activeParticipant.email) : 'No Conversation'}
-            </h3>
-            <p className="text-[10px] font-black uppercase tracking-widest text-text-light/60">
-              {activeParticipant?.email || 'Select a conversation to begin'}
+          {renderAvatar(activeParticipant.id, participantName, 'lg')}
+          <div className="min-w-0">
+            <h2 className="truncate text-base font-black text-text-main">{participantName}</h2>
+            <p className="truncate text-xs font-semibold text-text-light">
+              {activeParticipant.role && ROLE_LABEL[activeParticipant.role] ? `${ROLE_LABEL[activeParticipant.role]} · ` : ''}
+              {activeParticipant.email}
             </p>
           </div>
-        </div>
+        </header>
 
-        <div className="flex gap-3">
-          <button className="h-12 w-12 rounded-2xl bg-surface-alt flex items-center justify-center text-text-light hover:text-primary hover:bg-primary/5 transition-all shadow-sm">
-            <MoreVertical className="h-5 w-5" />
-          </button>
-        </div>
-      </header>
-
-      <div className="custom-scrollbar flex flex-grow flex-col gap-8 overflow-y-auto bg-surface-alt/5 p-5 scroll-smooth sm:p-10">
-        {pendingRecipient && !selectedConversation ? (
-          <div className="rounded-3xl border border-surface-border bg-white p-6 text-sm font-semibold text-text-muted">
-            This will start a new conversation with {pendingRecipient.email}.
-          </div>
-        ) : null}
-
-        {isLoadingMessages ? (
-          <div className="text-sm font-semibold text-text-light">Loading messages...</div>
-        ) : messages.length === 0 ? (
-          <div className="text-sm font-semibold text-text-light">
-            {pendingRecipient ? 'No messages yet. Send the first message.' : 'No messages in this thread yet.'}
-          </div>
-        ) : (
-          messages.map((message) => {
-            const isMine = message.senderId === user?.id
-
-            return (
-              <div
-                key={message.id}
-                className={`flex flex-col ${isMine ? 'items-end' : 'items-start'} gap-2 max-w-[85%] md:max-w-[70%] ${isMine ? 'ml-auto' : ''}`}
-              >
-                <div
-                  className={`px-6 py-4 rounded-3xl text-sm leading-relaxed shadow-premium-md flex flex-col gap-1 ${
-                    isMine
-                      ? 'bg-text-main text-white rounded-tr-none shadow-text-main/10'
-                      : 'bg-white text-text-main border border-surface-border/50 rounded-tl-none'
-                  }`}
-                >
-                  {message.attachmentUrl ? (
-                    message.attachmentContentType?.startsWith('image/') ? (
-                      <EvidenceLink href={message.attachmentUrl} className="block">
-                        <ProtectedImage
-                          src={message.attachmentUrl}
-                          alt={message.attachmentName || 'Attachment'}
-                          className="mb-2 max-h-64 w-full rounded-2xl object-cover"
-                        />
-                      </EvidenceLink>
-                    ) : (
-                      <EvidenceLink
-                        href={message.attachmentUrl}
-                        className={`mb-2 flex items-center justify-between gap-4 rounded-2xl border px-4 py-3 transition ${
-                          isMine
-                            ? 'border-white/15 bg-white/10 hover:bg-white/15'
-                            : 'border-surface-border bg-surface-alt/40 hover:bg-surface-alt'
-                        }`}
-                      >
-                        <div className="flex min-w-0 items-center gap-3">
-                          <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${isMine ? 'bg-white/10' : 'bg-white'}`}>
-                            <Paperclip className="h-4 w-4" />
-                          </div>
-                          <div className="min-w-0">
-                            <p className="truncate text-xs font-black uppercase tracking-[0.16em]">
-                              {message.attachmentName || 'Attachment'}
-                            </p>
-                            {message.attachmentSizeBytes ? (
-                              <p className={`text-[10px] font-bold ${isMine ? 'text-white/70' : 'text-text-light'}`}>
-                                {formatFileSize(message.attachmentSizeBytes)}
-                              </p>
-                            ) : null}
-                          </div>
-                        </div>
-                        <span className={`text-[10px] font-black uppercase tracking-[0.16em] ${isMine ? 'text-white/70' : 'text-primary'}`}>
-                          Open
-                        </span>
-                      </EvidenceLink>
-                    )
-                  ) : null}
-                  {message.content ? (
-                    <p className="font-medium tracking-tight">{message.content}</p>
-                  ) : null}
-                </div>
-                <div className="flex items-center gap-3 px-2">
-                  <span className="text-[9px] font-black text-text-light/40 uppercase tracking-widest">
-                    {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </span>
-                  {isMine && message.deliveryState === 'failed' ? (
-                    <button
-                      type="button"
-                      onClick={() => void handleRetry(message)}
-                      className="text-[9px] font-black uppercase tracking-widest text-error hover:underline"
-                    >
-                      Retry
-                    </button>
-                  ) : null}
-                  {isMine ? (
-                    <div className="text-primary">
-                      {renderDeliveryState(message)}
-                    </div>
-                  ) : null}
-                </div>
+        <div className="relative min-h-0 flex-1 bg-surface-alt/30">
+          <div ref={listRef} onScroll={handleListScroll} role="log" aria-live="polite" aria-label="Messages" className="h-full overflow-y-auto px-4 py-4 sm:px-8">
+            {pendingRecipient && !selectedConversation ? (
+              <div className="mx-auto mb-4 max-w-md rounded-2xl border border-surface-border bg-white p-4 text-center text-sm font-semibold text-text-muted">
+                This will start a new conversation with {pendingRecipient.email}.
               </div>
-            )
-          })
-        )}
-        <div ref={messagesEndRef} />
-      </div>
+            ) : null}
 
-      <footer className="shrink-0 border-t border-surface-border/30 bg-white p-5 sm:p-8">
-        {error ? <p className="mb-4 text-sm font-semibold text-error">{error}</p> : null}
-        {pendingAttachment ? (
-          <div className="mx-auto mb-4 flex max-w-4xl items-center justify-between gap-4 rounded-3xl border border-surface-border bg-surface-alt/40 px-4 py-3">
-            <div className="min-w-0">
-              <p className="truncate text-[10px] font-black uppercase tracking-[0.18em] text-text-main">
-                Attachment Ready
-              </p>
-              <p className="truncate text-sm font-semibold text-text-muted">
-                {pendingAttachment.name}
-              </p>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="text-[10px] font-black uppercase tracking-[0.16em] text-text-light">
-                {formatFileSize(pendingAttachment.sizeBytes)}
-              </span>
-              <button
-                type="button"
-                aria-label="Remove attachment"
-                onClick={clearPendingAttachment}
-                className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-text-light transition hover:text-error shadow-sm"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-        ) : null}
-        <div className="mx-auto flex max-w-4xl items-center gap-3 sm:gap-4">
-          <input
-            ref={attachmentInputRef}
-            type="file"
-            aria-label="Message attachment"
-            accept={evidenceUploadConstraints.supportedContentTypes.join(',')}
-            className="hidden"
-            onChange={(event) => void handleAttachmentSelected(event)}
-          />
-
-          <button
-            type="button"
-            aria-label="Attach file"
-            onClick={handleAttachmentClick}
-            disabled={isUploadingAttachment}
-            className="h-14 w-14 rounded-2xl bg-surface-alt flex items-center justify-center text-text-light hover:bg-white border border-transparent hover:border-surface-border transition-all shadow-sm disabled:opacity-60"
-          >
-            {isUploadingAttachment ? (
-              <LoaderCircle className="h-5 w-5 animate-spin" />
+            {isLoadingMessages ? (
+              <p className="py-6 text-center text-sm font-semibold text-text-light">Loading messages...</p>
+            ) : messages.length === 0 ? (
+              <p className="py-10 text-center text-sm font-semibold text-text-light">{pendingRecipient ? 'No messages yet. Send the first message.' : 'No messages in this thread yet.'}</p>
             ) : (
-              <Paperclip className="h-5 w-5" />
+              feed.map((item) =>
+                item.kind === 'day' ? (
+                  <div key={item.key} className="my-4 flex justify-center">
+                    <span className="rounded-full bg-white px-3 py-1 text-[11px] font-black uppercase tracking-wider text-text-light shadow-sm">{item.label}</span>
+                  </div>
+                ) : (
+                  <div key={item.message.id}>{renderBubble(item.message, item.message.senderId === user?.id, item.first, item.last)}</div>
+                ),
+              )
             )}
-          </button>
+          </div>
+          {scrolledUp ? (
+            <button type="button" onClick={jumpToLatest} aria-label="Jump to latest message" className="absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-xs font-black text-white shadow-premium">
+              <ArrowDown className="h-3.5 w-3.5" aria-hidden /> New messages
+            </button>
+          ) : null}
+        </div>
 
-          <div className="flex-grow relative">
-            <input
-              type="text"
-              placeholder={activeParticipant ? `Message ${emailHandle(activeParticipant.email)}...` : 'Type a message...'}
+        <footer className="shrink-0 border-t border-surface-border/60 bg-white p-3 sm:p-4">
+          {error ? <p role="alert" className="mb-3 text-sm font-semibold text-error">{error}</p> : null}
+          {pendingAttachment ? (
+            <div className="mb-3 flex items-center justify-between gap-3 rounded-2xl border border-surface-border bg-surface-alt/50 px-4 py-2.5">
+              <div className="min-w-0">
+                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-text-light">Attachment Ready</p>
+                <p className="truncate text-sm font-semibold text-text-main">{pendingAttachment.name}</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-bold text-text-light">{formatFileSize(pendingAttachment.sizeBytes)}</span>
+                <button type="button" aria-label="Remove attachment" onClick={clearPendingAttachment} className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-text-light shadow-sm hover:text-error">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          ) : null}
+          <div className="flex items-end gap-2 sm:gap-3">
+            <input ref={attachmentInputRef} type="file" aria-label="Message attachment" accept={evidenceUploadConstraints.supportedContentTypes.join(',')} className="hidden" onChange={(event) => void handleAttachmentSelected(event)} />
+            <button type="button" aria-label="Attach file" onClick={handleAttachmentClick} disabled={isUploadingAttachment} className="flex h-11 w-11 flex-none items-center justify-center rounded-xl bg-surface-alt text-text-muted transition hover:bg-surface-alt/70 hover:text-text-main disabled:opacity-60">
+              {isUploadingAttachment ? <LoaderCircle className="h-5 w-5 animate-spin" /> : <Paperclip className="h-5 w-5" />}
+            </button>
+            <textarea
+              ref={composerRef}
+              rows={1}
+              maxLength={5000}
+              aria-label="Write a message"
+              placeholder={`Message ${participantName.length > 20 ? `${participantName.slice(0, 19)}…` : participantName}...`}
               value={draft}
               onChange={(event) => {
                 const nextDraft = event.target.value
@@ -976,38 +1025,32 @@ export default function Messaging() {
                     return nextDrafts
                   }
 
-                  return {
-                    ...current,
-                    [activeDraftKey]: nextDraft,
-                  }
+                  return { ...current, [activeDraftKey]: nextDraft }
                 })
               }}
               onKeyDown={handleKeyDown}
-              className="w-full h-14 rounded-2xl border-none bg-surface-alt/50 px-8 text-sm font-bold focus:ring-2 focus:ring-primary/10 transition-all placeholder:text-text-light/60"
+              className="max-h-36 min-h-11 flex-1 resize-none rounded-xl border border-surface-border bg-surface-alt/50 px-4 py-2.5 text-sm font-semibold leading-relaxed placeholder:text-text-light/70 focus:bg-white"
             />
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 flex gap-4 text-text-light/50">
-              <Smile className="h-5 w-5 hover:text-primary cursor-pointer transition-colors" />
-              <Mic className="h-5 w-5 hover:text-primary cursor-pointer transition-colors" />
-            </div>
+            <button
+              type="button"
+              onClick={() => void handleSend()}
+              aria-label="Send message"
+              disabled={(!draft.trim() && !pendingAttachment) || isUploadingAttachment}
+              className="flex h-11 w-11 flex-none items-center justify-center rounded-xl bg-secondary text-white shadow-premium-sm transition hover:bg-secondary-dark disabled:opacity-40"
+            >
+              <Send className="h-5 w-5" />
+            </button>
           </div>
-
-          <button
-            onClick={() => void handleSend()}
-            aria-label="Send message"
-            disabled={(!draft.trim() && !pendingAttachment) || !activeParticipant || isUploadingAttachment}
-            className="h-14 w-14 bg-primary text-white rounded-2xl flex items-center justify-center shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all shrink-0 disabled:opacity-40 disabled:hover:scale-100"
-          >
-            <Send className="h-6 w-6 ml-0.5" />
-          </button>
-        </div>
-      </footer>
-    </div>
-  )
+          <p className="mt-2 hidden px-1 text-[11px] font-medium text-text-light sm:block">Press Enter to send, Shift+Enter for a new line.</p>
+        </footer>
+      </section>
+    )
+  }
 
   return (
-    <div className="min-h-screen bg-surface-alt/10 pt-28 pb-[calc(env(safe-area-inset-bottom)+6.5rem)] md:pb-10">
-      <div className="container mx-auto h-[calc(100vh-220px)] max-w-7xl overflow-hidden md:h-[calc(100vh-220px)]">
-        <div className="flex h-full overflow-hidden rounded-[2rem] border border-surface-border/50 bg-white shadow-premium-2xl md:rounded-[3rem]">
+    <div className="bg-surface-alt/30 pb-[calc(env(safe-area-inset-bottom)+6.5rem)] pt-24 md:pb-8 xl:pt-28">
+      <div className="container mx-auto max-w-7xl">
+        <div className="flex h-[calc(100dvh-13rem)] min-h-[32rem] overflow-hidden rounded-3xl border border-surface-border bg-white shadow-premium md:h-[calc(100dvh-11rem)]">
           {(isMobile && !showChat) || !isMobile ? renderSidebar() : null}
           {(isMobile && showChat) || !isMobile ? renderChat() : null}
         </div>

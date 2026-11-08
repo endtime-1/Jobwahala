@@ -4,10 +4,11 @@ import prisma from '../config/prisma';
 import { singleValue } from '../utils/request';
 import { emitMessageRefresh } from '../utils/workflowRealtime';
 import { getErrorMessage } from '../utils/errors';
+import { participantSelect, toParticipant } from '../utils/participant';
 
 const conversationSummaryInclude = {
-  user1: { select: { id: true, email: true } },
-  user2: { select: { id: true, email: true } },
+  user1: { select: participantSelect },
+  user2: { select: participantSelect },
   messages: { orderBy: { createdAt: 'desc' }, take: 1 },
 } as const;
 
@@ -60,7 +61,7 @@ const getRecentMessageSummaries = async (userId: string, take = 5) => {
   );
 
   const recentMessages = conversations.map((conversation) => {
-    const participant = conversation.user1Id === userId ? conversation.user2 : conversation.user1;
+    const participant = toParticipant(conversation.user1Id === userId ? conversation.user2 : conversation.user1);
 
     return {
       id: conversation.id,
@@ -104,7 +105,7 @@ const getConversationSidebarItems = async (userId: string) => {
 
   return conversations.map((conversation) => ({
     id: conversation.id,
-    participant: conversation.user1Id === userId ? conversation.user2 : conversation.user1,
+    participant: toParticipant(conversation.user1Id === userId ? conversation.user2 : conversation.user1),
     lastMessage: conversation.messages[0] || null,
     unreadCount: unreadCountMap.get(conversation.id) || 0,
   }));
@@ -128,6 +129,8 @@ export const getConversations = async (req: AuthRequest, res: Response) => {
 
     const mapped = conversations.map((conversation) => ({
       ...conversation,
+      user1: toParticipant(conversation.user1),
+      user2: toParticipant(conversation.user2),
       unreadCount: unreadCountMap.get(conversation.id) || 0,
     }));
 
