@@ -1,8 +1,8 @@
-import { ArrowDown, Check, CheckCheck, ChevronLeft, LoaderCircle, MessageSquare, Paperclip, Search, Send, X } from 'lucide-react'
+import { ArrowDown, Check, CheckCheck, ChevronLeft, LoaderCircle, MessageSquare, Paperclip, Search, Send, Smile, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import EvidenceLink, { ProtectedImage } from '../components/EvidenceLink'
-import { apiGetConversationSidebar, apiGetMessageDelta, apiGetMessages, apiMarkMessagesRead, apiSendMessage, type MessageAttachmentPayload } from '../lib/api'
+import { apiGetConversationSidebar, apiGetMessageDelta, apiGetMessages, apiMarkMessagesRead, apiSendMessage, apiSendTyping, type MessageAttachmentPayload } from '../lib/api'
 import { emailHandle, formatRelativeTime, getInitials } from '../lib/display'
 import { uploadEvidenceFile, evidenceUploadConstraints } from '../lib/evidenceUpload'
 import { subscribeToRealtimeEvents } from '../lib/realtime'
@@ -30,6 +30,8 @@ type ConversationRecord = {
     createdAt: string
   } | null
   unreadCount: number
+  /** The job this conversation is about, from the latest application between the two people. */
+  context?: { jobId: string; jobTitle: string; status: string } | null
 }
 
 type MessageRecord = {
@@ -75,6 +77,10 @@ const getMessagePreview = (
 }
 
 const nameOf = (person: { email: string; name?: string | null }) => person.name?.trim() || emailHandle(person.email)
+
+const statusLabel = (status: string) => status.charAt(0) + status.slice(1).toLowerCase().replace(/_/g, ' ')
+
+const EMOJIS = ['😀', '😊', '😂', '🙂', '😉', '😍', '🙏', '👍', '👏', '🎉', '🔥', '💯', '✅', '❤️', '🤝', '🙌', '😅', '🤔', '👋', '🌟', '📎', '📅', '💼', '📞']
 
 const ROLE_LABEL: Record<string, string> = { EMPLOYER: 'Employer', SEEKER: 'Job seeker', FREELANCER: 'Freelancer', ADMIN: 'JobWahala team' }
 
@@ -260,6 +266,11 @@ export default function Messaging() {
   const stickToBottomRef = useRef(true)
   const [scrolledUp, setScrolledUp] = useState(false)
   const [onlyUnread, setOnlyUnread] = useState(false)
+  const [typingIn, setTypingIn] = useState<string | null>(null)
+  const typingTimerRef = useRef<number | null>(null)
+  const lastTypingSentRef = useRef(0)
+  const [threadSearch, setThreadSearch] = useState<{ conversationId: string | null; open: boolean; query: string }>({ conversationId: null, open: false, query: '' })
+  const [emojiOpen, setEmojiOpen] = useState(false)
   const attachmentInputRef = useRef<HTMLInputElement>(null)
   const messagesRef = useRef<MessageRecord[]>([])
   const selectedIdRef = useRef<string | null>(null)
@@ -401,7 +412,15 @@ export default function Messaging() {
     if (!user) return
 
     return subscribeToRealtimeEvents({
+      onTyping: (payload) => {
+        if (!payload.conversationId) return
+        setTypingIn(payload.conversationId)
+        if (typingTimerRef.current) window.clearTimeout(typingTimerRef.current)
+        typingTimerRef.current = window.setTimeout(() => setTypingIn(null), 4000)
+      },
       onMessagesRefresh: (payload) => {
+        // A new message means they are no longer just typing.
+        setTypingIn(null)
         void (async () => {
           try {
             const latestSelectedId = selectedIdRef.current
@@ -525,6 +544,7 @@ export default function Messaging() {
   }, [contactSearch, pendingRecipient])
 
   const getSidebarPreviewLabel = (conversation: ConversationRecord) => {
+    if (typingIn === conversation.id) return 'typing…'
     const draftValue = drafts[getDraftKeyForConversation(conversation.id)]?.trim()
     if (draftValue) {
       return `Draft: ${draftValue}`
@@ -734,7 +754,49 @@ export default function Messaging() {
   const unreadTotal = conversations.reduce((sum, conversation) => sum + conversation.unreadCount, 0)
   const listedContacts = onlyUnread ? filteredContacts.filter((conversation) => conversation.unreadCount > 0) : filteredContacts
   const participantName = activeParticipant ? nameOf(activeParticipant) : ''
-  const feed = useMemo(() => buildFeed(messages), [messages])
+  // Searching inside a conversation only applies to the conversation it was typed in.
+  const searchHere = threadSearch.conversationId === selectedId ? threadSearch : null
+  const threadQuery = searchHere?.query.trim().toLowerCase() ?? ''
+  const visibleMessages = useMemo(
+    () => (threadQuery ? messages.filter((message) => (message.content ?? '').toLowerCase().includes(threadQuery) || (message.attachmentName ?? '').toLowerCase().includes(threadQuery)) : messages),
+    [messages, threadQuery],
+  )
+  const feed = useMemo(() => buildFeed(visibleMessages), [visibleMessages])
+
+  const updateDraft = (nextDraft: string) => {
+    setDraft(nextDraft)
+    if (nextDraft.trim() && selectedId && Date.now() - lastTypingSentRef.current > 3000) {
+      lastTypingSentRef.current = Date.now()
+      try {
+        void apiSendTyping(selectedId)?.catch?.(() => undefined)
+      } catch {
+        // "Typing" is a nicety: it must never get in the way of writing.
+      }
+    }
+    if (!activeDraftKey) return
+    setDrafts((current) => {
+      if (!nextDraft.trim()) {
+        if (!(activeDraftKey in current)) return current
+        const nextDrafts = { ...current }
+        delete nextDrafts[activeDraftKey]
+        return nextDrafts
+      }
+
+      return { ...current, [activeDraftKey]: nextDraft }
+    })
+  }
+
+  const insertEmoji = (emoji: string) => {
+    const box = composerRef.current
+    const start = box?.selectionStart ?? draft.length
+    const end = box?.selectionEnd ?? start
+    updateDraft(draft.slice(0, start) + emoji + draft.slice(end))
+    setEmojiOpen(false)
+    window.requestAnimationFrame(() => {
+      box?.focus()
+      box?.setSelectionRange(start + emoji.length, start + emoji.length)
+    })
+  }
 
   const renderAvatar = (id: string, name: string, size: 'md' | 'lg' = 'md') => (
     <span className={`flex flex-none items-center justify-center rounded-full font-black ${toneFor(id)} ${size === 'lg' ? 'h-12 w-12 text-base' : 'h-12 w-12 text-sm'}`} aria-hidden>
@@ -947,12 +1009,56 @@ export default function Messaging() {
           {renderAvatar(activeParticipant.id, participantName, 'lg')}
           <div className="min-w-0">
             <h2 className="truncate text-base font-black text-text-main">{participantName}</h2>
-            <p className="truncate text-xs font-semibold text-text-light">
-              {activeParticipant.role && ROLE_LABEL[activeParticipant.role] ? `${ROLE_LABEL[activeParticipant.role]} · ` : ''}
-              {activeParticipant.email}
+            <p className="truncate text-xs font-semibold text-text-light" aria-live="polite">
+              {typingIn && typingIn === selectedId ? (
+                <span className="font-bold text-secondary">typing…</span>
+              ) : (
+                <>
+                  {activeParticipant.role && ROLE_LABEL[activeParticipant.role] ? `${ROLE_LABEL[activeParticipant.role]} · ` : ''}
+                  {activeParticipant.email}
+                </>
+              )}
             </p>
           </div>
+          {selectedConversation ? (
+            <button
+              type="button"
+              aria-label="Search this conversation"
+              aria-pressed={Boolean(searchHere?.open)}
+              onClick={() => setThreadSearch({ conversationId: selectedId, open: !searchHere?.open, query: '' })}
+              className={`ml-auto flex h-10 w-10 flex-none items-center justify-center rounded-xl transition-colors ${searchHere?.open ? 'bg-secondary/10 text-secondary' : 'text-text-muted hover:bg-surface-alt'}`}
+            >
+              <Search className="h-5 w-5" />
+            </button>
+          ) : null}
         </header>
+
+        {searchHere?.open ? (
+          <div className="flex shrink-0 items-center gap-3 border-b border-surface-border/60 bg-white px-4 py-2.5 sm:px-6">
+            <input
+              type="search"
+              autoFocus
+              aria-label="Search in this conversation"
+              placeholder="Search in this conversation"
+              value={searchHere.query}
+              onChange={(event) => setThreadSearch({ conversationId: selectedId, open: true, query: event.target.value })}
+              className="h-10 min-w-0 flex-1 rounded-xl border border-surface-border bg-surface-alt/50 px-4 text-sm font-semibold"
+            />
+            <span className="flex-none text-xs font-bold text-text-light" aria-live="polite">
+              {threadQuery ? `${visibleMessages.length} ${visibleMessages.length === 1 ? 'match' : 'matches'}` : ''}
+            </span>
+          </div>
+        ) : null}
+
+        {selectedConversation?.context ? (
+          <div className="flex shrink-0 flex-wrap items-center gap-x-2 gap-y-1 border-b border-surface-border/60 bg-surface-alt/40 px-4 py-2 text-xs sm:px-6">
+            <span className="font-bold text-text-light">About</span>
+            <Link to={`/jobs/${selectedConversation.context.jobId}`} className="min-w-0 truncate font-extrabold text-primary hover:underline">
+              {selectedConversation.context.jobTitle}
+            </Link>
+            <span className="rounded-full bg-white px-2 py-0.5 font-bold text-text-muted">{statusLabel(selectedConversation.context.status)}</span>
+          </div>
+        ) : null}
 
         <div className="relative min-h-0 flex-1 bg-surface-alt/30">
           <div ref={listRef} onScroll={handleListScroll} role="log" aria-live="polite" aria-label="Messages" className="h-full overflow-y-auto px-4 py-4 sm:px-8">
@@ -964,6 +1070,8 @@ export default function Messaging() {
 
             {isLoadingMessages ? (
               <p className="py-6 text-center text-sm font-semibold text-text-light">Loading messages...</p>
+            ) : threadQuery && visibleMessages.length === 0 ? (
+              <p className="py-10 text-center text-sm font-semibold text-text-light">No messages match your search.</p>
             ) : messages.length === 0 ? (
               <p className="py-10 text-center text-sm font-semibold text-text-light">{pendingRecipient ? 'No messages yet. Send the first message.' : 'No messages in this thread yet.'}</p>
             ) : (
@@ -1003,6 +1111,20 @@ export default function Messaging() {
           ) : null}
           <div className="flex items-end gap-2 sm:gap-3">
             <input ref={attachmentInputRef} type="file" aria-label="Message attachment" accept={evidenceUploadConstraints.supportedContentTypes.join(',')} className="hidden" onChange={(event) => void handleAttachmentSelected(event)} />
+            <div className="relative flex-none">
+              <button type="button" aria-label="Add emoji" aria-expanded={emojiOpen} onClick={() => setEmojiOpen((open) => !open)} className="flex h-11 w-11 items-center justify-center rounded-xl bg-surface-alt text-text-muted transition hover:bg-surface-alt/70 hover:text-text-main">
+                <Smile className="h-5 w-5" />
+              </button>
+              {emojiOpen ? (
+                <div role="dialog" aria-label="Emoji" onKeyDown={(event) => event.key === 'Escape' && setEmojiOpen(false)} className="absolute bottom-14 left-0 z-20 grid w-64 grid-cols-6 gap-1 rounded-2xl border border-surface-border bg-white p-2 shadow-premium">
+                  {EMOJIS.map((emoji) => (
+                    <button key={emoji} type="button" aria-label={emoji} onClick={() => insertEmoji(emoji)} className="flex h-9 w-9 items-center justify-center rounded-lg text-xl hover:bg-surface-alt">
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+            </div>
             <button type="button" aria-label="Attach file" onClick={handleAttachmentClick} disabled={isUploadingAttachment} className="flex h-11 w-11 flex-none items-center justify-center rounded-xl bg-surface-alt text-text-muted transition hover:bg-surface-alt/70 hover:text-text-main disabled:opacity-60">
               {isUploadingAttachment ? <LoaderCircle className="h-5 w-5 animate-spin" /> : <Paperclip className="h-5 w-5" />}
             </button>
@@ -1013,21 +1135,7 @@ export default function Messaging() {
               aria-label="Write a message"
               placeholder={`Message ${participantName.length > 20 ? `${participantName.slice(0, 19)}…` : participantName}...`}
               value={draft}
-              onChange={(event) => {
-                const nextDraft = event.target.value
-                setDraft(nextDraft)
-                if (!activeDraftKey) return
-                setDrafts((current) => {
-                  if (!nextDraft.trim()) {
-                    if (!(activeDraftKey in current)) return current
-                    const nextDrafts = { ...current }
-                    delete nextDrafts[activeDraftKey]
-                    return nextDrafts
-                  }
-
-                  return { ...current, [activeDraftKey]: nextDraft }
-                })
-              }}
+              onChange={(event) => updateDraft(event.target.value)}
               onKeyDown={handleKeyDown}
               className="max-h-36 min-h-11 flex-1 resize-none rounded-xl border border-surface-border bg-surface-alt/50 px-4 py-2.5 text-sm font-semibold leading-relaxed placeholder:text-text-light/70 focus:bg-white"
             />

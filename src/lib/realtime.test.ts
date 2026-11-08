@@ -71,6 +71,22 @@ describe('subscribeToRealtimeEvents', () => {
     expect(notifications).not.toHaveBeenCalled()
   })
 
+  it('delivers typing events to typing handlers only, and stops after unsubscribing', () => {
+    const typing = vi.fn()
+    const messages = vi.fn()
+    const stop = subscribe({ onTyping: typing })
+    subscribe({ onMessagesRefresh: messages })
+
+    FakeEventSource.instances[0].emit('messages.typing', { conversationId: 'c1', userId: 'u1' })
+
+    expect(typing).toHaveBeenCalledWith({ conversationId: 'c1', userId: 'u1' })
+    expect(messages).not.toHaveBeenCalled()
+
+    stop()
+    FakeEventSource.instances[0].emit('messages.typing', { conversationId: 'c1', userId: 'u1' })
+    expect(typing).toHaveBeenCalledTimes(1)
+  })
+
   it('keeps the connection until the last subscriber leaves, then closes it', () => {
     const stopA = subscribe({ onMessagesRefresh: vi.fn() })
     const stopB = subscribe({ onProposalsRefresh: vi.fn() })

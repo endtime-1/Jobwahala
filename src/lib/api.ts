@@ -529,6 +529,10 @@ export const apiSendMessage = (
     }),
   }).then(handleResponse);
 
+/** Tells the other person, live, that you are writing. Nothing is stored. */
+export const apiSendTyping = (conversationId: string) =>
+  fetch(`${BASE_URL}/messages/${conversationId}/typing`, { method: 'POST', headers: headers(true) }).then(handleResponse);
+
 export const apiMarkMessagesRead = (conversationId: string) =>
   fetch(`${BASE_URL}/messages/${conversationId}/read`, {
     method: 'PATCH',

@@ -10,6 +10,11 @@ export type RealtimeMessagePayload = {
   createdAt?: string
 }
 
+export type RealtimeTypingPayload = {
+  conversationId?: string
+  userId?: string
+}
+
 export type RealtimeNotificationPayload = {
   notificationId?: string
   reason?: string
@@ -36,6 +41,7 @@ export type RealtimeAgreementPayload = {
 type RealtimeHandlers = {
   onNotificationsRefresh?: (payload: RealtimeNotificationPayload) => void
   onMessagesRefresh?: (payload: RealtimeMessagePayload) => void
+  onTyping?: (payload: RealtimeTypingPayload) => void
   onProposalsRefresh?: (payload: RealtimeProposalPayload) => void
   onAgreementsRefresh?: (payload: RealtimeAgreementPayload) => void
   onConnected?: () => void
@@ -54,6 +60,7 @@ const parseEventData = <T>(data: any) => {
 const listeners = {
   notifications: new Set<(p: RealtimeNotificationPayload) => void>(),
   messages: new Set<(p: RealtimeMessagePayload) => void>(),
+  typing: new Set<(p: RealtimeTypingPayload) => void>(),
   proposals: new Set<(p: RealtimeProposalPayload) => void>(),
   agreements: new Set<(p: RealtimeAgreementPayload) => void>(),
   connected: new Set<() => void>(),
@@ -62,6 +69,7 @@ const listeners = {
 export const dispatchRealtimeEvent = (event: string, data: any) => {
   if (event === 'notifications.refresh') listeners.notifications.forEach(l => l(parseEventData(data)))
   if (event === 'messages.refresh') listeners.messages.forEach(l => l(parseEventData(data)))
+  if (event === 'messages.typing') listeners.typing.forEach(l => l(parseEventData(data)))
   if (event === 'proposals.refresh') listeners.proposals.forEach(l => l(parseEventData(data)))
   if (event === 'agreements.refresh') listeners.agreements.forEach(l => l(parseEventData(data)))
   if (event === 'connected') listeners.connected.forEach(l => l())
@@ -87,6 +95,7 @@ const openSharedSource = (token: string) => {
   source.addEventListener('connected', () => dispatchRealtimeEvent('connected', {}))
   source.addEventListener('notifications.refresh', (e) => dispatchRealtimeEvent('notifications.refresh', (e as MessageEvent).data))
   source.addEventListener('messages.refresh', (e) => dispatchRealtimeEvent('messages.refresh', (e as MessageEvent).data))
+  source.addEventListener('messages.typing', (e) => dispatchRealtimeEvent('messages.typing', (e as MessageEvent).data))
   source.addEventListener('proposals.refresh', (e) => dispatchRealtimeEvent('proposals.refresh', (e as MessageEvent).data))
   source.addEventListener('agreements.refresh', (e) => dispatchRealtimeEvent('agreements.refresh', (e as MessageEvent).data))
   source.onerror = () => errorHandlers.forEach((handler) => handler())
@@ -107,6 +116,7 @@ const ensureSharedSource = () => {
 export const subscribeToRealtimeEvents = (handlers: RealtimeHandlers) => {
   if (handlers.onNotificationsRefresh) listeners.notifications.add(handlers.onNotificationsRefresh)
   if (handlers.onMessagesRefresh) listeners.messages.add(handlers.onMessagesRefresh)
+  if (handlers.onTyping) listeners.typing.add(handlers.onTyping)
   if (handlers.onProposalsRefresh) listeners.proposals.add(handlers.onProposalsRefresh)
   if (handlers.onAgreementsRefresh) listeners.agreements.add(handlers.onAgreementsRefresh)
   if (handlers.onConnected) listeners.connected.add(handlers.onConnected)
@@ -118,6 +128,7 @@ export const subscribeToRealtimeEvents = (handlers: RealtimeHandlers) => {
   return () => {
     if (handlers.onNotificationsRefresh) listeners.notifications.delete(handlers.onNotificationsRefresh)
     if (handlers.onMessagesRefresh) listeners.messages.delete(handlers.onMessagesRefresh)
+    if (handlers.onTyping) listeners.typing.delete(handlers.onTyping)
     if (handlers.onProposalsRefresh) listeners.proposals.delete(handlers.onProposalsRefresh)
     if (handlers.onAgreementsRefresh) listeners.agreements.delete(handlers.onAgreementsRefresh)
     if (handlers.onConnected) listeners.connected.delete(handlers.onConnected)

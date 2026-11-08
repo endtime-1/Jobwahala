@@ -5,6 +5,8 @@ import { singleValue } from '../utils/request';
 import { emitMessageRefresh } from '../utils/workflowRealtime';
 import { getErrorMessage } from '../utils/errors';
 import { participantSelect, toParticipant } from '../utils/participant';
+import { latestContextByPerson } from '../utils/messageContext';
+import { emitRealtimeEvent } from '../services/realtime';
 
 const conversationSummaryInclude = {
   user1: { select: participantSelect },
@@ -103,12 +105,33 @@ const getConversationSidebarItems = async (userId: string) => {
     conversations.map((conversation) => conversation.id),
   );
 
-  return conversations.map((conversation) => ({
-    id: conversation.id,
-    participant: toParticipant(conversation.user1Id === userId ? conversation.user2 : conversation.user1),
-    lastMessage: conversation.messages[0] || null,
-    unreadCount: unreadCountMap.get(conversation.id) || 0,
-  }));
+  // What each conversation is about: the latest job application between the two people.
+  const otherIds = conversations.map((conversation) => (conversation.user1Id === userId ? conversation.user2Id : conversation.user1Id));
+  const applications = otherIds.length
+    ? await prisma.application.findMany({
+        where: {
+          OR: [
+            { seekerId: userId, job: { employerId: { in: otherIds } } },
+            { seekerId: { in: otherIds }, job: { employerId: userId } },
+          ],
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 300,
+        select: { seekerId: true, status: true, createdAt: true, job: { select: { id: true, title: true, employerId: true } } },
+      })
+    : [];
+  const contextByPerson = latestContextByPerson(applications, userId);
+
+  return conversations.map((conversation) => {
+    const otherId = conversation.user1Id === userId ? conversation.user2Id : conversation.user1Id;
+    return {
+      id: conversation.id,
+      participant: toParticipant(conversation.user1Id === userId ? conversation.user2 : conversation.user1),
+      lastMessage: conversation.messages[0] || null,
+      unreadCount: unreadCountMap.get(conversation.id) || 0,
+      context: contextByPerson.get(otherId) ?? null,
+    };
+  });
 };
 
 export const getConversations = async (req: AuthRequest, res: Response) => {
@@ -350,5 +373,23 @@ export const markAsRead = async (req: AuthRequest, res: Response) => {
     res.json({ success: true, message: 'Messages marked as read' });
   } catch (error) {
     res.status(500).json({ success: false, message: getErrorMessage(error) });
+  }
+};
+
+/** "Typing...": tells the other person live that this one is writing. Nothing is stored. */
+export const sendTyping = async (req: AuthRequest, res: Response) => {
+  try {
+    const conversationId = singleValue(req.params.id);
+    const userId = req.user!.id;
+    if (!conversationId) return res.status(400).json({ success: false, message: 'Conversation id is required' });
+
+    const conversation = await getConversationForUser(conversationId, userId);
+    if (!conversation) return res.status(403).json({ success: false, message: 'Access denied' });
+
+    const otherId = conversation.user1Id === userId ? conversation.user2Id : conversation.user1Id;
+    emitRealtimeEvent(otherId, 'messages.typing', { conversationId, userId });
+    return res.json({ success: true });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
