@@ -38,13 +38,16 @@ export const prerender = (path: string): PrerenderedPage => {
         </MemoryRouter>
       </HelmetProvider>,
     )
+    // React 19 writes the page's <title>, <meta> and <link> tags at the start of the output; older Helmet put them in the context.
+    const lead = /^(?:<title[^>]*>[\s\S]*?<\/title>|<meta\b[^>]*>|<link\b[^>]*>)+/.exec(html)?.[0] ?? ''
     const helmet = helmetContext.helmet
+    const fromLead = (pattern: RegExp) => (lead.match(pattern) ?? []).join('')
     return {
-      html,
+      html: html.slice(lead.length),
       head: {
-        title: helmet?.title?.toString() ?? '',
-        meta: helmet?.meta?.toString() ?? '',
-        link: helmet?.link?.toString() ?? '',
+        title: fromLead(/<title[^>]*>[\s\S]*?<\/title>/g) || helmet?.title?.toString() || '',
+        meta: fromLead(/<meta\b[^>]*>/g) || helmet?.meta?.toString() || '',
+        link: fromLead(/<link\b[^>]*>/g) || helmet?.link?.toString() || '',
       },
     }
   } finally {
