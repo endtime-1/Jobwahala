@@ -256,15 +256,15 @@ export default function Signup() {
                     <>Create account <ArrowRight className="h-4 w-4" /></>
                   )}
                 </button>
-
-                <p className="text-[11px] text-center text-[#9caab8] leading-relaxed">
-                  By signing up, you agree to our{' '}
-                  <Link to="/terms" className="text-[#6b7a8d] underline underline-offset-2 hover:text-[#111c2d]">Terms</Link>
-                  {' '}and{' '}
-                  <Link to="/privacy" className="text-[#6b7a8d] underline underline-offset-2 hover:text-[#111c2d]">Privacy Policy</Link>.
-                </p>
               </form>
               )}
+
+              <p className="mt-4 text-center text-xs leading-relaxed text-[#6b7a8d]">
+                By signing up you agree to our{' '}
+                <Link to="/terms" className="font-semibold underline underline-offset-2 hover:text-[#111c2d]">Terms of Service</Link>
+                {' '}and{' '}
+                <Link to="/privacy" className="font-semibold underline underline-offset-2 hover:text-[#111c2d]">Privacy Policy</Link>.
+              </p>
             </div>
 
             <p className="mt-5 text-center text-[13px] text-[#6b7a8d]">

@@ -322,15 +322,15 @@ describe('asked at sign-up', () => {
   })
 })
 
-describe('the privacy policy draft', () => {
-  it('explains the CV database: who can search, what is seen before and after unlocking, blocking and boosts', () => {
-    render(wrap(<Privacy />))
+describe('the privacy policy', () => {
+  it('explains the CV database: who can search, what is seen before and after unlocking, and blocking and boosts', () => {
+    const { container } = render(wrap(<Privacy />))
+    const text = container.textContent ?? ''
 
-    expect(screen.getByRole('heading', { name: /The CV database: who can see what/ })).toBeInTheDocument()
-    expect(screen.getByText(/only employers whose business we have verified and who are on a paid plan/)).toBeInTheDocument()
-    expect(screen.getByText(/your name, phone number, email address and CV file/)).toBeInTheDocument()
-    expect(screen.getByText(/you can block any company/)).toBeInTheDocument()
-    expect(screen.getByText(/there is no way to export contact details in bulk/)).toBeInTheDocument()
-    expect(screen.getByText(/marked "Boosted" to/)).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /Who can see a job seeker/ })).toBeInTheDocument()
+    expect(text).toMatch(/only employers whose business we have verified, on a paid plan that includes the CV database/)
+    expect(text).toMatch(/your name, phone number, email address and CV file/)
+    expect(text).toMatch(/block any company/)
+    expect(text).toMatch(/Profile boost/)
   })
 })

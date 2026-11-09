@@ -8,27 +8,20 @@ export type LegalSection = { heading: string; body: ReactNode }
 type LegalPageProps = {
   title: string
   description: string
+  effective: string
   updated: string
   intro: string
   sections: LegalSection[]
-  /** Shown in a banner at the top while the text is still waiting for a lawyer. */
-  draftNotice?: ReactNode
 }
 
-export default function LegalPage({ title, description, updated, intro, sections, draftNotice }: LegalPageProps) {
+export default function LegalPage({ title, description, effective, updated, intro, sections }: LegalPageProps) {
   return (
     <div className="pb-20 pt-24 xl:pt-28">
       <SEO title={title} description={description} />
       <div className="container max-w-4xl">
         <PageHero eyebrow="Legal" title={title}>
-          <p className="mt-4 text-sm font-semibold text-white/60">Last updated {updated}</p>
+          <p className="mt-4 text-sm font-semibold text-white/60">Effective {effective}. Last updated {updated}.</p>
         </PageHero>
-        {draftNotice ? (
-          <div role="note" aria-label="Draft notice" className="mt-8 rounded-2xl border-2 border-gold bg-gold/15 p-5 text-base font-semibold leading-7 text-text-main">
-            <p className="text-sm font-black uppercase tracking-[0.18em] text-primary">Draft for legal review</p>
-            <div className="mt-2">{draftNotice}</div>
-          </div>
-        ) : null}
         <p className="mt-8 text-lg leading-8 text-text-muted">{intro}</p>
 
         <nav aria-label="Sections" className="mt-10 rounded-2xl border border-surface-border bg-surface-alt/30 p-5">
