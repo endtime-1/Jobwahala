@@ -53,6 +53,7 @@ const seoJobSelect = {
   durationMonths: true,
   unpaid: true,
   postedByAdminId: true,
+  applyInstructions: true,
   employer: { select: { employerProfile: { select: { companyName: true, logoUrl: true, website: true } } } },
 } as const;
 
@@ -72,6 +73,7 @@ type SeoJobRow = {
   durationMonths: number | null;
   unpaid: boolean;
   postedByAdminId: string | null;
+  applyInstructions: string | null;
   employer: { employerProfile: { companyName: string; logoUrl: string | null; website: string | null } | null };
 };
 
@@ -94,6 +96,7 @@ const toSeoJob = (row: SeoJobRow, siteUrl: string): SeoJob => {
     durationMonths: row.durationMonths,
     unpaid: row.unpaid,
     postedOnBehalf: Boolean(row.postedByAdminId),
+    applyInstructions: row.applyInstructions,
     employerName: row.employer.employerProfile?.companyName || 'A company on JobWahala',
     employerLogoUrl: logo ? (/^https?:\/\//i.test(logo) ? logo : `${siteUrl}${logo}`) : null,
     employerWebsite: row.employer.employerProfile?.website ?? null,

@@ -17,6 +17,7 @@ import AdminCoursesPanel from '../../components/AdminCoursesPanel'
 import AdminBillingPanel from '../../components/AdminBillingPanel'
 import AdminHealthPanel from '../../components/AdminHealthPanel'
 import AdminGrowthPanel from '../../components/AdminGrowthPanel'
+import AdminJobImport from '../../components/AdminJobImport'
 import AdminBlogPanel from '../../components/AdminBlogPanel'
 import AdminHiringPanel from '../../components/AdminHiringPanel'
 import AdminOverviewPanel, { type AdminTab } from '../../components/AdminOverviewPanel'
@@ -249,6 +250,7 @@ export default function AdminDashboard({ initialTab = 'overview' }: { initialTab
 
           {activeTab === 'jobs' ? (
             <div className="space-y-6">
+              <AdminJobImport onImported={refreshAll} />
               <form onSubmit={handleCreateAdminJob} className="rounded-3xl border border-surface-border bg-white/80 p-6">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                   <div className="max-w-2xl"><p className="text-[10px] font-black uppercase tracking-[0.2em] text-text-light mb-2">Admin posting desk</p><h2 className="text-2xl font-black tracking-tight text-text-main">Post a job on behalf of a company</h2><p className="mt-2 text-sm font-semibold text-text-muted">Select an active employer company and publish a role.</p></div>

@@ -1322,3 +1322,22 @@ export const apiAdminBlogPreview = (body: string): Promise<{ html: string }> =>
 
 export const apiAdminBlogDelete = (id: string) =>
   fetch(`${BASE_URL}/admin/blog/${id}`, { method: 'DELETE', headers: headers(true) }).then(handleResponse)
+
+// ---- admin: import jobs from a CSV
+
+export type AdminImportLine = { line: number; title: string; status: 'created' | 'would_create' | 'skipped' | 'invalid'; reason?: string; id?: string; path?: string }
+export type AdminImportResult = {
+  company: { id: string | null; name: string; exists: boolean }
+  dryRun: boolean
+  counts: { created: number; skipped: number; invalid: number }
+  lines: AdminImportLine[]
+}
+
+export const apiAdminImportJobs = (input: {
+  csv: string
+  company: { name: string; website: string; email: string; phone: string }
+  defaultType: string
+  defaultClosingDate: string
+  dryRun: boolean
+}): Promise<AdminImportResult> =>
+  fetch(`${BASE_URL}/admin/jobs/import`, { method: 'POST', headers: headers(true), body: JSON.stringify(input) }).then(handleResponse)

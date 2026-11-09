@@ -32,6 +32,8 @@ export type SeoJob = {
   employerWebsite?: string | null;
   /** An admin posted this for the company (it sent the vacancy by WhatsApp). Shown to people and crawlers. */
   postedOnBehalf?: boolean;
+  /** How to apply outside JobWahala (WhatsApp, email). When set, people are told to apply that way. */
+  applyInstructions?: string | null;
 };
 
 const e = escapeHtml;
@@ -109,7 +111,8 @@ export const buildJobPostingJsonLd = (job: SeoJob, siteUrl: string) => {
     '@type': 'JobPosting',
     title: job.title,
     identifier: { '@type': 'PropertyValue', name: job.employerName, value: job.id },
-    directApply: true,
+    // Applying happens on JobWahala unless the employer asked people to apply by WhatsApp or email.
+    directApply: !job.applyInstructions,
     description: paragraphs(job.description) || `<p>${e(job.title)}</p>`,
     datePosted: job.createdAt.toISOString(),
     ...(job.closesAt ? { validThrough: job.closesAt.toISOString() } : {}),
@@ -264,7 +267,8 @@ ${job.postedOnBehalf ? `<p>Posted by JobWahala on behalf of ${e(job.employerName
 ` : ''}${job.closesAt ? `<p>Apply by ${e(job.closesAt.toISOString().slice(0, 10))}.</p>
 ` : ''}<h2>About this job</h2>
 ${paragraphs(job.description)}
-<p><a href="${e(url)}">Apply for this job on JobWahala</a></p>
+${job.applyInstructions ? `<h2>How to apply</h2>
+${paragraphs(job.applyInstructions)}` : `<p><a href="${e(url)}">Apply for this job on JobWahala</a></p>`}
 <p>More: <a href="${e(siteUrl)}/jobs">all open jobs</a>${city ? ` · <a href="${e(siteUrl)}/jobs-in-${e(slugify(city))}">jobs in ${e(city)}</a>` : ''}</p>`,
   });
 };

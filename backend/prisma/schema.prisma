@@ -146,6 +146,7 @@ model EmployerProfile {
   claimStatus        String   @default("CLAIMED") // CLAIMED, UNCLAIMED
   createdByAdminId   String?
   contactPhone       String?  // only for companies an admin set up: where the claim link goes
+  contactEmail       String?  // same: the company's email, for the claim link
   // Founding Employers: the first companies (the limit is in BillingSettings), with a badge and free featured credits.
   isFoundingEmployer Boolean  @default(false)
   foundingNumber     Int?     @unique
@@ -222,6 +223,8 @@ model Job {
   startDate         DateTime?
   schedule          String? // FULL_TIME or PART_TIME
   possibleJobOffer  Boolean   @default(false)
+  // How to apply, when people apply outside JobWahala (for example by WhatsApp or email). Shown on the job page; the in-app Apply button is hidden.
+  applyInstructions String?
   status      String   @default("ACTIVE") // DRAFT, ACTIVE, PAUSED, CLOSED, EXPIRED (owner); FLAGGED, SUSPENDED (admin)
   // Last day the job can be applied for. Existing rows and admin-posted jobs get 30 days from creation.
   closesAt    DateTime @default(dbgenerated("(strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '+30 days'))"))

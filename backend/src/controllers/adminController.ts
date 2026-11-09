@@ -9,6 +9,7 @@ import { createNotifications } from '../utils/notifications';
 import { emitAgreementRefresh } from '../utils/workflowRealtime';
 import { getErrorMessage } from '../utils/errors';
 import { recordAdminAction } from '../utils/adminAudit';
+import { ImportError, importJobs, type ImportInput } from '../services/jobImportService';
 
 // Moderation Lookups
 export const getReports = async (req: AuthRequest, res: Response) => {
@@ -583,6 +584,18 @@ export const updateJobContent = async (req: AuthRequest, res: Response) => {
 
     return res.json({ success: true, message: 'Job updated', job });
   } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
+  }
+};
+
+/** Import jobs from a CSV on behalf of a company (the admin "Import jobs from CSV" tool). With dryRun it only reports what would happen. */
+export const importJobsFromCsv = async (req: AuthRequest, res: Response) => {
+  try {
+    const adminRow = await prisma.user.findUnique({ where: { id: req.user!.id }, select: { email: true } });
+    const result = await importJobs({ id: req.user!.id, email: adminRow?.email ?? 'unknown' }, req.body as ImportInput);
+    return res.status(result.dryRun ? 200 : 201).json({ success: true, ...result });
+  } catch (error) {
+    if (error instanceof ImportError) return res.status(error.status).json({ success: false, message: error.message });
     return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };

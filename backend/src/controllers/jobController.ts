@@ -437,6 +437,11 @@ export const applyForJob = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ success: false, message: 'Job not found or inactive' });
     }
 
+    // The employer takes applications outside JobWahala (WhatsApp, email): nobody here would see an in-app application.
+    if (job.applyInstructions) {
+      return res.status(400).json({ success: false, message: 'This employer takes applications outside JobWahala. Follow the How to apply steps on the job page.' });
+    }
+
     const existing = await prisma.application.findUnique({
       where: {
         jobId_seekerId: { jobId, seekerId }

@@ -12,7 +12,8 @@ import {
   updateUserStatus, 
   updateUsersStatusBulk,
   updateJobStatus,
-  updateJobContent, 
+  updateJobContent,
+  importJobsFromCsv, 
   updateJobsStatusBulk,
   updateAgreementDisputeStatus,
   updateServiceStatus,
@@ -39,6 +40,7 @@ import { validate } from '../middleware/validate';
 import {
   deleteAdminUserSchema,
   createAdminJobSchema,
+  importJobsSchema,
   updateAdminJobContentSchema,
   updateAgreementDisputeStatusSchema,
   updateAdminBulkJobStatusSchema,
@@ -73,6 +75,7 @@ router.patch('/blog/:id', validate(updateBlogPostSchema), updatePost);
 router.delete('/blog/:id', validate(blogPostIdSchema), deletePost);
 router.get('/disputes', getAgreementDisputes);
 router.post('/jobs', validate(createAdminJobSchema), createAdminJob);
+router.post('/jobs/import', validate(importJobsSchema), importJobsFromCsv);
 router.patch('/reports/bulk-status', validate(updateAdminBulkReportStatusSchema), updateReportsStatusBulk);
 router.patch('/users/bulk-status', validate(updateAdminBulkUserStatusSchema), updateUsersStatusBulk);
 router.patch('/jobs/bulk-status', validate(updateAdminBulkJobStatusSchema), updateJobsStatusBulk);

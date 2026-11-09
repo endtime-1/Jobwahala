@@ -184,3 +184,22 @@ export const updateAdminJobContentSchema = z.object({
     .refine((body) => body.title !== undefined || body.description !== undefined, { message: 'Change the title or the description' }),
   params: idParamsSchema,
 });
+
+export const importJobsSchema = z.object({
+  body: z
+    .object({
+      csv: z.string().min(10, 'Choose a CSV file').max(1_000_000, 'The file is too large'),
+      company: z
+        .object({
+          name: trimmedOptionalString(160),
+          website: trimmedOptionalString(200),
+          email: trimmedOptionalString(200),
+          phone: trimmedOptionalString(40),
+        })
+        .strict(),
+      defaultType: z.string().trim().min(1).max(80),
+      defaultClosingDate: z.string().trim().min(8).max(40),
+      dryRun: z.boolean(),
+    })
+    .strict(),
+});

@@ -7,6 +7,7 @@ import VerifiedBadge from '../components/VerifiedBadge'
 import UnverifiedEmployerLabel from '../components/UnverifiedEmployerLabel'
 import SaveJobButton from '../components/SaveJobButton'
 import ShareOnWhatsApp from '../components/ShareOnWhatsApp'
+import { linkContacts } from '../lib/applyInstructions'
 import { apiApplyForJob, apiDeleteApplication, apiGetJobApplicationCoaching, apiGetJobById, apiGetMyJobApplication, apiTrackJobView } from '../lib/api'
 import { emailHandle, formatRelativeTime } from '../lib/display'
 import { closingSummary } from '../lib/jobLifecycle'
@@ -42,6 +43,8 @@ type JobDetail = {
   closesAt?: string | null
   /** An admin posted this for the company (it sent the vacancy by WhatsApp). */
   postedOnBehalf?: boolean
+  /** How to apply outside JobWahala (WhatsApp, email). When set it replaces the Apply form. */
+  applyInstructions?: string | null
   employer: {
     id: string
     email: string
@@ -376,6 +379,15 @@ export default function JobDetails() {
 
         <div className="lg:col-span-4 lg:pl-2">
           <div className="space-y-6 lg:sticky lg:top-28">
+            {job.applyInstructions ? (
+              <section aria-label="How to apply" className="dashboard-panel border-primary/20 p-5 sm:p-7">
+                <h3 className="mb-3 text-2xl font-black tracking-tight text-text-main">How to apply</h3>
+                <p className="mb-3 text-sm font-semibold text-text-muted">
+                  {companyName} takes applications outside JobWahala. Follow these steps to apply.
+                </p>
+                <div className="whitespace-pre-line rounded-2xl border border-primary/15 bg-primary/5 p-4 text-sm font-bold leading-relaxed text-text-main">{linkContacts(job.applyInstructions)}</div>
+              </section>
+            ) : (
             <div className="dashboard-panel relative overflow-hidden border-primary/20 p-5 sm:p-7 group/apply">
               <div className="absolute top-0 right-0 h-40 w-40 bg-primary/5 rounded-full -mr-20 -mt-20 blur-3xl group-hover/apply:bg-primary/10 transition-colors"></div>
 
@@ -546,6 +558,7 @@ export default function JobDetails() {
                 </div>
               </div>
             </div>
+            )}
 
             <div className="dashboard-panel space-y-8 bg-surface-alt/30 p-5 sm:p-6">
               <h3 className="font-black text-xs uppercase tracking-widest text-text-light flex items-center gap-3">
