@@ -355,7 +355,8 @@ export const getJobListSharePage = async (req: Request, res: Response) => {
           ? {
               heading: 'Open jobs across Africa',
               description: 'Browse and apply for real jobs across Africa. See the pay and location before you apply.',
-              intro: 'Real jobs from employers you can check, across Africa.',
+              intro:
+                'Find real jobs in Ghana and across Africa from employers you can check. Every job shows the pay and location before you apply, and employers with the verified badge have shown us their business documents. Browse the newest jobs below, or look by place, by category, or for internships and National Service.',
               path: '/jobs',
             }
           : {
@@ -368,7 +369,7 @@ export const getJobListSharePage = async (req: Request, res: Response) => {
     res.type('html');
     res.set('Cache-Control', 'public, max-age=300');
     if (kind === 'home') return res.send(renderHomePage({ jobs, siteUrl, intro: page.intro, description: page.description }));
-    return res.send(renderJobListPage({ ...page, jobs, siteUrl }));
+    return res.send(renderJobListPage({ ...page, jobs, siteUrl, browse: kind === 'jobs' }));
   } catch (error) {
     logger.error('job_list_share_page_error', { error: getErrorMessage(error) });
     return res.status(500).type('html').send(renderSharePageNotFound(siteUrl));

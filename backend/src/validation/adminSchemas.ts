@@ -171,3 +171,16 @@ export const updateAgreementDisputeStatusSchema = z.object({
     .strict(),
   params: idParamsSchema,
 });
+
+/** An admin fixing a typo in a job, with the employer's permission. At least one of title and description, and why. */
+export const updateAdminJobContentSchema = z.object({
+  body: z
+    .object({
+      title: z.string().trim().min(1).max(160).optional(),
+      description: z.string().trim().min(1).max(5000).optional(),
+      reason: z.string().trim().min(3, 'Say why (for example "typo, employer agreed by WhatsApp")').max(500),
+    })
+    .strict()
+    .refine((body) => body.title !== undefined || body.description !== undefined, { message: 'Change the title or the description' }),
+  params: idParamsSchema,
+});

@@ -326,6 +326,8 @@ export type JobListPageInput = {
   extraJsonLd?: unknown[];
   /** The page title when it should differ from the heading. */
   title?: string;
+  /** Add the "Browse by location / category / Internships" sections, so the page is more than a short list when few jobs are open. */
+  browse?: boolean;
 };
 
 const HOME_CITIES = ['Accra', 'Kumasi', 'Takoradi', 'Tamale', 'Cape Coast', 'Ho', 'Koforidua', 'Sunyani'];
@@ -338,6 +340,22 @@ const jobItems = (jobs: SeoJob[], siteUrl: string) =>
       return `<li><a href="${e(`${siteUrl}/jobs/${job.id}`)}">${e(job.title)}</a> - ${e(job.employerName)}${facts ? ` (${e(facts)})` : ''}</li>`;
     })
     .join('\n');
+
+/** Links to places, categories and early-career pages, so a list page with few jobs still leads somewhere. */
+export const browseSections = (siteUrl: string) => {
+  const places = [...HOME_CITIES.map((name) => ({ label: `Jobs in ${name}`, path: `/jobs-in-${slugify(name)}` })), { label: 'Remote jobs', path: '/remote-jobs' }, { label: 'All locations', path: '/jobs-by-location' }];
+  const categories = [...CATEGORIES.filter((entry) => HOME_CATEGORIES.includes(entry.slug)).map((entry) => ({ label: `${entry.name} jobs`, path: `/${entry.slug}-jobs` })), { label: 'All categories', path: '/jobs-by-category' }];
+  const early = [{ label: 'Internships, NSS and graduate jobs', path: '/internships' }, { label: 'Internships', path: '/internship-jobs' }, { label: 'National Service (NSS)', path: '/nss-jobs' }, { label: 'Industrial attachments', path: '/attachment-jobs' }];
+  const list = (links: { label: string; path: string }[]) =>
+    '<ul>\n' + links.map((link) => `<li><a href="${e(siteUrl + link.path)}">${e(link.label)}</a></li>`).join('\n') + '\n</ul>';
+  return `
+<h2>Browse by location</h2>
+${list(places)}
+<h2>Browse by category</h2>
+${list(categories)}
+<h2>Internships &amp; NSS</h2>
+${list(early)}`;
+};
 
 /** The home page: the same sections people see, as plain HTML with real links to jobs, places, categories and employers. */
 export const renderHomePage = ({ jobs, siteUrl, intro, description }: { jobs: SeoJob[]; siteUrl: string; intro: string; description: string }) => {
@@ -399,7 +417,7 @@ ${categories}
   });
 };
 
-export const renderJobListPage = ({ heading, description, intro, path, jobs, siteUrl, extraJsonLd = [], title }: JobListPageInput) => {
+export const renderJobListPage = ({ heading, description, intro, path, jobs, siteUrl, extraJsonLd = [], title, browse = false }: JobListPageInput) => {
   const items = jobs
     .map((job) => {
       const facts = [job.type, job.location, job.category].filter(Boolean).join(' · ');
@@ -427,6 +445,6 @@ export const renderJobListPage = ({ heading, description, intro, path, jobs, sit
     body: `<h1>${e(heading)}</h1>
 <p>${e(intro)}</p>
 ${jobs.length ? `<ul>\n${items}\n</ul>` : '<p>No open jobs right now. Check back soon.</p>'}
-<p><a href="${e(siteUrl)}/jobs">See every open job</a></p>`,
+<p><a href="${e(siteUrl)}/jobs">See every open job</a></p>${browse ? browseSections(siteUrl) : ''}`,
   });
 };

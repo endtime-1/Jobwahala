@@ -1248,3 +1248,10 @@ export const apiAdminHiringSettings = (data: { fromPriceGhs: number | null; guar
 export const apiAdminStaff = () => sendJson('/admin/hiring/staff', 'GET');
 export const apiAdminCreateRecruiter = (data: { email: string; displayName: string; title?: string; phone?: string }) => sendJson('/admin/hiring/staff', 'POST', data);
 export const apiAdminSetRecruiterActive = (userId: string, active: boolean) => sendJson(`/admin/hiring/staff/${userId}`, 'PATCH', { active });
+
+export const apiUpdateAdminJobContent = (id: string, input: { title?: string; description?: string; reason: string }) =>
+  fetch(`${BASE_URL}/admin/jobs/${id}`, {
+    method: 'PATCH',
+    headers: headers(true),
+    body: JSON.stringify(input),
+  }).then(handleResponse);

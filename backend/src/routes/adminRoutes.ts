@@ -11,7 +11,8 @@ import {
   updateReportsStatusBulk,
   updateUserStatus, 
   updateUsersStatusBulk,
-  updateJobStatus, 
+  updateJobStatus,
+  updateJobContent, 
   updateJobsStatusBulk,
   updateAgreementDisputeStatus,
   updateServiceStatus,
@@ -36,6 +37,7 @@ import { validate } from '../middleware/validate';
 import {
   deleteAdminUserSchema,
   createAdminJobSchema,
+  updateAdminJobContentSchema,
   updateAgreementDisputeStatusSchema,
   updateAdminBulkJobStatusSchema,
   updateAdminBulkReportStatusSchema,
@@ -72,6 +74,7 @@ router.patch('/services/bulk-status', validate(updateAdminBulkServiceStatusSchem
 // Moderation Actions
 router.patch('/reports/:id/status', validate(updateAdminReportStatusSchema), updateReportStatus);
 router.patch('/users/:id/status', validate(updateAdminUserStatusSchema), updateUserStatus);
+router.patch('/jobs/:id', validate(updateAdminJobContentSchema), updateJobContent);
 router.patch('/jobs/:id/status', validate(updateAdminJobStatusSchema), updateJobStatus);
 router.patch('/services/:id/status', validate(updateAdminServiceStatusSchema), updateServiceStatus);
 router.patch('/verifications/:id/status', validate(updateVerificationRequestStatusSchema), updateVerificationRequestStatus);

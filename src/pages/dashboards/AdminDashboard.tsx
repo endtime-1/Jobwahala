@@ -1,3 +1,4 @@
+import AdminJobEditor from './AdminJobEditor'
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import { ShieldCheck, Users, Briefcase, Flag, Wrench, Trash2, RefreshCw, BadgeCheck, AlertTriangle } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
@@ -294,6 +295,7 @@ export default function AdminDashboard({ initialTab = 'overview' }: { initialTab
                       </div>
                       <div className="flex flex-wrap items-center gap-3">
                         {moderationStatuses.map((s) => (<button key={s} type="button" disabled={isActing || job.status === s} onClick={() => handleAction(() => apiUpdateAdminJobStatus(job.id, s))} className={`rounded-xl px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] transition-all ${job.status === s ? 'bg-primary text-white' : 'bg-white border border-surface-border text-text-muted hover:border-primary hover:text-primary'}`}>{s}</button>))}
+                        <AdminJobEditor job={job} onSaved={refreshAll} />
                       </div>
                     </div>
                   </div>

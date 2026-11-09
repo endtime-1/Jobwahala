@@ -8,6 +8,7 @@ import { createAgreementEvent } from '../utils/agreementEvents';
 import { createNotifications } from '../utils/notifications';
 import { emitAgreementRefresh } from '../utils/workflowRealtime';
 import { getErrorMessage } from '../utils/errors';
+import { recordAdminAction } from '../utils/adminAudit';
 
 // Moderation Lookups
 export const getReports = async (req: AuthRequest, res: Response) => {
@@ -543,5 +544,45 @@ export const deleteUser = async (req: AuthRequest, res: Response) => {
     res.json({ success: true, message: 'User permanently removed' });
   } catch (error) {
     res.status(500).json({ success: false, message: getErrorMessage(error) });
+  }
+};
+
+/** Fix the title or text of a job (a typo), with the employer's permission. The change and the reason go in the admin action log. */
+export const updateJobContent = async (req: AuthRequest, res: Response) => {
+  try {
+    const jobId = singleValue(req.params.id);
+    const { title, description, reason } = req.body as { title?: string; description?: string; reason: string };
+    if (!jobId) return res.status(400).json({ success: false, message: 'Job id is required' });
+
+    const existing = await prisma.job.findUnique({ where: { id: jobId }, select: { id: true, title: true, description: true } });
+    if (!existing) return res.status(404).json({ success: false, message: 'Job not found' });
+
+    const adminRow = await prisma.user.findUnique({ where: { id: req.user!.id }, select: { email: true } });
+    const admin = { id: req.user!.id, email: adminRow?.email ?? 'unknown' };
+
+    const changes: Record<string, { from: string; to: string }> = {};
+    if (title !== undefined && title !== existing.title) changes.title = { from: existing.title, to: title };
+    if (description !== undefined && description !== existing.description) changes.description = { from: existing.description.slice(0, 500), to: description.slice(0, 500) };
+    if (Object.keys(changes).length === 0) return res.status(400).json({ success: false, message: 'Nothing changed' });
+
+    const job = await prisma.$transaction(async (tx) => {
+      const updated = await tx.job.update({
+        where: { id: jobId },
+        data: { ...(changes.title ? { title } : {}), ...(changes.description ? { description } : {}) },
+      });
+      await recordAdminAction(tx, {
+        admin,
+        action: 'job.edit_content',
+        targetType: 'Job',
+        targetId: jobId,
+        reason,
+        metadata: { changed: Object.keys(changes), changes },
+      });
+      return updated;
+    });
+
+    return res.json({ success: true, message: 'Job updated', job });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: getErrorMessage(error) });
   }
 };
