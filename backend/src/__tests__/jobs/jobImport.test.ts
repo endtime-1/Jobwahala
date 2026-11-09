@@ -5,7 +5,7 @@ import type { Request, Response } from 'express';
 
 const prismaMock = vi.hoisted(() => {
   const mock: Record<string, any> = {
-    employerProfile: { findMany: vi.fn(), update: vi.fn() },
+    employerProfile: { findMany: vi.fn(), findUnique: vi.fn(), update: vi.fn() },
     job: { findMany: vi.fn(), create: vi.fn(), findFirst: vi.fn() },
     adminActionLog: { create: vi.fn() },
     user: { findUnique: vi.fn() },
@@ -142,6 +142,20 @@ describe('importing the SBP jobs', () => {
     prismaMock.job.findMany.mockResolvedValue(parseCsv(sbp).slice(1).map((cells) => ({ title: cells[0] })));
     const again = await importJobs(admin, input(), now);
     expect(again.counts).toEqual({ created: 0, skipped: 12, invalid: 0 });
+  });
+
+  it('uses the company picked in the Growth section, whatever the file says, and never creates a second copy', async () => {
+    prismaMock.employerProfile.findUnique.mockResolvedValue({ userId: 'growth-1', companyName: 'SBP Africa (assigned)' });
+    const result = await importJobs(admin, input({ company: { id: 'growth-1' } }), now);
+
+    expect(company.createManagedCompany).not.toHaveBeenCalled();
+    expect(prismaMock.employerProfile.findMany).not.toHaveBeenCalled();
+    expect(result.company).toMatchObject({ id: 'growth-1', name: 'SBP Africa (assigned)', exists: true });
+    expect(result.counts.created).toBe(12);
+    expect(new Set(prismaMock.job.create.mock.calls.map((call: any[]) => call[0].data.employerId))).toEqual(new Set(['growth-1']));
+
+    prismaMock.employerProfile.findUnique.mockResolvedValue(null);
+    await expect(importJobs(admin, input({ company: { id: 'gone' } }), now)).rejects.toThrow('no longer exists');
   });
 
   it('a preview changes nothing', async () => {

@@ -19,7 +19,8 @@ export class ImportError extends Error {
 
 export type ImportInput = {
   csv: string;
-  company: { name?: string; website?: string; email?: string; phone?: string };
+  /** Either an existing company (from the Growth section) by id, or the details of a company to create. */
+  company: { id?: string; name?: string; website?: string; email?: string; phone?: string };
   defaultType: string;
   defaultClosingDate: string;
   /** Only report what would happen. */
@@ -58,13 +59,19 @@ export const importJobs = async (admin: Admin, input: ImportInput, now = new Dat
   if (rows.length === 0) throw new ImportError(400, 'The file has no job rows. The first row must be the column names.');
   if (rows.length > 200) throw new ImportError(400, 'Import at most 200 jobs at a time.');
 
+  // A company picked in the Growth section is used as it is: its name decides, never the file, so no second copy is made.
+  const picked = input.company.id
+    ? await prisma.employerProfile.findUnique({ where: { userId: input.company.id }, select: { userId: true, companyName: true } })
+    : null;
+  if (input.company.id && !picked) throw new ImportError(404, 'That company no longer exists.');
+
   const csvCompanies = [...new Set(rows.map((row) => row.company).filter(Boolean))];
-  const companyName = input.company.name?.trim() || (csvCompanies.length === 1 ? csvCompanies[0] : '');
+  const companyName = picked?.companyName ?? (input.company.name?.trim() || (csvCompanies.length === 1 ? csvCompanies[0] : ''));
   if (!companyName) throw new ImportError(400, 'Enter the company name (the file names more than one company, or none).');
   const email = input.company.email?.trim() || '';
   if (email && !emailLooksRight(email)) throw new ImportError(400, 'The company email does not look right.');
 
-  const profiles = await prisma.employerProfile.findMany({ select: { userId: true, companyName: true }, take: 10000 });
+  const profiles = picked ? [picked] : await prisma.employerProfile.findMany({ select: { userId: true, companyName: true }, take: 10000 });
   const existing = profiles.find((profile) => titleKey(profile.companyName) === titleKey(companyName));
   const taken = new Set<string>();
   if (existing) {

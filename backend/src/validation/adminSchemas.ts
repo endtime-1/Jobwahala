@@ -191,6 +191,7 @@ export const importJobsSchema = z.object({
       csv: z.string().min(10, 'Choose a CSV file').max(1_000_000, 'The file is too large'),
       company: z
         .object({
+          id: trimmedOptionalString(80),
           name: trimmedOptionalString(160),
           website: trimmedOptionalString(200),
           email: trimmedOptionalString(200),

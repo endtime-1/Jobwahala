@@ -14,6 +14,7 @@ import {
   apiAdminSetFounding,
 } from '../lib/api'
 import { getErrorMessage } from '../lib/errors'
+import AdminJobImport from './AdminJobImport'
 import { OUTREACH_STATUSES, isFollowUpDue, type ManagedCompany, type OutreachContact, type OutreachStatus } from '../lib/growth'
 
 type Section = 'companies' | 'founding' | 'outreach'
@@ -63,6 +64,7 @@ function CompaniesSection({ onPostJob }: { onPostJob: (companyId: string) => voi
   const [form, setForm] = useState({ companyName: '', industry: '', contactPhone: '', website: '' })
   const [emails, setEmails] = useState<Record<string, string>>({})
   const [issued, setIssued] = useState<IssuedLink | null>(null)
+  const [importingFor, setImportingFor] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     try {
@@ -173,8 +175,15 @@ function CompaniesSection({ onPostJob }: { onPostJob: (companyId: string) => voi
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <button type="button" onClick={() => onPostJob(company.id)} className="btn btn-outline btn-sm">Post a job</button>
+                  <button type="button" onClick={() => setImportingFor(company.id)} className="btn btn-outline btn-sm">Import jobs (CSV)</button>
                 </div>
               </div>
+
+              {importingFor === company.id ? (
+                <div className="mt-4">
+                  <AdminJobImport fixedCompany={{ id: company.id, name: company.companyName }} startOpen onClose={() => setImportingFor(null)} onImported={() => void load()} />
+                </div>
+              ) : null}
 
               {company.claimStatus === 'UNCLAIMED' ? (
                 <div className="mt-4 grid gap-3 border-t border-surface-border/60 pt-4 lg:grid-cols-[1fr_auto]">

@@ -14,8 +14,16 @@ const STATUS_STYLE: Record<string, string> = {
 const STATUS_LABEL: Record<string, string> = { created: 'Created', would_create: 'Will be created', skipped: 'Skipped', invalid: 'Problem' }
 
 /** Admin: import jobs from a CSV for a recruiter or company. Shows a preview first; rows whose title already exists for the company are skipped. */
-export default function AdminJobImport({ onImported }: { onImported?: () => void }) {
-  const [open, setOpen] = useState(false)
+type Props = {
+  onImported?: () => void
+  /** A company picked in the Growth section: its jobs go to this company and no company details are asked for. */
+  fixedCompany?: { id: string; name: string }
+  startOpen?: boolean
+  onClose?: () => void
+}
+
+export default function AdminJobImport({ onImported, fixedCompany, startOpen = false, onClose }: Props) {
+  const [open, setOpen] = useState(startOpen)
   const [csv, setCsv] = useState('')
   const [fileName, setFileName] = useState('')
   const [company, setCompany] = useState({ name: '', website: '', email: '', phone: '' })
@@ -38,7 +46,7 @@ export default function AdminJobImport({ onImported }: { onImported?: () => void
     setError('')
     setCopied(false)
     try {
-      const data = await apiAdminImportJobs({ csv, company, defaultType, defaultClosingDate, dryRun })
+      const data = await apiAdminImportJobs({ csv, company: fixedCompany ? { ...company, id: fixedCompany.id, name: fixedCompany.name } : company, defaultType, defaultClosingDate, dryRun })
       setResult(data)
       if (!dryRun) onImported?.()
     } catch (caught) {
@@ -77,18 +85,24 @@ export default function AdminJobImport({ onImported }: { onImported?: () => void
     <section className="space-y-5 rounded-3xl border border-surface-border bg-white/80 p-6" aria-label="Import jobs from CSV">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="text-xl font-black text-text-main">Import jobs from CSV</h2>
+          <h2 className="text-xl font-black text-text-main">Import jobs from CSV{fixedCompany ? ` for ${fixedCompany.name}` : ''}</h2>
           <p className="max-w-3xl text-sm font-semibold text-text-muted">
             Columns used: Job title, Company, Location, Region, Category, Job type, Salary, Closing date, Description, How to apply. Any other column is ignored. Jobs are shown as posted by JobWahala on behalf
             of the company. A row whose title already exists for the company is skipped, so you can safely run the same file again.
           </p>
         </div>
-        <button type="button" onClick={() => setOpen(false)} className="text-xs font-black text-text-muted">
+        <button type="button" onClick={() => { setOpen(false); onClose?.() }} className="text-xs font-black text-text-muted">
           Close
         </button>
       </div>
 
+      {fixedCompany ? (
+        <p className="rounded-xl bg-primary/5 px-4 py-3 text-sm font-bold text-text-main">Jobs will be posted on behalf of {fixedCompany.name}.</p>
+      ) : null}
+
       <div className="grid gap-4 md:grid-cols-2">
+        {fixedCompany ? null : (
+          <>
         <label className={label}>
           Company name (empty = the name in the file)
           <input className={input} value={company.name} onChange={(event) => setCompany({ ...company, name: event.target.value })} />
@@ -105,6 +119,8 @@ export default function AdminJobImport({ onImported }: { onImported?: () => void
           Company phone or WhatsApp (optional)
           <input className={input} value={company.phone} onChange={(event) => setCompany({ ...company, phone: event.target.value })} />
         </label>
+          </>
+        )}
         <label className={label}>
           Job type when a row says "Not specified"
           <input className={input} value={defaultType} onChange={(event) => setDefaultType(event.target.value)} />

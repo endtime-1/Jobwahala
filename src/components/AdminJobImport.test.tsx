@@ -58,6 +58,27 @@ describe('the CSV import tool', () => {
   })
 })
 
+describe('the import from a company in the Growth section', () => {
+  it('asks for no company details and sends the company id', async () => {
+    api.apiAdminImportJobs.mockReset()
+    api.apiAdminImportJobs.mockResolvedValue({ ...preview })
+    render(<AdminJobImport startOpen fixedCompany={{ id: 'growth-1', name: 'SBP Africa' }} />)
+
+    expect(screen.getByText('Jobs will be posted on behalf of SBP Africa.')).toBeInTheDocument()
+    expect(screen.queryByLabelText(/Company name/)).not.toBeInTheDocument()
+
+    const file = new File(['x'], 'jobs.csv', { type: 'text/csv' })
+    Object.defineProperty(file, 'text', { value: () => Promise.resolve('Job title,Description' + String.fromCharCode(10) + 'Scouts,Find riders') })
+    fireEvent.change(screen.getByLabelText(/CSV file/), { target: { files: [file] } })
+    fireEvent.change(screen.getByLabelText(/Closing date/), { target: { value: '2026-12-09' } })
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Preview' })).toBeEnabled())
+    fireEvent.click(screen.getByRole('button', { name: 'Preview' }))
+
+    await waitFor(() => expect(api.apiAdminImportJobs).toHaveBeenCalled())
+    expect(api.apiAdminImportJobs.mock.calls[0][0].company).toMatchObject({ id: 'growth-1', name: 'SBP Africa' })
+  })
+})
+
 describe('contact details in "How to apply"', () => {
   it('links email addresses and WhatsApp numbers', () => {
     render(<div>{linkContacts('Send CV to:\nWhatsApp: 0547125675\nEmail: recruitment@sbpafrica.group\nCall 024 400 0000')}</div>)

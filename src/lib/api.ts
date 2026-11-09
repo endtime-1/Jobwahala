@@ -1335,7 +1335,7 @@ export type AdminImportResult = {
 
 export const apiAdminImportJobs = (input: {
   csv: string
-  company: { name: string; website: string; email: string; phone: string }
+  company: { id?: string; name: string; website: string; email: string; phone: string }
   defaultType: string
   defaultClosingDate: string
   dryRun: boolean
