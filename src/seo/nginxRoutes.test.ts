@@ -49,9 +49,43 @@ describe('the bot and domain rules in nginx', () => {
     expect(nginx).toMatch(/error_page 502 503 504 = @backend_unavailable;/)
     expect(nginx).toMatch(/Retry-After 120/)
     // every location that proxies to the share pages has the fallback
-    const crawlerLocations = nginx.split('\n  location ').filter((block) => block.includes('if ($is_link_crawler)'))
+    const crawlerLocations = nginx.split('\n  location ').filter((block) => block.includes('rewrite') && block.includes('/api/share/'))
     expect(crawlerLocations.length).toBeGreaterThan(8)
     for (const block of crawlerLocations) expect(block).toContain('@backend_unavailable')
+  })
+
+  it('serves the same server-rendered page to every visitor, bots and people alike (no different content for bots)', () => {
+    const pageLocations = nginx.split('\n  location ').filter((block) => block.includes('rewrite') && block.includes('/api/share/'))
+    expect(pageLocations.length).toBeGreaterThanOrEqual(12)
+    for (const block of pageLocations) {
+      expect(block).not.toContain('if ($is_link_crawler)')
+      expect(block).toContain('proxy_pass $backend;')
+    }
+    // the home page and the jobs page are among them
+    expect(nginx).toMatch(/location = \/ \{[^}]*\/api\/share\/pages\/home/)
+    expect(nginx).toMatch(/location = \/jobs \{[^}]*\/api\/share\/pages\/jobs/)
+  })
+
+  it('still gives people the app when the API is down, and crawlers a 503', () => {
+    const fallback = nginx.slice(nginx.indexOf('location @backend_unavailable'))
+    expect(fallback).toMatch(/if \(\$is_link_crawler = 0\) \{\s*rewrite \^ \/index\.html break;/)
+    expect(fallback).toContain('return 503')
+  })
+
+  it('serves the pages made at build time (about, terms, privacy, blog) from dist/prerendered', () => {
+    expect(nginx).toContain('try_files /prerendered/$pre_page.html /index.html;')
+    expect(nginx).toContain('try_files /prerendered/blog/$pre_post.html @app_page;')
+    expect(nginx).toMatch(/pre_page>about\|terms\|privacy\|blog/)
+  })
+
+  it('sends http:// visits to https on the www address', () => {
+    expect(nginx).toMatch(/if \(\$http_x_forwarded_proto = http\) \{\s*return 301 https:\/\/www\.jobwahala\.com\$request_uri;/)
+  })
+
+  it('serves the sitemap index and each sitemap it lists from the API', () => {
+    expect(nginx).toContain('location = /sitemap.xml')
+    expect(nginx).toContain('sitemap_part>static|landing|jobs|companies')
+    expect(nginx).toContain('/api/share/sitemap/$sitemap_part')
   })
 
   it('serves the web health check without the API, and keeps the app shell for 404 pages', () => {

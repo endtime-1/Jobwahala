@@ -140,7 +140,7 @@ export const placesOfJob = (job: Pick<LandingJob, 'location'>): Place[] => {
 type Category = { slug: string; name: string; keywords: string[] };
 
 // A keyword matches words that START with it ("bank" finds banking and banker); a trailing ! means the whole word.
-const CATEGORIES: Category[] = [
+export const CATEGORIES: Category[] = [
   { slug: 'banking', name: 'Banking', keywords: ['bank', 'teller', 'loan officer', 'microfinance', 'credit officer'] },
   { slug: 'accounting', name: 'Accounting', keywords: ['account', 'audit', 'bookkeep', 'tax'] },
   { slug: 'finance', name: 'Finance', keywords: ['financ', 'treasury', 'investment'] },
@@ -348,7 +348,8 @@ const describe = (spec: PageSpec, jobs: LandingJob[]) => {
   ].filter(Boolean);
 
   return {
-    title: `${h1} - ${count} open now`,
+    // City pages say how many vacancies there are; a category on its own says it is for Ghana.
+    title: spec.category && !spec.place ? `${h1} in Ghana` : `${h1} - ${count} ${count === 1 ? 'vacancy' : 'vacancies'} today`,
     description: `Apply for ${count} open ${noun}${topCategories.length ? `, mostly ${listWords(topCategories)}` : ''}. See the pay and location before you apply on JobWahala.`.slice(0, 200),
     intro: bits.join(' '),
   };

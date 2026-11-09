@@ -11,10 +11,18 @@ interface SEOProps {
   noindex?: boolean
 }
 
+const SITE = 'https://www.jobwahala.com'
+
+/** This page's own address on the main site: the canonical link must never point at another page. */
+const currentCanonical = () => {
+  const path = typeof window === 'undefined' ? '/' : window.location.pathname
+  return `${SITE}${path === '/' ? '' : path.replace(/\/+$/, '')}`
+}
+
 export default function SEO({
   title,
   description = 'Find real jobs across Africa from employers you can check, or post your jobs free and review applicants on one board.',
-  canonical = 'https://www.jobwahala.com',
+  canonical = currentCanonical(),
   ogImage = 'https://www.jobwahala.com/og-image.jpg',
   ogType = 'website',
   keywords = 'jobs in africa, jobs in ghana, remote work africa, post a job free, verified employers, jobwahala',

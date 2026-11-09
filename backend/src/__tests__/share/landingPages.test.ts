@@ -208,7 +208,7 @@ describe('what is on each page', () => {
     const page = buildLandingPage('banking-jobs-in-accra', index)!;
 
     expect(page.h1).toBe('Banking jobs in Accra');
-    expect(page.title).toBe('Banking jobs in Accra - 4 open now');
+    expect(page.title).toBe('Banking jobs in Accra - 4 vacancies today');
     expect(page.intro).toMatch(/There are 4 open banking jobs in Accra on JobWahala from \d employers?\./);
     expect(page.intro).toContain('Pay starts from GHS 1,800 a month');
     expect(page.description).toContain('4 open banking jobs in Accra');
@@ -351,7 +351,7 @@ describe('the HTML for search engines', () => {
   it('has the title, description, canonical address, H1, intro, jobs and related links', () => {
     const html = renderLandingPage(pageOf('banking-jobs-in-accra', jobs)!, 'https://jobwahala.com');
 
-    expect(html).toContain('<title>Banking jobs in Accra - 3 open now | JobWahala</title>');
+    expect(html).toContain('<title>Banking jobs in Accra - 3 vacancies today | JobWahala</title>');
     expect(html).toContain('<meta name="description" content="Apply for 3 open banking jobs in Accra');
     expect(html).toContain('<link rel="canonical" href="https://jobwahala.com/banking-jobs-in-accra">');
     expect(html).toContain('<h1>Banking jobs in Accra</h1>');

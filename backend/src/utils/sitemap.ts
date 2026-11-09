@@ -19,6 +19,9 @@ export const staticSitemapPaths: SitemapEntry[] = [
   { path: '/jobs', changeFrequency: 'daily', priority: 0.9 },
   { path: '/internships', changeFrequency: 'daily', priority: 0.9 },
   { path: '/blog', changeFrequency: 'weekly', priority: 0.5 },
+  // The articles are in src/data/blogData.ts; src/seo/prerender.test.ts fails if one is missing here.
+  { path: '/blog/hiring-in-ghana', changeFrequency: 'monthly', priority: 0.5 },
+  { path: '/blog/freelance-success-ghana', changeFrequency: 'monthly', priority: 0.5 },
   { path: '/about', changeFrequency: 'monthly', priority: 0.4 },
   { path: '/hiring-service', changeFrequency: 'monthly', priority: 0.7 },
   { path: '/support', changeFrequency: 'monthly', priority: 0.4 },
@@ -83,4 +86,17 @@ export const buildSitemapXml = (baseUrl: string, entries: SitemapEntry[]) => {
     .join('\n');
 
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${items}\n</urlset>\n`;
+};
+
+/** A sitemap index: a list of the sitemap files, each with the date it last changed. */
+export const buildSitemapIndexXml = (baseUrl: string, files: { path: string; lastModified?: Date }[]) => {
+  const items = files
+    .map((file) => {
+      const parts = [`    <loc>${escapeXml(`${baseUrl}${file.path}`)}</loc>`];
+      if (file.lastModified) parts.push(`    <lastmod>${file.lastModified.toISOString().slice(0, 10)}</lastmod>`);
+      return `  <sitemap>\n${parts.join('\n')}\n  </sitemap>`;
+    })
+    .join('\n');
+
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${items}\n</sitemapindex>\n`;
 };

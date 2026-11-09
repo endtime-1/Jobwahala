@@ -1,10 +1,17 @@
 import { Router } from 'express';
 import { getCourseHubSharePage, getCourseLandingSharePage, getCourseSharePage, getFreelancerSharePage, getJobListSharePage, getLandingJson, getLandingSharePage, getCompanySharePage,
-  getJobSharePage, getSitemap } from '../controllers/shareController';
+  getJobSharePage, getSitemap, getSitemapIndex, getSitemapPart } from '../controllers/shareController';
+
+import { appShellMiddleware } from '../utils/appShell';
 
 const router = Router();
 
-router.get('/sitemap.xml', getSitemap);
+// Every page is merged into the app's own shell, so people and crawlers get the same full HTML.
+router.use(appShellMiddleware());
+
+router.get('/sitemap.xml', getSitemapIndex);
+router.get('/sitemap-all.xml', getSitemap);
+router.get('/sitemap/:part', getSitemapPart);
 router.get('/freelancers/:id', getFreelancerSharePage);
 router.get('/jobs/:id', getJobSharePage);
 router.get('/companies/:id', getCompanySharePage);

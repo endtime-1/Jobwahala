@@ -9,6 +9,8 @@ export default function HeroVisual() {
       <img
         src="/people/woman-desk.webp"
         alt="A woman laughing during a work call at her desk"
+        fetchPriority="high"
+        decoding="async"
         width={560}
         height={700}
         className="absolute left-0 top-8 w-[52%] -rotate-3 rounded-3xl object-cover shadow-premium-2xl ring-2 ring-gold/80"
@@ -16,6 +18,7 @@ export default function HeroVisual() {
       <img
         src="/people/man-suit.webp"
         alt="A man in a suit in conversation"
+        decoding="async"
         width={560}
         height={700}
         className="absolute right-0 top-0 w-[44%] rotate-3 rounded-3xl object-cover shadow-premium-2xl ring-1 ring-white/25"
@@ -23,6 +26,7 @@ export default function HeroVisual() {
       <img
         src="/people/woman-portrait.webp"
         alt="A smiling young woman"
+        decoding="async"
         width={560}
         height={700}
         className="absolute bottom-0 right-6 w-[46%] -rotate-2 rounded-3xl object-cover shadow-premium-2xl ring-2 ring-gold/80"

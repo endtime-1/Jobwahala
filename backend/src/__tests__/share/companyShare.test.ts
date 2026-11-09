@@ -45,7 +45,7 @@ describe('the company page for crawlers', () => {
     await getCompanySharePage(request('emp-1'), res);
 
     expect(out.status).toBe(200);
-    expect(out.body).toContain('Akoko Solutions LTD jobs and company profile');
+    expect(out.body).toContain('Akoko Solutions LTD Jobs &amp; Company Profile');
     expect(out.body).toContain('Unverified employer');
     expect(out.body).toContain('B2B SALES EXECUTIVE');
     expect(prismaMock.user.findFirst.mock.calls[0][0].where).toMatchObject({ id: 'emp-1', role: 'EMPLOYER', status: 'ACTIVE' });

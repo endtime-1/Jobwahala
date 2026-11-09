@@ -5,7 +5,7 @@ import logger from '../config/logger';
 import { singleValue } from '../utils/request';
 import { getErrorMessage } from '../utils/errors';
 import { renderFreelancerSharePage, renderSharePageNotFound } from '../utils/sharePage';
-import { renderCompanyPage, renderJobListPage, renderJobPage, type SeoJob } from '../utils/seoPages';
+import { renderCompanyPage, renderHomePage, renderJobListPage, renderJobPage, type SeoJob } from '../utils/seoPages';
 import { approvedBusinessVerificationQuery, isVerifiedEmployer } from '../utils/verification';
 import { EARLY_CAREER_TYPES } from '../utils/earlyCareer';
 import { publicJobWhere } from '../utils/jobLifecycle';
@@ -17,8 +17,8 @@ import { renderCourseDetailPage, renderCourseHubPage, renderCourseLandingPage } 
 import { courseInclude, toPublicCourse } from '../services/courseCatalog';
 import { publicCourseWhere } from '../utils/courses';
 import { siteCopy } from '../content/siteCopy';
-import { organizationJsonLd } from '../content/organization';
 import {
+  buildSitemapIndexXml,
   buildSitemapXml,
   countryEntries,
   freelanceSitemapPaths,
@@ -142,45 +142,90 @@ export const getFreelancerSharePage = async (req: Request, res: Response) => {
   }
 };
 
-/**
- * A sitemap with the pages search engines should know about: the fixed pages, a page per
- * country, every open job and every company that has one.
- */
-export const getSitemap = async (req: Request, res: Response) => {
-  try {
-    const baseUrl = resolvePublicBaseUrl({
-      configured: process.env.FRONTEND_BASE_URL,
-      protocol: req.get('x-forwarded-proto') || req.protocol,
-      host: req.get('x-forwarded-host') || req.get('host') || undefined,
-    });
+const baseUrlOf = (req: Request) =>
+  resolvePublicBaseUrl({
+    configured: process.env.FRONTEND_BASE_URL,
+    protocol: req.get('x-forwarded-proto') || req.protocol,
+    host: req.get('x-forwarded-host') || req.get('host') || undefined,
+  });
 
-    const jobs = await prisma.job.findMany({
-      where: publicJobWhere(),
-      select: { id: true, employerId: true, updatedAt: true },
-      orderBy: { updatedAt: 'desc' },
-      take: 5000,
-    });
+// The day this release started: the best "last modified" date for pages that only change when we deploy.
+const RELEASE_DATE = new Date();
 
-    const companyIds = [...new Set(jobs.map((job) => job.employerId))];
+/** The pages search engines should know about, in four groups. Only pages that may be indexed are listed. */
+const sitemapSections = async (): Promise<Record<'static' | 'landing' | 'jobs' | 'companies', SitemapEntry[]>> => {
+  const jobs = await prisma.job.findMany({
+    where: publicJobWhere(),
+    select: { id: true, employerId: true, updatedAt: true },
+    orderBy: { updatedAt: 'desc' },
+    take: 5000,
+  });
 
-    const entries: SitemapEntry[] = [
+  const newestByCompany = new Map<string, Date>();
+  for (const job of jobs) if (!newestByCompany.has(job.employerId)) newestByCompany.set(job.employerId, job.updatedAt);
+  const newestJob = jobs[0]?.updatedAt ?? RELEASE_DATE;
+
+  return {
+    static: ([
       ...staticSitemapPaths,
       ...(env.freelanceEnabled ? freelanceSitemapPaths : []),
       ...countryEntries(),
       ...(await courseSitemapPaths()).map((path) => ({ path, changeFrequency: 'weekly' as const, priority: 0.6 })),
-      ...landingSitemapPaths(await loadLandingIndex()).map((path) => ({ path, changeFrequency: 'daily' as const, priority: 0.6 })),
-      ...jobs.map((job) => ({
-        path: `/jobs/${job.id}`,
-        lastModified: job.updatedAt,
-        changeFrequency: 'weekly' as const,
-        priority: 0.7,
-      })),
-      ...companyIds.map((id) => ({ path: `/companies/${id}`, changeFrequency: 'weekly' as const, priority: 0.6 })),
-    ];
+    ] as SitemapEntry[]).map((entry) => ({ ...entry, lastModified: entry.lastModified ?? (entry.changeFrequency === 'daily' ? newestJob : RELEASE_DATE) })),
+    landing: landingSitemapPaths(await loadLandingIndex()).map((path) => ({
+      path,
+      lastModified: newestJob,
+      changeFrequency: 'daily' as const,
+      priority: 0.6,
+    })),
+    jobs: jobs.map((job) => ({ path: `/jobs/${job.id}`, lastModified: job.updatedAt, changeFrequency: 'weekly' as const, priority: 0.7 })),
+    companies: [...newestByCompany].map(([id, updatedAt]) => ({ path: `/companies/${id}`, lastModified: updatedAt, changeFrequency: 'weekly' as const, priority: 0.6 })),
+  };
+};
+
+export const SITEMAP_PARTS = ['static', 'landing', 'jobs', 'companies'] as const;
+
+/** Every page in one file (kept for tools that want a single list). */
+export const getSitemap = async (req: Request, res: Response) => {
+  try {
+    const sections = await sitemapSections();
+    const entries: SitemapEntry[] = [...sections.static, ...sections.landing, ...sections.jobs, ...sections.companies];
 
     res.type('application/xml');
     res.set('Cache-Control', 'public, max-age=3600');
-    return res.send(buildSitemapXml(baseUrl, entries));
+    return res.send(buildSitemapXml(baseUrlOf(req), entries));
+  } catch (error) {
+    logger.error('sitemap_failed', { error: getErrorMessage(error) });
+    return res.status(500).type('text/plain').send('Unable to build the sitemap right now');
+  }
+};
+
+/** /sitemap.xml: the index that points to the static pages, landing pages, jobs and companies. */
+export const getSitemapIndex = async (req: Request, res: Response) => {
+  try {
+    const sections = await sitemapSections();
+    const newest = (entries: SitemapEntry[]) => entries.reduce<Date | undefined>((latest, entry) => (!latest || (entry.lastModified && entry.lastModified > latest) ? entry.lastModified : latest), undefined);
+    const files = SITEMAP_PARTS.filter((part) => sections[part].length > 0).map((part) => ({ path: `/sitemap-${part}.xml`, lastModified: newest(sections[part]) }));
+
+    res.type('application/xml');
+    res.set('Cache-Control', 'public, max-age=3600');
+    return res.send(buildSitemapIndexXml(baseUrlOf(req), files));
+  } catch (error) {
+    logger.error('sitemap_index_failed', { error: getErrorMessage(error) });
+    return res.status(500).type('text/plain').send('Unable to build the sitemap right now');
+  }
+};
+
+/** One of the sitemaps the index points to. */
+export const getSitemapPart = async (req: Request, res: Response) => {
+  const part = singleValue(req.params.part) as (typeof SITEMAP_PARTS)[number] | undefined;
+  if (!part || !SITEMAP_PARTS.includes(part)) return res.status(404).type('text/plain').send('Not found');
+
+  try {
+    const sections = await sitemapSections();
+    res.type('application/xml');
+    res.set('Cache-Control', 'public, max-age=3600');
+    return res.send(buildSitemapXml(baseUrlOf(req), sections[part]));
   } catch (error) {
     logger.error('sitemap_failed', { error: getErrorMessage(error) });
     return res.status(500).type('text/plain').send('Unable to build the sitemap right now');
@@ -293,6 +338,7 @@ export const getJobListSharePage = async (req: Request, res: Response) => {
       kind === 'country'
         ? {
             heading: `Jobs in ${country}`,
+            title: `Jobs in ${country} - ${rows.length} ${rows.length === 1 ? 'vacancy' : 'vacancies'} today`,
             description: `Browse and apply for real jobs in ${country}. See the pay and location before you apply, and track every application.`,
             intro: `Real jobs from employers you can check in ${country}.`,
             path: `/jobs-in/${req.params.country}`,
@@ -321,7 +367,8 @@ export const getJobListSharePage = async (req: Request, res: Response) => {
 
     res.type('html');
     res.set('Cache-Control', 'public, max-age=300');
-    return res.send(renderJobListPage({ ...page, jobs, siteUrl, extraJsonLd: kind === 'home' ? [organizationJsonLd(siteUrl)] : [] }));
+    if (kind === 'home') return res.send(renderHomePage({ jobs, siteUrl, intro: page.intro, description: page.description }));
+    return res.send(renderJobListPage({ ...page, jobs, siteUrl }));
   } catch (error) {
     logger.error('job_list_share_page_error', { error: getErrorMessage(error) });
     return res.status(500).type('html').send(renderSharePageNotFound(siteUrl));

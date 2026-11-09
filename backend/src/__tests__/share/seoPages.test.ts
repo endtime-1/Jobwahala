@@ -56,7 +56,7 @@ describe('buildJobPostingJsonLd', () => {
     expect(data.employmentType).toBe('FULL_TIME');
     expect(data.hiringOrganization.name).toBe('Sunrise Microfinance');
     expect(data.jobLocation.address.addressLocality).toBe('Kumasi');
-    expect(data.jobLocation.address.addressCountry).toBe('Ghana');
+    expect(data.jobLocation.address.addressCountry).toBe('GH');
     expect(data.description).toContain('<p>Answer customer questions by phone.</p>');
   });
 
@@ -73,7 +73,7 @@ describe('renderJobPage', () => {
   it('has a real title, heading, canonical link and structured data', () => {
     const html = renderJobPage(job, 'https://www.jobwahala.com');
 
-    expect(html).toContain('<title>Customer Support Agent at Sunrise Microfinance | JobWahala</title>');
+    expect(html).toContain('<title>Customer Support Agent at Sunrise Microfinance – Kumasi | JobWahala</title>');
     expect(html).toContain('<h1>Customer Support Agent</h1>');
     expect(html).toContain('<link rel="canonical" href="https://www.jobwahala.com/jobs/job-1">');
     expect(html).toContain('application/ld+json');
@@ -82,7 +82,7 @@ describe('renderJobPage', () => {
   it('has a WhatsApp-ready preview: title, description with the key facts, canonical link and picture', () => {
     const html = renderJobPage({ ...job, location: 'Accra', salary: 'GHS 2,000 a month', type: 'Full-time' }, 'https://www.jobwahala.com');
 
-    expect(html).toContain('<meta property="og:title" content="Customer Support Agent at Sunrise Microfinance">');
+    expect(html).toContain('<meta property="og:title" content="Customer Support Agent at Sunrise Microfinance – Accra">');
     expect(html).toMatch(/<meta property="og:description" content="Accra · GHS 2,000 a month · Full-time\. /);
     expect(html).toContain('<meta property="og:url" content="https://www.jobwahala.com/jobs/job-1">');
     expect(html).toContain('<meta property="og:type" content="article">');
@@ -172,7 +172,7 @@ describe('renderCompanyPage', () => {
   it('gives crawlers the company name as the title, its open roles, and the right address', () => {
     const html = renderCompanyPage(company, 'https://www.jobwahala.com');
 
-    expect(html).toContain('<title>Akoko Solutions LTD jobs and company profile | JobWahala</title>');
+    expect(html).toContain('<title>Akoko Solutions LTD Jobs &amp; Company Profile | JobWahala</title>');
     expect(html).toContain('<link rel="canonical" href="https://www.jobwahala.com/companies/emp-1">');
     expect(html).toContain('Open roles (1)');
     expect(html).toContain('href="https://www.jobwahala.com/jobs/job-1"');

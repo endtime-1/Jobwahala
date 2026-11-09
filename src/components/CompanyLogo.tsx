@@ -23,6 +23,8 @@ export default function CompanyLogo({ name, logoUrl, className = 'h-12 w-12 roun
         <img
           src={logoUrl as string}
           alt={`${name} logo`}
+          width={48}
+          height={48}
           loading="lazy"
           decoding="async"
           onError={() => setFailedUrl(logoUrl ?? null)}

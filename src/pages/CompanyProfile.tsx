@@ -70,7 +70,7 @@ export default function CompanyProfile() {
       '@context': 'https://schema.org',
       '@type': 'Organization',
       name: company.companyName,
-      url: `${window.location.origin}/companies/${company.id}`,
+      url: `https://www.jobwahala.com/companies/${company.id}`,
       ...(company.description ? { description: company.description } : {}),
       ...(company.logoUrl ? { logo: new URL(company.logoUrl, window.location.origin).toString() } : {}),
       ...(company.website ? { sameAs: [company.website] } : {}),
@@ -119,7 +119,7 @@ export default function CompanyProfile() {
 
       <section className="relative overflow-hidden rounded-[2rem] px-5 py-8 text-white sm:px-9 sm:py-11" style={{ background: heroBackground }}>
         {company.isBranded && company.coverImageUrl ? (
-          <img src={company.coverImageUrl} alt="" className="absolute inset-0 h-full w-full object-cover opacity-30" />
+          <img src={company.coverImageUrl} alt="" width={1200} height={400} decoding="async" className="absolute inset-0 h-full w-full object-cover opacity-30" />
         ) : null}
         <div className="heritage-strip absolute inset-x-0 top-0" aria-hidden />
         <div className="relative z-10 flex flex-col gap-6 sm:flex-row sm:items-center">
@@ -217,7 +217,7 @@ export default function CompanyProfile() {
           <ul className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-3">
             {company.gallery.map((src, index) => (
               <li key={src} className="overflow-hidden rounded-2xl border border-surface-border">
-                <img src={src} alt={`${company.companyName} photo ${index + 1}`} loading="lazy" className="h-40 w-full object-cover" />
+                <img src={src} alt={`${company.companyName} photo ${index + 1}`} width={400} height={160} loading="lazy" decoding="async" className="h-40 w-full object-cover" />
               </li>
             ))}
           </ul>

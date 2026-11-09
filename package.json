@@ -8,10 +8,11 @@
     "dev:all": "node scripts/dev.mjs",
     "dev:backend": "npm --prefix backend run dev",
     "dev:frontend": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && node scripts/prerender.mjs",
     "test:smoke": "vitest run --config vitest.config.ts",
     "deploy:check:vps": "node scripts/checkVpsEnv.mjs",
     "deploy:verify": "node scripts/postDeployCheck.mjs",
+    "seo:check": "node scripts/seoHtmlCheck.mjs",
     "deploy:verify:bots": "node scripts/checkBotRoutes.mjs",
     "lint": "eslint .",
     "preview": "vite preview"
