@@ -34,3 +34,5 @@ export const updateBlogPostSchema = z.object({
 });
 
 export const blogPostIdSchema = z.object({ params: z.object({ id: z.string().min(1) }) });
+
+export const previewBlogSchema = z.object({ body: z.object({ body: z.string().max(60000) }).strict() });

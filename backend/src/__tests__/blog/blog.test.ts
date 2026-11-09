@@ -14,7 +14,7 @@ const prismaMock = vi.hoisted(() => {
 });
 vi.mock('../../config/prisma', () => ({ default: prismaMock }));
 
-import { createPost, deletePost, getPost, listPosts, updatePost } from '../../controllers/blogController';
+import { createPost, deletePost, getPost, listPosts, previewPost, updatePost } from '../../controllers/blogController';
 import { getBlogPostSharePage, getSitemapPart } from '../../controllers/shareController';
 import { createBlogPostSchema, updateBlogPostSchema } from '../../validation/blogSchemas';
 import { isBlogCategory, postState, publicPostWhere, readingMinutes, renderMarkdown, slugifyTitle } from '../../utils/blog';
@@ -259,6 +259,15 @@ describe('writing posts in the admin panel', () => {
     const paths = await adminRouterPaths();
     expect(paths).toContain('/blog');
     expect(paths).toContain('/blog/:id');
+  });
+});
+
+describe('the editor preview', () => {
+  it('renders the draft with the same renderer as the public page', () => {
+    const { res, state } = respond();
+    previewPost({ body: { body: ['## Hello', '![A pic](/api/uploads/logo/p.webp)'].join(String.fromCharCode(10)) } } as never, res);
+    expect(state.body.html).toContain('<h2>Hello</h2>');
+    expect(state.body.html).toContain('<img src="/api/uploads/logo/p.webp" alt="A pic" loading="lazy">');
   });
 });
 

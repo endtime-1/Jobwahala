@@ -4,6 +4,7 @@ import {
   apiAdminBlogCreate,
   apiAdminBlogDelete,
   apiAdminBlogList,
+  apiAdminBlogPreview,
   apiAdminBlogUpdate,
   type AdminBlogInput,
   type AdminBlogPost,
@@ -62,6 +63,9 @@ export default function AdminBlogPanel() {
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const bodyRef = useRef<HTMLTextAreaElement>(null)
+  const [showPreview, setShowPreview] = useState(false)
+  const [previewHtml, setPreviewHtml] = useState('')
+  const [imageAlt, setImageAlt] = useState('')
 
   const load = useCallback(async () => {
     try {
@@ -79,6 +83,35 @@ export default function AdminBlogPanel() {
   }, [load])
 
   const set = <K extends keyof AdminBlogInput>(key: K, value: AdminBlogInput[K]) => setForm((current) => ({ ...current, [key]: value }))
+
+  // The preview comes from the server's own renderer, so it is exactly what visitors will read.
+  useEffect(() => {
+    if (!showPreview) return
+    const timer = window.setTimeout(() => {
+      apiAdminBlogPreview(form.body).then((data) => setPreviewHtml(data.html)).catch(() => setPreviewHtml(''))
+    }, 400)
+    return () => window.clearTimeout(timer)
+  }, [showPreview, form.body])
+
+  const insertImage = async (file: File | undefined) => {
+    if (!file) return
+    if (!imageAlt.trim()) {
+      setError('Describe the image first (alt text), then choose the file.')
+      return
+    }
+    setError('')
+    try {
+      const data = await uploadLogoFile(file)
+      const area = bodyRef.current
+      const at = area ? area.selectionStart : form.body.length
+      const description = imageAlt.trim().replace(/[\[\]]/g, '')
+      const markdown = '\n\n![' + description + '](' + data.file.url + ')\n\n'
+      set('body', `${form.body.slice(0, at)}${markdown}${form.body.slice(at)}`)
+      setImageAlt('')
+    } catch (caught) {
+      setError(getErrorMessage(caught, 'Could not upload the image (PNG, JPG or WEBP, 1 MB at most).'))
+    }
+  }
 
   const startNew = () => {
     setForm(emptyForm())
@@ -277,6 +310,16 @@ export default function AdminBlogPanel() {
               <button type="button" className={toolButton} onClick={() => wrapSelection('**')}>Bold</button>
               <button type="button" className={toolButton} onClick={() => prefixLine('- ')}>List</button>
               <button type="button" className={toolButton} onClick={() => wrapSelection('[', '](https://)')}>Link</button>
+              <button type="button" className={toolButton} aria-pressed={showPreview} onClick={() => setShowPreview((current) => !current)}>
+                {showPreview ? 'Hide preview' : 'Preview'}
+              </button>
+            </div>
+            <div className="mb-2 flex flex-wrap items-center gap-2">
+              <input aria-label="Image description" className="w-56 rounded-lg border border-surface-border bg-white px-3 py-1.5 text-xs font-semibold" placeholder="Image description (alt text)" value={imageAlt} onChange={(event) => setImageAlt(event.target.value)} />
+              <label className="cursor-pointer text-xs font-black text-primary">
+                Insert an image
+                <input type="file" aria-label="Insert an image" accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={(event) => { void insertImage(event.target.files?.[0]); event.target.value = '' }} />
+              </label>
             </div>
             <textarea
               ref={bodyRef}
@@ -287,6 +330,12 @@ export default function AdminBlogPanel() {
               onPaste={onPaste}
               placeholder="Write in Markdown, or paste from Word or Google Docs: headings, bold, lists and links are kept."
             />
+            {showPreview ? (
+              <div className="mt-3 rounded-2xl border border-surface-border bg-white p-5" aria-label="Preview">
+                <p className={label}>Preview</p>
+                <div className="article-body" dangerouslySetInnerHTML={{ __html: previewHtml || '<p>Nothing to preview yet.</p>' }} />
+              </div>
+            ) : null}
           </div>
 
           <label className={label}>

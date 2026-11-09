@@ -1317,5 +1317,8 @@ export const apiAdminBlogCreate = (input: AdminBlogInput) =>
 export const apiAdminBlogUpdate = (id: string, input: Partial<AdminBlogInput>) =>
   fetch(`${BASE_URL}/admin/blog/${id}`, { method: 'PATCH', headers: headers(true), body: JSON.stringify(input) }).then(handleResponse)
 
+export const apiAdminBlogPreview = (body: string): Promise<{ html: string }> =>
+  fetch(`${BASE_URL}/admin/blog/preview`, { method: 'POST', headers: headers(true), body: JSON.stringify({ body }) }).then(handleResponse)
+
 export const apiAdminBlogDelete = (id: string) =>
   fetch(`${BASE_URL}/admin/blog/${id}`, { method: 'DELETE', headers: headers(true) }).then(handleResponse)

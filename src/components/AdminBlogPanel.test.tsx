@@ -7,9 +7,11 @@ const api = vi.hoisted(() => ({
   apiAdminBlogCreate: vi.fn(),
   apiAdminBlogUpdate: vi.fn(),
   apiAdminBlogDelete: vi.fn(),
+  apiAdminBlogPreview: vi.fn(),
 }))
+const upload = vi.hoisted(() => vi.fn())
 vi.mock('../lib/api', () => api)
-vi.mock('../lib/evidenceUpload', () => ({ uploadLogoFile: vi.fn() }))
+vi.mock('../lib/evidenceUpload', () => ({ uploadLogoFile: upload }))
 
 import AdminBlogPanel from './AdminBlogPanel'
 
@@ -77,5 +79,26 @@ describe('the blog panel', () => {
     render(<AdminBlogPanel />)
     expect(await screen.findByText('Coming soon')).toBeInTheDocument()
     expect(screen.getByText('SCHEDULED')).toBeInTheDocument()
+  })
+
+  it('shows a live preview made by the server, and inserts an uploaded image with its description', async () => {
+    api.apiAdminBlogPreview.mockResolvedValue({ html: '<h2>Signs</h2><p>Never pay to apply.</p>' })
+    upload.mockResolvedValue({ file: { url: '/api/uploads/logo/pic.webp' } })
+    render(<AdminBlogPanel />)
+    fireEvent.click(await screen.findByRole('button', { name: /New post/ }))
+    fireEvent.change(screen.getByLabelText('Article'), { target: { value: 'Start' } })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Preview' }))
+    expect(await screen.findByRole('heading', { name: 'Signs' })).toBeInTheDocument()
+    expect(api.apiAdminBlogPreview).toHaveBeenCalledWith('Start')
+
+    // an image needs its description first
+    const file = new File([new Uint8Array(4)], 'pic.webp', { type: 'image/webp' })
+    fireEvent.change(screen.getByLabelText('Insert an image'), { target: { files: [file] } })
+    expect(await screen.findByRole('alert')).toHaveTextContent('Describe the image first')
+
+    fireEvent.change(screen.getByLabelText('Image description'), { target: { value: 'A job advert with a warning' } })
+    fireEvent.change(screen.getByLabelText('Insert an image'), { target: { files: [file] } })
+    await waitFor(() => expect((screen.getByLabelText('Article') as HTMLTextAreaElement).value).toContain('![A job advert with a warning](/api/uploads/logo/pic.webp)'))
   })
 })
