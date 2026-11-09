@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const prismaMock = vi.hoisted(() => ({ job: { findMany: vi.fn() }, course: { findMany: vi.fn() } }));
+const prismaMock = vi.hoisted(() => ({ job: { findMany: vi.fn() }, course: { findMany: vi.fn() }, blogPost: { findMany: vi.fn().mockResolvedValue([]) } }));
 vi.mock('../../config/prisma', () => ({ default: prismaMock }));
 
 import {

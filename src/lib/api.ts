@@ -1255,3 +1255,67 @@ export const apiUpdateAdminJobContent = (id: string, input: { title?: string; de
     headers: headers(true),
     body: JSON.stringify(input),
   }).then(handleResponse);
+
+// ---- blog
+
+export type BlogCategory = { slug: string; label: string }
+export type BlogCard = {
+  slug: string
+  title: string
+  excerpt: string
+  category: string
+  categoryLabel: string
+  coverImageUrl: string | null
+  coverImageAlt: string | null
+  authorName: string
+  publishedAt: string | null
+  readingMinutes: number
+}
+export type BlogArticle = BlogCard & { html: string; metaDescription: string }
+
+export const apiGetBlogPosts = (category?: string): Promise<{ categories: BlogCategory[]; posts: BlogCard[] }> =>
+  fetch(`${BASE_URL}/blog${category ? `?category=${encodeURIComponent(category)}` : ''}`).then(handleResponse)
+
+export const apiGetBlogPost = (slug: string): Promise<{ post: BlogArticle; more: BlogCard[] }> =>
+  fetch(`${BASE_URL}/blog/${encodeURIComponent(slug)}`).then(handleResponse)
+
+export type AdminBlogPost = {
+  id: string
+  slug: string
+  title: string
+  metaDescription: string
+  category: string
+  body: string
+  coverImageUrl: string | null
+  coverImageAlt: string | null
+  authorName: string
+  status: 'DRAFT' | 'PUBLISHED'
+  state: 'DRAFT' | 'SCHEDULED' | 'PUBLISHED'
+  publishAt: string | null
+  updatedAt: string
+  wordCount: number
+}
+export type AdminBlogInput = {
+  title: string
+  slug: string
+  metaDescription: string
+  category: string
+  body: string
+  coverImageUrl: string
+  coverImageAlt: string
+  authorName: string
+  status: 'DRAFT' | 'PUBLISHED'
+  publishAt: string
+}
+
+export const apiAdminBlogList = (): Promise<{ categories: BlogCategory[]; posts: AdminBlogPost[] }> =>
+  fetch(`${BASE_URL}/admin/blog`, { headers: headers(true) }).then(handleResponse)
+
+export const apiAdminBlogCreate = (input: AdminBlogInput) =>
+  fetch(`${BASE_URL}/admin/blog`, { method: 'POST', headers: headers(true), body: JSON.stringify(input) }).then(handleResponse)
+
+export const apiAdminBlogUpdate = (id: string, input: Partial<AdminBlogInput>) =>
+  fetch(`${BASE_URL}/admin/blog/${id}`, { method: 'PATCH', headers: headers(true), body: JSON.stringify(input) }).then(handleResponse)
+
+export const apiAdminBlogDelete = (id: string) =>
+  fetch(`${BASE_URL}/admin/blog/${id}`, { method: 'DELETE', headers: headers(true) }).then(handleResponse)

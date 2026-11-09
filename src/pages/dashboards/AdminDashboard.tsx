@@ -17,6 +17,7 @@ import AdminCoursesPanel from '../../components/AdminCoursesPanel'
 import AdminBillingPanel from '../../components/AdminBillingPanel'
 import AdminHealthPanel from '../../components/AdminHealthPanel'
 import AdminGrowthPanel from '../../components/AdminGrowthPanel'
+import AdminBlogPanel from '../../components/AdminBlogPanel'
 import AdminHiringPanel from '../../components/AdminHiringPanel'
 import AdminOverviewPanel, { type AdminTab } from '../../components/AdminOverviewPanel'
 import { getErrorMessage } from '../../lib/errors'
@@ -169,7 +170,7 @@ export default function AdminDashboard({ initialTab = 'overview' }: { initialTab
       </div>
 
       <div className="dashboard-actions mb-8">
-        {(['overview', 'reports', 'users', 'jobs', 'services', 'verifications', 'disputes', 'courses', 'billing', 'growth', 'hiring', 'system'] as const).map((tab) => (
+        {(['overview', 'reports', 'users', 'jobs', 'services', 'verifications', 'disputes', 'courses', 'billing', 'growth', 'hiring', 'blog', 'system'] as const).map((tab) => (
           <button key={tab} type="button" onClick={() => setActiveTab(tab)} className={`dashboard-action-chip ${activeTab === tab ? 'border-primary/30 bg-primary/10 text-primary' : ''}`}>{tab.charAt(0).toUpperCase() + tab.slice(1)}</button>
         ))}
       </div>
@@ -417,6 +418,7 @@ export default function AdminDashboard({ initialTab = 'overview' }: { initialTab
           {activeTab === 'billing' ? <AdminBillingPanel /> : null}
 
           {activeTab === 'hiring' ? <AdminHiringPanel /> : null}
+          {activeTab === 'blog' ? <AdminBlogPanel /> : null}
 
           {activeTab === 'growth' ? (
             <AdminGrowthPanel

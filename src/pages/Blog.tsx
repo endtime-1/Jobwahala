@@ -1,159 +1,74 @@
-import { ArrowRight, Clock, Search } from 'lucide-react'
-import { Link } from 'react-router-dom'
-import SEO from '../components/SEO'
+import { useQuery } from '@tanstack/react-query'
+import { Link, useSearchParams } from 'react-router-dom'
 import PageHero from '../components/PageHero'
-import { blogPosts } from '../data/blogData'
+import SEO from '../components/SEO'
+import { apiGetBlogPosts } from '../lib/api'
+
+const formatDate = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '')
 
 export default function Blog() {
+  const [params, setParams] = useSearchParams()
+  const category = params.get('category') ?? ''
+  const { data, isLoading, isError } = useQuery({ queryKey: ['blog', category], queryFn: () => apiGetBlogPosts(category || undefined) })
+  const categories = data?.categories ?? []
+  const label = categories.find((entry) => entry.slug === category)?.label
+
   return (
     <div className="pt-24 pb-20 md:pb-24 xl:pt-28 xl:pb-32">
-      <SEO 
-        title="Resource Center — Insights on Hiring & Remote Work in Africa"
-        description="Your toolkit for the African job market. Hiring guides for growing teams and remote work playbooks for freelancers."
-        keywords="hiring in africa, african tech careers, remote work africa, jobwahala blog, african tech trends"
+      <SEO
+        title={label ? `${label} – Blog` : 'Blog – Career Advice for Job Seekers and Employers in Ghana'}
+        description="CV tips, interview tips, scam alerts, National Service and graduate advice, and hiring advice for employers in Ghana. Written by the JobWahala team."
       />
-      
+
       <div className="container">
-        <PageHero eyebrow="Resources" title="Guides for work and hiring" accent="in Africa." className="mb-10">
+        <PageHero eyebrow="Blog" title={label ?? 'JobWahala Blog'} className="mb-10">
           <p className="mt-4 max-w-2xl text-base font-medium text-white/75 sm:text-lg">
-            Practical advice for people building a team, finding a job or growing a freelance career.
+            Practical advice for finding a job, avoiding scams and hiring well in Ghana and across Africa.
           </p>
         </PageHero>
 
-        {/* Search & Filter (Placeholder UI) */}
-        <div className="mb-12 flex flex-col md:flex-row items-center justify-between gap-6 border-b border-surface-border pb-8">
-          <div className="flex flex-wrap gap-3">
-            {['All', 'Hiring Guide', 'Success Stories', 'Career Tips', 'Market Trends'].map((cat) => (
-              <button key={cat} className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${cat === 'All' ? 'bg-primary text-white' : 'bg-surface-alt text-text-muted hover:bg-surface-border'}`}>
-                {cat}
-              </button>
-            ))}
-          </div>
-          <div className="relative group w-full md:w-64">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-text-light group-focus-within:text-primary transition-colors" />
-            <input type="text" placeholder="Search articles..." className="w-full bg-surface-alt border-none rounded-2xl py-3 pl-12 pr-4 text-sm font-bold focus:ring-2 focus:ring-primary/20" />
-          </div>
-        </div>
-
-        {/* Featured Post (Template) */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-20 items-center">
-          <Link to={`/blog/${blogPosts[0].id}`} className="rounded-[3rem] overflow-hidden shadow-premium-2xl aspect-video lg:aspect-square relative group block">
-            <img src={blogPosts[0].image} alt={blogPosts[0].title} width={800} height={800} fetchPriority="high" decoding="async" className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-            <div className="absolute bottom-10 left-10 right-10">
-               <span className="px-3 py-1 bg-primary text-white rounded-lg text-[10px] font-black uppercase tracking-widest mb-4 inline-block">Featured</span>
-               <h2 className="text-3xl font-black text-white tracking-tighter leading-tight">{blogPosts[0].title}</h2>
-            </div>
-          </Link>
-          <div className="space-y-8 text-left">
-            <p className="text-primary font-black text-xs uppercase tracking-[0.2em]">{blogPosts[0].category}</p>
-            <Link to={`/blog/${blogPosts[0].id}`} className="block group">
-              <h2 className="text-4xl font-black text-text-main tracking-tighter leading-tight group-hover:text-primary transition-colors">{blogPosts[0].title}</h2>
-            </Link>
-            <p className="text-xl text-text-muted font-medium leading-relaxed">{blogPosts[0].excerpt}</p>
-            <div className="flex items-center gap-6 pt-4">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 bg-surface-alt rounded-full flex items-center justify-center font-black text-primary border border-surface-border">JW</div>
-                <div>
-                  <p className="text-xs font-black text-text-main">{blogPosts[0].author}</p>
-                  <p className="text-[10px] text-text-light font-bold uppercase tracking-widest">{blogPosts[0].date}</p>
-                </div>
-              </div>
-              <div className="h-10 w-[1px] bg-surface-border"></div>
-              <p className="text-[10px] text-text-light font-black uppercase tracking-widest">{blogPosts[0].readTime}</p>
-            </div>
-            <Link to={`/blog/${blogPosts[0].id}`} className="btn btn-primary btn-lg px-8 sm:px-10 mt-4 inline-flex">
-               Read Full Guide <ArrowRight className="h-6 w-6" />
-            </Link>
-          </div>
-        </div>
-
-        {/* Grid Posts */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-          {blogPosts.slice(1).map((post) => (
-            <Link key={post.id} to={`/blog/${post.id}`} className="card group hover:scale-[1.02] shadow-premium-lg border-surface-border/50 overflow-hidden active:scale-95 transition-all">
-               <div className="aspect-[16/10] overflow-hidden -mx-7 -mt-7 mb-7 relative rounded-t-[2rem]">
-                 <img src={post.image} alt={post.title} width={800} height={600} loading="lazy" decoding="async" className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700" />
-                 <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest text-primary shadow-sm">
-                   {post.category}
-                 </div>
-               </div>
-               <div className="text-left">
-                 <h3 className="mb-4 text-2xl font-black tracking-tighter text-text-main group-hover:text-primary transition-colors leading-tight">
-                   {post.title}
-                 </h3>
-                 <p className="text-text-muted text-base leading-relaxed font-medium mb-8 line-clamp-3">
-                   {post.excerpt}
-                 </p>
-               </div>
-               <div className="flex items-center justify-between pt-6 border-t border-surface-border/50">
-                 <div className="flex items-center gap-2">
-                   <Clock className="h-3.5 w-3.5 text-text-light" />
-                   <span className="text-[10px] font-black uppercase tracking-widest text-text-light">{post.readTime}</span>
-                 </div>
-                 <div className="text-primary font-black uppercase tracking-widest text-[10px] flex items-center gap-2 group/link">
-                   Read More <ArrowRight className="h-3.5 w-3.5 group-hover/link:translate-x-1 transition-transform" />
-                 </div>
-               </div>
-            </Link>
+        <nav aria-label="Categories" className="mb-10 flex flex-wrap gap-3">
+          {[{ slug: '', label: 'All' }, ...categories].map((entry) => (
+            <button
+              key={entry.slug || 'all'}
+              type="button"
+              onClick={() => setParams(entry.slug ? { category: entry.slug } : {})}
+              aria-pressed={category === entry.slug}
+              className={`rounded-full px-4 py-2 text-sm font-bold transition-all ${category === entry.slug ? 'bg-primary text-white' : 'bg-surface-alt text-text-muted hover:bg-surface-border'}`}
+            >
+              {entry.label}
+            </button>
           ))}
-          
-          {/* Success Spotlight Placeholder (Trust Pillar) */}
-          <div className="card border-dashed border-primary/30 bg-primary/2 border-2 flex flex-col items-center justify-center text-center p-12">
-            <div className="h-20 w-20 bg-primary/10 rounded-full flex items-center justify-center mb-6 text-primary">
-              <Sparkles className="h-10 w-10" />
-            </div>
-            <h3 className="text-2xl font-black tracking-tighter text-text-main mb-4">Your Success Story?</h3>
-            <p className="text-text-muted font-medium mb-8">Launch your career on JobWahala and become our next featured spotlight.</p>
-            <Link to="/onboarding?role=seeker" className="btn btn-outline border-primary text-primary px-8">
-              Join the Launch
-            </Link>
-          </div>
+        </nav>
+
+        {isLoading ? <p className="text-sm font-semibold text-text-muted">Loading articles…</p> : null}
+        {isError ? <p role="alert" className="text-sm font-bold text-red-600">We could not load the articles. Please try again.</p> : null}
+        {data && data.posts.length === 0 ? <p className="rounded-2xl border border-dashed border-surface-border p-8 text-sm font-semibold text-text-muted">No articles here yet. Check back soon.</p> : null}
+
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+          {data?.posts.map((post) => (
+            <article key={post.slug} className="overflow-hidden rounded-[2rem] border border-surface-border bg-white shadow-sm">
+              {post.coverImageUrl ? (
+                <Link to={`/blog/${post.slug}`} className="block aspect-video overflow-hidden">
+                  <img src={post.coverImageUrl} alt={post.coverImageAlt ?? post.title} width={800} height={450} loading="lazy" decoding="async" className="h-full w-full object-cover" />
+                </Link>
+              ) : null}
+              <div className="p-6">
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-secondary">
+                  {post.categoryLabel} · {formatDate(post.publishedAt)}
+                </p>
+                <h2 className="mt-2 text-xl font-black leading-snug text-text-main">
+                  <Link to={`/blog/${post.slug}`} className="hover:text-primary">{post.title}</Link>
+                </h2>
+                <p className="mt-2 line-clamp-3 text-sm font-medium text-text-muted">{post.excerpt}</p>
+                <p className="mt-4 text-xs font-bold text-text-light">
+                  {post.authorName} · {post.readingMinutes} min read
+                </p>
+              </div>
+            </article>
+          ))}
         </div>
       </div>
-
-       {/* Newsletter Section (Marketing Growth) */}
-       <section className="mt-24 md:mt-32">
-          <div className="bg-text-main rounded-[4rem] p-12 md:p-20 relative overflow-hidden group shadow-premium-2xl">
-             <div className="absolute top-0 right-0 h-full w-1/2 bg-gradient-to-l from-primary/20 to-transparent z-0"></div>
-              <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-12">
-                <div className="max-w-xl text-left">
-                  <h2 className="text-4xl md:text-5xl font-black text-white tracking-tighter leading-tight mb-6">Ready to work without the wahala?</h2>
-                  <p className="text-white/70 text-lg font-medium leading-relaxed">Find real jobs, or post yours free and review applicants on one board.</p>
-                </div>
-                <div className="w-full lg:w-auto">
-                  <div className="flex flex-col sm:flex-row gap-4">
-                    <Link to="/onboarding?role=seeker" className="btn btn-primary px-10 whitespace-nowrap">I want work</Link>
-                    <Link to="/onboarding?role=employer" className="btn btn-outline border-white/30 bg-white/10 px-10 whitespace-nowrap text-white">I want to hire</Link>
-                  </div>
-                  <p className="text-[10px] text-white/40 font-bold uppercase tracking-[0.2em] mt-4">Free to join</p>
-                </div>
-              </div>
-          </div>
-       </section>
     </div>
-  )
-}
-
-function Sparkles(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
-      <path d="M5 3v4" />
-      <path d="M19 17v4" />
-      <path d="M3 5h4" />
-      <path d="M17 19h4" />
-    </svg>
   )
 }

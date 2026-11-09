@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { getCourseHubSharePage, getCourseLandingSharePage, getCourseSharePage, getFreelancerSharePage, getJobListSharePage, getLandingJson, getLandingSharePage, getCompanySharePage,
-  getJobSharePage, getSitemap, getSitemapIndex, getSitemapPart } from '../controllers/shareController';
+  getJobSharePage, getSitemap, getSitemapIndex, getSitemapPart, getBlogListSharePage, getBlogPostSharePage } from '../controllers/shareController';
 
 import { appShellMiddleware } from '../utils/appShell';
 
@@ -13,6 +13,8 @@ router.get('/sitemap.xml', getSitemapIndex);
 router.get('/sitemap-all.xml', getSitemap);
 router.get('/sitemap/:part', getSitemapPart);
 router.get('/freelancers/:id', getFreelancerSharePage);
+router.get('/blog', getBlogListSharePage);
+router.get('/blog/:slug', getBlogPostSharePage);
 router.get('/jobs/:id', getJobSharePage);
 router.get('/companies/:id', getCompanySharePage);
 router.get('/seo/:slug', getLandingSharePage);

@@ -1,7 +1,4 @@
-import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { blogPosts } from '../data/blogData'
 import { prerender, prerenderPaths } from '../prerender'
 
 const words = (html: string) => html.replace(/<[^>]+>/g, ' ').split(/\s+/).filter(Boolean).length
@@ -14,13 +11,8 @@ describe('pages made at build time', () => {
     expect(page.html.match(/<h1/g)).toHaveLength(1)
   })
 
-  it('covers the about, terms, privacy and blog pages and every article', () => {
-    for (const path of ['/about', '/terms', '/privacy', '/blog']) expect(prerenderPaths).toContain(path)
-    for (const post of blogPosts) expect(prerenderPaths).toContain(`/blog/${post.id}`)
-  })
-
-  it('has every article in the sitemap', () => {
-    const sitemap = readFileSync(resolve(__dirname, '../../backend/src/utils/sitemap.ts'), 'utf8')
-    for (const post of blogPosts) expect(sitemap).toContain(`/blog/${post.id}`)
+  it('covers the about, terms and privacy pages (the blog is rendered by the API from the database)', () => {
+    for (const path of ['/about', '/terms', '/privacy']) expect(prerenderPaths).toContain(path)
+    expect(prerenderPaths.some((path) => path.startsWith('/blog'))).toBe(false)
   })
 })

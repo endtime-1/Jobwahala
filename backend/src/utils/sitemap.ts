@@ -18,10 +18,6 @@ export const staticSitemapPaths: SitemapEntry[] = [
   { path: '/', changeFrequency: 'daily', priority: 1 },
   { path: '/jobs', changeFrequency: 'daily', priority: 0.9 },
   { path: '/internships', changeFrequency: 'daily', priority: 0.9 },
-  { path: '/blog', changeFrequency: 'weekly', priority: 0.5 },
-  // The articles are in src/data/blogData.ts; src/seo/prerender.test.ts fails if one is missing here.
-  { path: '/blog/hiring-in-ghana', changeFrequency: 'monthly', priority: 0.5 },
-  { path: '/blog/freelance-success-ghana', changeFrequency: 'monthly', priority: 0.5 },
   { path: '/about', changeFrequency: 'monthly', priority: 0.4 },
   { path: '/hiring-service', changeFrequency: 'monthly', priority: 0.7 },
   { path: '/support', changeFrequency: 'monthly', priority: 0.4 },

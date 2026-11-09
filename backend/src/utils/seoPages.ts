@@ -212,7 +212,7 @@ ${image ? `<meta property="og:image:alt" content="${e(image.alt ?? title)}">\n` 
 ${jsonLd ? `<script type="application/ld+json">${safeJson(jsonLd)}</script>` : ''}
 </head>
 <body>
-<header><nav aria-label="Main"><a href="${e(siteUrl)}/">JobWahala</a> · <a href="${e(siteUrl)}/jobs">Jobs</a> · <a href="${e(siteUrl)}/internships">Internships &amp; NSS</a> · <a href="${e(siteUrl)}/courses">Courses</a> · <a href="${e(siteUrl)}/blog">Guides</a> · <a href="${e(siteUrl)}/hiring-service">Hiring Service</a> · <a href="${e(siteUrl)}/support">Help</a></nav></header>
+<header><nav aria-label="Main"><a href="${e(siteUrl)}/">JobWahala</a> · <a href="${e(siteUrl)}/jobs">Jobs</a> · <a href="${e(siteUrl)}/internships">Internships &amp; NSS</a> · <a href="${e(siteUrl)}/courses">Courses</a> · <a href="${e(siteUrl)}/blog">Blog</a> · <a href="${e(siteUrl)}/hiring-service">Hiring Service</a> · <a href="${e(siteUrl)}/support">Help</a></nav></header>
 <main>
 ${body}
 </main>

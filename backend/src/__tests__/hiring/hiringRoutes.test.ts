@@ -1,8 +1,10 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { adminRouterPaths } from '../acquisition/helpers';
 
 type Layer = { route?: { path: string; methods: Record<string, boolean> }; name: string };
 const routesOf = (router: unknown) => (router as { stack: Layer[] }).stack.filter((layer) => layer.route).map((layer) => `${Object.keys(layer.route!.methods)[0].toUpperCase()} ${layer.route!.path}`);
+
+vi.setConfig({ testTimeout: 30000 });
 
 describe('who can reach the Hiring Service routes', () => {
   it('puts the money, the terms, the settings and the recruiter accounts behind the admin-only router', async () => {

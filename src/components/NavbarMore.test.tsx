@@ -49,7 +49,7 @@ describe('the desktop menu for a job seeker', () => {
 
     const menu = screen.getByLabelText('More pages')
     const names = within(menu).getAllByRole('link').map((link) => link.textContent?.trim())
-    expect(names).toEqual(['Courses', 'Saved jobs', 'CV Generator', 'Resources'])
+    expect(names).toEqual(['Courses', 'Saved jobs', 'CV Generator', 'Blog'])
     expect(screen.getByRole('button', { name: /more/i })).toHaveAttribute('aria-expanded', 'true')
   })
 
@@ -81,7 +81,7 @@ describe('the other roles', () => {
     expect(names).toEqual(['Dashboard', 'CV database', 'Plans & billing', 'Team', 'Messages'])
     fireEvent.click(screen.getByRole('button', { name: /more/i }))
     const more = within(screen.getByLabelText('More pages')).getAllByRole('link').map((link) => link.textContent?.trim())
-    expect(more).toEqual(['Hiring service'])
+    expect(more).toEqual(['Hiring service', 'Blog'])
   })
 
   it('a menu that already fits has no More button', () => {
@@ -99,7 +99,7 @@ describe('the other roles', () => {
     fireEvent.click(screen.getByRole('button', { name: /more/i }))
 
     const names = within(screen.getByLabelText('More pages')).getAllByRole('link').map((link) => link.textContent?.trim())
-    expect(names).toEqual(['Hiring service', 'Find Talent', 'Proposals', 'Agreements'])
+    expect(names).toEqual(['Hiring service', 'Find Talent', 'Proposals', 'Agreements', 'Blog'])
   })
 
   it('a recruiter has a one-link menu: their dashboard', () => {

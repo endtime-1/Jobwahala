@@ -9,6 +9,7 @@ import { renderCompanyPage, renderHomePage, renderJobListPage, renderJobPage, ty
 import { approvedBusinessVerificationQuery, isVerifiedEmployer } from '../utils/verification';
 import { EARLY_CAREER_TYPES } from '../utils/earlyCareer';
 import { publicJobWhere } from '../utils/jobLifecycle';
+import { isBlogCategory, publicPostWhere } from '../utils/blog';
 import { buildLandingIndex, buildLandingPage, landingSitemapPaths, type LandingIndex, type LandingJob } from '../utils/landingPages';
 import { renderLandingNotFound, renderLandingPage } from '../utils/landingRender';
 import { loadPublicCourses } from '../services/courseCatalog';
@@ -17,6 +18,8 @@ import { renderCourseDetailPage, renderCourseHubPage, renderCourseLandingPage } 
 import { courseInclude, toPublicCourse } from '../services/courseCatalog';
 import { publicCourseWhere } from '../utils/courses';
 import { siteCopy } from '../content/siteCopy';
+import { loadPublicPost, loadPublicPosts } from './blogController';
+import { renderBlogListPage, renderBlogPostPage } from '../utils/blogRender';
 import {
   buildSitemapIndexXml,
   buildSitemapXml,
@@ -153,7 +156,7 @@ const baseUrlOf = (req: Request) =>
 const RELEASE_DATE = new Date();
 
 /** The pages search engines should know about, in four groups. Only pages that may be indexed are listed. */
-const sitemapSections = async (): Promise<Record<'static' | 'landing' | 'jobs' | 'companies', SitemapEntry[]>> => {
+const sitemapSections = async (): Promise<Record<'static' | 'landing' | 'blog' | 'jobs' | 'companies', SitemapEntry[]>> => {
   const jobs = await prisma.job.findMany({
     where: publicJobWhere(),
     select: { id: true, employerId: true, updatedAt: true },
@@ -164,6 +167,11 @@ const sitemapSections = async (): Promise<Record<'static' | 'landing' | 'jobs' |
   const newestByCompany = new Map<string, Date>();
   for (const job of jobs) if (!newestByCompany.has(job.employerId)) newestByCompany.set(job.employerId, job.updatedAt);
   const newestJob = jobs[0]?.updatedAt ?? RELEASE_DATE;
+
+  const posts = await prisma.blogPost.findMany({ where: publicPostWhere(), select: { slug: true, updatedAt: true }, orderBy: { updatedAt: 'desc' }, take: 2000 });
+  const blogEntries: SitemapEntry[] = posts.length
+    ? [{ path: '/blog', lastModified: posts[0].updatedAt, changeFrequency: 'weekly' as const, priority: 0.6 }, ...posts.map((post) => ({ path: `/blog/${post.slug}`, lastModified: post.updatedAt, changeFrequency: 'monthly' as const, priority: 0.6 }))]
+    : [];
 
   return {
     static: ([
@@ -178,18 +186,19 @@ const sitemapSections = async (): Promise<Record<'static' | 'landing' | 'jobs' |
       changeFrequency: 'daily' as const,
       priority: 0.6,
     })),
+    blog: blogEntries,
     jobs: jobs.map((job) => ({ path: `/jobs/${job.id}`, lastModified: job.updatedAt, changeFrequency: 'weekly' as const, priority: 0.7 })),
     companies: [...newestByCompany].map(([id, updatedAt]) => ({ path: `/companies/${id}`, lastModified: updatedAt, changeFrequency: 'weekly' as const, priority: 0.6 })),
   };
 };
 
-export const SITEMAP_PARTS = ['static', 'landing', 'jobs', 'companies'] as const;
+export const SITEMAP_PARTS = ['static', 'landing', 'blog', 'jobs', 'companies'] as const;
 
 /** Every page in one file (kept for tools that want a single list). */
 export const getSitemap = async (req: Request, res: Response) => {
   try {
     const sections = await sitemapSections();
-    const entries: SitemapEntry[] = [...sections.static, ...sections.landing, ...sections.jobs, ...sections.companies];
+    const entries: SitemapEntry[] = [...sections.static, ...sections.landing, ...sections.blog, ...sections.jobs, ...sections.companies];
 
     res.type('application/xml');
     res.set('Cache-Control', 'public, max-age=3600');
@@ -500,5 +509,38 @@ export const getCourseSharePage = async (req: Request, res: Response) => {
   } catch (error) {
     logger.error('course_share_page_error', { error: getErrorMessage(error) });
     return res.status(500).type('html').send(renderLandingNotFound(siteUrl));
+  }
+};
+
+// ---- blog
+
+export const getBlogListSharePage = async (req: Request, res: Response) => {
+  const siteUrl = publicSiteUrl(req);
+  try {
+    const raw = singleValue(req.query.category as string | undefined);
+    const category = isBlogCategory(raw) ? raw : undefined;
+    res.type('html');
+    res.set('Cache-Control', 'public, max-age=300');
+    return res.send(renderBlogListPage(await loadPublicPosts(category), siteUrl, category));
+  } catch (error) {
+    logger.error('blog_list_page_error', { error: getErrorMessage(error) });
+    return res.status(500).type('html').send(renderSharePageNotFound(siteUrl));
+  }
+};
+
+export const getBlogPostSharePage = async (req: Request, res: Response) => {
+  const siteUrl = publicSiteUrl(req);
+  try {
+    const post = await loadPublicPost(singleValue(req.params.slug) || '');
+    res.type('html');
+    // Drafts and scheduled posts look exactly like a page that does not exist.
+    if (!post) return res.status(404).send(renderSharePageNotFound(siteUrl));
+
+    const more = (await loadPublicPosts(undefined, 3)).filter((item) => item.slug !== post.slug).slice(0, 2);
+    res.set('Cache-Control', 'public, max-age=300');
+    return res.send(renderBlogPostPage(post, more, siteUrl));
+  } catch (error) {
+    logger.error('blog_post_page_error', { error: getErrorMessage(error) });
+    return res.status(500).type('html').send(renderSharePageNotFound(siteUrl));
   }
 };

@@ -879,6 +879,7 @@ describe('the sitemap', () => {
       rowOf(publicCourse({ slug: 'photo-1', skills: ['photography'], category: 'design-creative' })),
     ]);
     prismaMock.job.findMany = vi.fn().mockResolvedValue([]);
+    (prismaMock as Record<string, unknown>).blogPost = { findMany: vi.fn().mockResolvedValue([]) };
     let xml = '';
     const res = {
       status() {

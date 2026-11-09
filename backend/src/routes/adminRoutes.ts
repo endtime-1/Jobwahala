@@ -32,6 +32,8 @@ import { getCourseQueue, reviewCourse, reviewProvider, setFeatured } from '../co
 import { courseReviewSchema, featuredSchema, providerReviewSchema } from '../validation/courseSchemas';
 import { adjustUserCredits, createProduct, getBillingSettings, getRevenue, listPayments, listProducts, lookupAccount, refund, updateBillingSettings, updateProduct } from '../controllers/adminBillingController';
 import { creditAdjustmentSchema, createProductSchema, refundSchema, settingsSchema, updateProductSchema } from '../validation/billingSchemas';
+import { adminListPosts, createPost, deletePost, updatePost } from '../controllers/blogController';
+import { blogPostIdSchema, createBlogPostSchema, updateBlogPostSchema } from '../validation/blogSchemas';
 import { authMiddleware, roleMiddleware } from '../middleware/auth';
 import { validate } from '../middleware/validate';
 import {
@@ -64,6 +66,10 @@ router.get('/jobs', getAllJobs);
 router.get('/services', getAllServices);
 router.get('/verifications', getVerificationRequests);
 router.get('/audit-log', getAdminAuditLog);
+router.get('/blog', adminListPosts);
+router.post('/blog', validate(createBlogPostSchema), createPost);
+router.patch('/blog/:id', validate(updateBlogPostSchema), updatePost);
+router.delete('/blog/:id', validate(blogPostIdSchema), deletePost);
 router.get('/disputes', getAgreementDisputes);
 router.post('/jobs', validate(createAdminJobSchema), createAdminJob);
 router.patch('/reports/bulk-status', validate(updateAdminBulkReportStatusSchema), updateReportsStatusBulk);

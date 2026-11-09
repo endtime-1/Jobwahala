@@ -1431,3 +1431,24 @@ model HiringEvent {
 
   @@index([requestId, createdAt])
 }
+
+// A blog post written in the admin panel. Public when status is PUBLISHED and publishAt has passed (a future publishAt means scheduled).
+model BlogPost {
+  id              String    @id @default(uuid())
+  slug            String    @unique
+  title           String
+  metaDescription String
+  category        String    // cv-tips, interview-tips, scam-alerts, nss-graduates, employer-advice
+  body            String    // Markdown
+  coverImageUrl   String?
+  coverImageAlt   String?
+  authorName      String
+  status          String    @default("DRAFT") // DRAFT or PUBLISHED
+  publishAt       DateTime?
+  createdById     String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([status, publishAt])
+  @@index([category])
+}

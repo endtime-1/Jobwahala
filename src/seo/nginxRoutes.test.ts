@@ -72,10 +72,11 @@ describe('the bot and domain rules in nginx', () => {
     expect(fallback).toContain('return 503')
   })
 
-  it('serves the pages made at build time (about, terms, privacy, blog) from dist/prerendered', () => {
+  it('serves the pages made at build time (about, terms, privacy) from dist/prerendered, and the blog from the API', () => {
     expect(nginx).toContain('try_files /prerendered/$pre_page.html /index.html;')
-    expect(nginx).toContain('try_files /prerendered/blog/$pre_post.html @app_page;')
-    expect(nginx).toMatch(/pre_page>about\|terms\|privacy\|blog/)
+    expect(nginx).toContain('pre_page>about|terms|privacy)')
+    expect(nginx).toContain('rewrite ^ /api/share/blog break;')
+    expect(nginx).toContain('rewrite ^ /api/share/blog/$blog_slug break;')
   })
 
   it('sends http:// visits to https on the www address', () => {
@@ -84,7 +85,7 @@ describe('the bot and domain rules in nginx', () => {
 
   it('serves the sitemap index and each sitemap it lists from the API', () => {
     expect(nginx).toContain('location = /sitemap.xml')
-    expect(nginx).toContain('sitemap_part>static|landing|jobs|companies')
+    expect(nginx).toContain('sitemap_part>static|landing|blog|jobs|companies')
     expect(nginx).toContain('/api/share/sitemap/$sitemap_part')
   })
 

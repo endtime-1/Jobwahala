@@ -43,7 +43,7 @@ const seekerLinks: NavLinkItem[] = [
   { name: 'Agreements', href: '/agreements', icon: <FileCheck className="h-4 w-4" /> },
   { name: 'CV Generator', href: '/cv-generator', icon: <Rocket className="h-4 w-4" /> },
   { name: 'Messages', href: '/messaging', icon: <MessageSquare className="h-4 w-4" /> },
-  { name: 'Resources', href: '/blog', icon: <BookOpen className="h-4 w-4" /> },
+  { name: 'Blog', href: '/blog', icon: <BookOpen className="h-4 w-4" /> },
   { name: 'Freelance gigs', href: '/freelancers', icon: <Users className="h-4 w-4" /> },
 ]
 
@@ -59,6 +59,7 @@ const employerLinks: NavLinkItem[] = [
   { name: 'Proposals', href: '/proposals', icon: <Handshake className="h-4 w-4" /> },
   { name: 'Agreements', href: '/agreements', icon: <FileCheck className="h-4 w-4" /> },
   { name: 'Messages', href: '/messaging', icon: <MessageSquare className="h-4 w-4" /> },
+  { name: 'Blog', href: '/blog', icon: <BookOpen className="h-4 w-4" /> },
 ]
 
 const freelancerLinks: NavLinkItem[] = [
@@ -70,7 +71,7 @@ const freelancerLinks: NavLinkItem[] = [
   { name: 'Proposals', href: '/proposals', icon: <Handshake className="h-4 w-4" /> },
   { name: 'Agreements', href: '/agreements', icon: <FileCheck className="h-4 w-4" /> },
   { name: 'Messages', href: '/messaging', icon: <MessageSquare className="h-4 w-4" /> },
-  { name: 'Resources', href: '/blog', icon: <BookOpen className="h-4 w-4" /> },
+  { name: 'Blog', href: '/blog', icon: <BookOpen className="h-4 w-4" /> },
 ]
 
 const adminLinks: NavLinkItem[] = [
@@ -79,6 +80,7 @@ const adminLinks: NavLinkItem[] = [
   { name: 'Internships & NSS', href: '/internships', icon: <GraduationCap className="h-4 w-4" /> },
   { name: 'Courses', href: '/courses', icon: <BookOpen className="h-4 w-4" /> },
   { name: 'Freelancers', href: '/freelancers', icon: <Users className="h-4 w-4" /> },
+  { name: 'Blog', href: '/blog', icon: <BookOpen className="h-4 w-4" /> },
 ]
 
 const recruiterLinks: NavLinkItem[] = [
@@ -89,15 +91,15 @@ const guestLinks: NavLinkItem[] = [
   { name: 'Browse Jobs', href: '/jobs', icon: <Briefcase className="h-4 w-4" /> },
   { name: 'Internships & NSS', href: '/internships', icon: <GraduationCap className="h-4 w-4" /> },
   { name: 'Courses', href: '/courses', icon: <BookOpen className="h-4 w-4" /> },
-  { name: 'Resources', href: '/blog', icon: <BookOpen className="h-4 w-4" /> },
+  { name: 'Blog', href: '/blog', icon: <BookOpen className="h-4 w-4" /> },
 ]
 
 // The desktop bar keeps the five links people use most. The rest go under "More" so nothing is cut off at the edge.
 // (The phone menu still lists every link.)
 const MORE_LINKS: Record<string, readonly string[]> = {
-  SEEKER: ['Courses', 'Saved jobs', 'CV Generator', 'Resources', 'Proposals', 'Agreements', 'Freelance gigs'],
-  EMPLOYER: ['Hiring service', 'Find Talent', 'Proposals', 'Agreements'],
-  FREELANCER: ['Internships & NSS', 'Courses', 'Agreements', 'Resources'],
+  SEEKER: ['Courses', 'Saved jobs', 'CV Generator', 'Blog', 'Proposals', 'Agreements', 'Freelance gigs'],
+  EMPLOYER: ['Hiring service', 'Find Talent', 'Proposals', 'Agreements', 'Blog'],
+  FREELANCER: ['Internships & NSS', 'Courses', 'Agreements', 'Blog'],
 }
 
 const pendingSetupLinks: NavLinkItem[] = [

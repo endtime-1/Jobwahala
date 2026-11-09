@@ -48,7 +48,7 @@ const footerColumns = [
   {
     title: 'Learn and get help',
     links: [
-      ['Guides and articles', '/blog'],
+      ['Blog', '/blog'],
       ['About JobWahala', '/about'],
       ['Help centre', '/support'],
       ['Terms of service', '/terms'],
