@@ -198,6 +198,9 @@ export const renderShell = ({ title, description, url, siteUrl, ogType = 'websit
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>${e(title)} | JobWahala</title>
 <meta name="description" content="${e(description)}">
 ${noindex ? '<meta name="robots" content="noindex, follow">\n' : ''}<link rel="canonical" href="${e(url)}">

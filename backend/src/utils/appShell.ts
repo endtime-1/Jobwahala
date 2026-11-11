@@ -14,7 +14,7 @@ const MAX_CACHED_PAGES = 300;
 
 const SHELL_TAGS = [
   /<script\b[^>]*\btype="module"[^>]*><\/script>/gi,
-  /<link\b[^>]*\brel="(?:stylesheet|modulepreload|preload|icon|apple-touch-icon)"[^>]*>/gi,
+  /<link\b[^>]*\brel="(?:stylesheet|modulepreload|preload)"[^>]*>/gi,
   /<meta\b[^>]*\bname="theme-color"[^>]*>/gi,
 ];
 
