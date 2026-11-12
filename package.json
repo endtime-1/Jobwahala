@@ -13,6 +13,7 @@
     "deploy:check:vps": "node scripts/checkVpsEnv.mjs",
     "deploy:verify": "node scripts/postDeployCheck.mjs",
     "seo:check": "node scripts/seoHtmlCheck.mjs",
+    "seo:sitemap": "node scripts/checkSitemapUrls.mjs",
     "deploy:verify:bots": "node scripts/checkBotRoutes.mjs",
     "lint": "eslint .",
     "preview": "vite preview"

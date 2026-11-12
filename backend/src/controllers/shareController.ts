@@ -5,11 +5,11 @@ import logger from '../config/logger';
 import { singleValue } from '../utils/request';
 import { getErrorMessage } from '../utils/errors';
 import { renderFreelancerSharePage, renderSharePageNotFound } from '../utils/sharePage';
-import { renderCompanyPage, renderHomePage, renderJobListPage, renderJobPage, type SeoJob } from '../utils/seoPages';
+import { renderClosedJobPage, renderCompanyPage, renderHomePage, renderJobListPage, renderJobPage, type SeoJob } from '../utils/seoPages';
 import { approvedBusinessVerificationQuery, isVerifiedEmployer } from '../utils/verification';
 import { EARLY_CAREER_TYPES } from '../utils/earlyCareer';
 import { publicJobWhere } from '../utils/jobLifecycle';
-import { isBlogCategory, publicPostWhere } from '../utils/blog';
+import { blogSlugRedirects, isBlogCategory, publicPostWhere } from '../utils/blog';
 import { buildLandingIndex, buildLandingPage, landingSitemapPaths, type LandingIndex, type LandingJob } from '../utils/landingPages';
 import { renderLandingNotFound, renderLandingPage } from '../utils/landingRender';
 import { loadPublicCourses } from '../services/courseCatalog';
@@ -258,8 +258,20 @@ export const getJobSharePage = async (req: Request, res: Response) => {
 
     if (!job) {
       // A job that existed but is expired, closed or removed is "gone" (410), so search engines drop it; an id that never existed is a plain 404.
-      const existed = id ? await prisma.job.findUnique({ where: { id }, select: { id: true } }) : null;
-      return res.status(existed ? 410 : 404).send(renderSharePageNotFound(siteUrl));
+      const existed = id ? await prisma.job.findUnique({ where: { id }, select: { id: true, title: true, category: true, location: true } }) : null;
+      if (!existed) return res.status(404).send(renderSharePageNotFound(siteUrl));
+
+      // Show the closed notice with similar open jobs (same category, else the newest), and keep it out of search results.
+      let similar: SeoJobRow[] = [];
+      try {
+        const base = { ...publicJobWhere(), id: { not: existed.id } };
+        const wanted = { select: seoJobSelect, orderBy: { createdAt: 'desc' as const }, take: 5 };
+        similar = (existed.category ? await prisma.job.findMany({ where: { ...base, category: existed.category }, ...wanted }) : []) as SeoJobRow[];
+        if (!similar.length) similar = (await prisma.job.findMany({ where: base, ...wanted })) as SeoJobRow[];
+      } catch (error) {
+        logger.warn('closed_job_similar_failed', { error: getErrorMessage(error) });
+      }
+      return res.status(410).send(renderClosedJobPage({ title: existed.title ?? null, id: existed.id, similar: (similar ?? []).map((row) => toSeoJob(row, siteUrl)), siteUrl }));
     }
 
     res.set('Cache-Control', 'public, max-age=300');
@@ -534,10 +546,15 @@ export const getBlogListSharePage = async (req: Request, res: Response) => {
 export const getBlogPostSharePage = async (req: Request, res: Response) => {
   const siteUrl = publicSiteUrl(req);
   try {
-    const post = await loadPublicPost(singleValue(req.params.slug) || '');
+    const requested = singleValue(req.params.slug) || '';
+    const post = await loadPublicPost(requested);
     res.type('html');
     // Drafts and scheduled posts look exactly like a page that does not exist.
-    if (!post) return res.status(404).send(renderSharePageNotFound(siteUrl));
+    if (!post) {
+      const target = Object.prototype.hasOwnProperty.call(blogSlugRedirects, requested) ? blogSlugRedirects[requested] : null;
+      if (target && (await loadPublicPost(target))) return res.redirect(301, `${siteUrl}/blog/${target}`);
+      return res.status(404).send(renderSharePageNotFound(siteUrl));
+    }
 
     const more = (await loadPublicPosts(undefined, 3)).filter((item) => item.slug !== post.slug).slice(0, 2);
     res.set('Cache-Control', 'public, max-age=300');

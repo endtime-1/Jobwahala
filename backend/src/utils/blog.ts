@@ -123,3 +123,11 @@ export const readingMinutes = (markdown: string) => Math.max(1, Math.round(plain
 
 /** A cover image address that the site can show: a normal https address or one of our own paths. */
 export const isUsableImageUrl = (value: string) => /^(https:\/\/|\/api\/uploads\/|\/people\/)/i.test(value);
+
+/**
+ * Old or mistyped article addresses that were linked from other pages, and the live article each one belongs to.
+ * They answer with a permanent redirect so people and Google land on the real article instead of a 404.
+ */
+export const blogSlugRedirects: Record<string, string> = {
+  'how-to-spot-fake-job-adverts-ghana': 'how-to-spot-a-fake-job-advert-in-ghana-2026-guide-jobwahala',
+};

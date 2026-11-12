@@ -236,6 +236,28 @@ export const jobPreviewImage = (job: Pick<SeoJob, 'employerLogoUrl' | 'employerN
   return { url: logo, alt: `${job.employerName} logo` };
 };
 
+/** A job that existed but has closed, expired or been removed: says so, points to similar open jobs, and stays out of search results. */
+export const renderClosedJobPage = ({ title, similar, siteUrl, id }: { title: string | null; similar: SeoJob[]; siteUrl: string; id: string }) => {
+  const items = similar
+    .map((job) => {
+      const facts = [job.type, job.location].filter(Boolean).join(' · ');
+      return `<li><a href="${e(`${siteUrl}/jobs/${job.id}`)}">${e(job.title)}</a> - ${e(job.employerName)}${facts ? ` (${e(facts)})` : ''}</li>`;
+    })
+    .join('\n');
+
+  return renderShell({
+    title: 'This job has closed',
+    description: 'This job is no longer open. See similar open jobs on JobWahala.',
+    url: `${siteUrl}/jobs/${id}`,
+    siteUrl,
+    noindex: true,
+    body: `<h1>This job has closed</h1>
+<p>${title ? `"${e(title)}" is` : 'This job is'} no longer accepting applications.</p>
+${similar.length ? `<h2>Similar open jobs</h2>\n<ul>\n${items}\n</ul>` : ''}
+<p><a href="${e(siteUrl)}/jobs">See every open job</a></p>`,
+  });
+};
+
 export const renderJobPage = (job: SeoJob, siteUrl: string) => {
   const url = `${siteUrl}/jobs/${job.id}`;
   const city = isRemoteLocation(job.location) ? '' : (job.location ?? '').split(/[/,]/)[0].trim();
