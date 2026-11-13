@@ -127,3 +127,13 @@ describe('moved blog addresses', () => {
     expect(out.status).toBe(404);
   });
 });
+
+describe('titles do not repeat the site name', () => {
+  it('strips a trailing "| JobWahala" from the stored title', async () => {
+    const { stripBrand, renderShell } = await import('../../utils/seoPages');
+    expect(stripBrand('How to Write a CV | JobWahala - JobWahala')).toBe('How to Write a CV');
+    expect(stripBrand('Open jobs across Africa')).toBe('Open jobs across Africa');
+    const html = renderShell({ title: 'A guide | JobWahala', description: 'd', url: 'https://x/y', siteUrl: 'https://x', body: '' });
+    expect(html).toContain('<title>A guide | JobWahala</title>');
+  });
+});

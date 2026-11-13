@@ -194,7 +194,17 @@ export const breadcrumbJsonLd = (siteUrl: string, crumbs: { label: string; path:
   itemListElement: crumbs.map((crumb, index) => ({ '@type': 'ListItem', position: index + 1, name: crumb.label, item: siteUrl + crumb.path })),
 });
 
-export const renderShell = ({ title, description, url, siteUrl, ogType = 'website', jsonLd, noindex = false, image, body }: PageShell) => `<!doctype html>
+/** Drops a trailing "| JobWahala" (or "- JobWahala") so the site name is not shown twice in a title. */
+export const stripBrand = (title: string) => {
+  let out = title.trim();
+  const brand = /\s*[|–—-]\s*JobWahala\s*$/i;
+  while (brand.test(out) && out.replace(brand, "").trim()) out = out.replace(brand, "").trim();
+  return out;
+};
+
+export const renderShell = ({ title: rawTitle, description, url, siteUrl, ogType = 'website', jsonLd, noindex = false, image, body }: PageShell) => {
+  const title = stripBrand(rawTitle);
+  return `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -225,6 +235,7 @@ ${body}
 ${renderFooter(siteUrl)}
 </body>
 </html>`;
+};
 
 /**
  * The picture shown when a job link is shared: the company's own logo when it has one WhatsApp and other

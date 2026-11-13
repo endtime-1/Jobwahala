@@ -74,7 +74,7 @@ describe('the bot and domain rules in nginx', () => {
 
   it('serves the pages made at build time (about, terms, privacy) from dist/prerendered, and the blog from the API', () => {
     expect(nginx).toContain('try_files /prerendered/$pre_page.html /index.html;')
-    expect(nginx).toContain('pre_page>about|terms|privacy)')
+    expect(nginx).toContain('pre_page>about|terms|privacy|support|hiring-service)')
     expect(nginx).toContain('rewrite ^ /api/share/blog break;')
     expect(nginx).toContain('rewrite ^ /api/share/blog/$blog_slug break;')
   })

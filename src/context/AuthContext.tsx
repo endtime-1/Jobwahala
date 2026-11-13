@@ -57,7 +57,7 @@ export interface AuthUser {
   freelancerProfile?: FreelancerProfile | null;
 }
 
-interface AuthContextType {
+export interface AuthContextType {
   user: AuthUser | null;
   token: string | null;
   isLoading: boolean;
@@ -75,7 +75,8 @@ interface AuthContextType {
   refreshUser: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+// eslint-disable-next-line react-refresh/only-export-components -- the build-time page renderer supplies a signed-out value
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const getStoredToken = () => localStorage.getItem('jobwahala_token');
 

@@ -1,6 +1,6 @@
 import { whatsappChannelUrl } from '../content/organization';
 import { BLOG_CATEGORIES, blogCategoryLabel, readingMinutes, renderMarkdown } from './blog';
-import { breadcrumbJsonLd, renderShell } from './seoPages';
+import { breadcrumbJsonLd, renderShell, stripBrand } from './seoPages';
 import { escapeHtml as e } from './sharePage';
 
 export type BlogCard = {
@@ -21,7 +21,7 @@ const isoDay = (date: Date | null) => (date ? date.toISOString().slice(0, 10) : 
 
 const cardHtml = (post: BlogCard, siteUrl: string) => `<article>
 ${post.coverImageUrl ? `<a href="${e(`${siteUrl}/blog/${post.slug}`)}"><img src="${e(absolute(post.coverImageUrl, siteUrl))}" alt="${e(post.coverImageAlt ?? post.title)}" width="800" height="450" loading="lazy"></a>\n` : ''}<p>${e(blogCategoryLabel(post.category))} · <time datetime="${e(isoDay(post.publishAt))}">${e(day(post.publishAt))}</time></p>
-<h2><a href="${e(`${siteUrl}/blog/${post.slug}`)}">${e(post.title)}</a></h2>
+<h2><a href="${e(`${siteUrl}/blog/${post.slug}`)}">${e(stripBrand(post.title))}</a></h2>
 <p>${e(post.metaDescription)}</p>
 <p>${e(post.authorName)} · ${readingMinutes(post.body)} min read</p>
 </article>`;
@@ -61,7 +61,7 @@ ${posts.length ? posts.map((post) => cardHtml(post, siteUrl)).join('\n') : '<p>N
 
 const shareLinks = (url: string, title: string) => {
   const u = encodeURIComponent(url);
-  const text = encodeURIComponent(`${title} - JobWahala`);
+  const text = encodeURIComponent(`${stripBrand(title)} - JobWahala`);
   return [
     ['WhatsApp', `https://wa.me/?text=${text}%20${u}`],
     ['Facebook', `https://www.facebook.com/sharer/sharer.php?u=${u}`],
@@ -72,7 +72,8 @@ const shareLinks = (url: string, title: string) => {
 
 export type BlogPostPage = BlogCard & { updatedAt: Date };
 
-export const renderBlogPostPage = (post: BlogPostPage, more: BlogCard[], siteUrl: string) => {
+export const renderBlogPostPage = (rawPost: BlogPostPage, more: BlogCard[], siteUrl: string) => {
+  const post = { ...rawPost, title: stripBrand(rawPost.title) };
   const url = `${siteUrl}/blog/${post.slug}`;
   const cover = post.coverImageUrl ? absolute(post.coverImageUrl, siteUrl) : null;
   const share = shareLinks(url, post.title)

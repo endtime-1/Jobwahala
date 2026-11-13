@@ -1,13 +1,15 @@
 // Writes the server-rendered version of the static pages into dist/prerendered/ (run after `vite build`).
 // Each file is the built index.html with the page's real content and head tags put in, so the page is readable
 // without JavaScript and the app still starts and takes over.
+import { realpathSync } from 'node:fs'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import react from '@vitejs/plugin-react'
 import { createServer } from 'vite'
 
-const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+// realpath gives the drive letter its real case on Windows; otherwise React can load twice (c:/ and C:) and hooks fail.
+const root = realpathSync.native(resolve(dirname(fileURLToPath(import.meta.url)), '..'))
 const dist = join(root, 'dist')
 
 const tagsOf = (html, pattern) => html.match(pattern) ?? []

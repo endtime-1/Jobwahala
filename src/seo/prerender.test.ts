@@ -12,7 +12,7 @@ describe('pages made at build time', () => {
   })
 
   it('covers the about, terms and privacy pages (the blog is rendered by the API from the database)', () => {
-    for (const path of ['/about', '/terms', '/privacy']) expect(prerenderPaths).toContain(path)
+    for (const path of ['/about', '/terms', '/privacy', '/support', '/hiring-service']) expect(prerenderPaths).toContain(path)
     expect(prerenderPaths.some((path) => path.startsWith('/blog'))).toBe(false)
   })
 })
